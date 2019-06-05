@@ -24,3 +24,6 @@ Some important notes:
     All svm analyses utilized the svmlib toolbox
     
     
+To use:
+    1) you will need all files converted. The way to convert files can be found in the preprocessing folder
+    
