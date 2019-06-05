@@ -21,7 +21,7 @@ Int_file description: The int file is a matrix composed of time-stamps that give
                                 Note that for column 4, an incorrect trial will have 1s on both the sample
                                 and choice runs
                                 
-______________________________________________________________________________________________________________
+_____________________________________________________________________________________________________________
 Steps for generating the Int file:
 
     1) Convert your position data to .mat files by running NL2Mat_complete_short.m - note you will have to define
