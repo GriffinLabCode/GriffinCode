@@ -1,1 +1,26 @@
+The scripts and functions in this folder should be used a scaffold to guide writing of your own, unless data
+is formatted the same as mine (John) was.
 
+You can find other iterations of scripts and functions and some other things I've analyzed by going to the following
+directories:
+
+    X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Linear Classifier
+    X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate
+    
+You can also find scripts and functions Henry or Andrew wrote by going to the following directories:
+
+    X:\03. Lab Procedures and Protocols\MATLABToolbox\Henry Code
+    X:\03. Lab Procedures and Protocols\MATLABToolbox\Andrew code
+    
+I only uploaded my own since I'm most familiar with them.
+    
+_____________________________________________________________________________________________________________________
+
+Some important notes:
+
+    You will notice two functions named something like 'get_inputs'. Prior to use of any scripts or functions that 
+    require the get_input.m function, you will need to open get_inputs.m and change the variables of interest.
+    
+    All svm analyses utilized the svmlib toolbox
+    
+    
