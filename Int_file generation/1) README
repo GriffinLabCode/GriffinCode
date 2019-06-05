@@ -33,12 +33,12 @@ Steps for generating the Int file:
        
     2) After you have converted your video-tracking data (VT1.mat), you open the Int_DNMP_master.m script and define 
        whether you want to interpolate missing video-tracking data.
-              - We advise to interpolate the missing data. To see for yourself, don't interpolate the data, go through
-                the rest of the instructions here, open the check_int.m script, define the same parameters for maze
-                locations, and run the script. What you will find is there are cases where the camera loses the rat,
-                causing inappropriate time-stamps to be defined as a maze location. For example, you may define the 
-                t-junction and get the time-stamps for when the animal entered the t-junction, but if the camera lost
-                the animal, then picked him back up after t-junction entry, your t-junction entry time-stamp will be
-                beyond t-junction entry and therefore not accurately depicting what you defined.
+              - We advise to interpolate the missing data or correct it yourself. To see why corrections are important,
+                don't interpolate the data, go through the rest of the instructions here, open the check_int.m script, 
+                define the same parameters for maze locations, and run the script. What you will find is there are cases 
+                where the camera loses the rat causing inappropriate time-stamps to be defined as a maze location. For example, 
+                you may define the t-junction and get the time-stamps for when the animal entered the t-junction, but if the 
+                camera lost the animal, then picked him back up after t-junction entry, your t-junction entry time-stamp will 
+                be beyond t-junction entry and therefore not accurately depicting what you defined.
                       
 
