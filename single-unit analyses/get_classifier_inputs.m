@@ -12,18 +12,6 @@ function [input]=get_classifier_inputs()
     % psuedosimultaneous or within rat?
     input.withinRat_design   = 0;
     input.pseudosimultaneous = 1;
-   
-    % ~~~ IGNORE if not using compare_classifier iteration ~~~ %
-        % select which code to run
-        input.startbox_taskphase_binned = 1;
-        input.control_trajectory        = 0; % delay l vs iti l, delay r vs iti r
-        input.startbox_context          = 0;  
-        input.taskphase_maze            = 0;
-        input.multiclass_maze_segment   = 0;
-
-        % for binned classifiers, do you want to make time bins, comparing
-        % delay sec 1 to iti sec 1:2? 
-        input.equal_bins_delayITI = 0;
     
     % region
     input.mPFC_good = 0;
@@ -40,14 +28,6 @@ function [input]=get_classifier_inputs()
     % plot?
     input.plot = 0;
     
-    % This is outdated
-    input.swap_labels = 0;
-    
-    % some other stuff
-    input.correct           = 0; % not functional for classification
-    input.incorrect         = 0; % not functional for classification
-    input.notperfectsess    = 0;
-    
     % standardize?
     input.standardize_across_vars = 0;
     input.standardize_within_var  = 1;
@@ -58,9 +38,6 @@ function [input]=get_classifier_inputs()
      input.n_samples        = 60; % samples to subsample to
     % don't change if you only want one iteration
     input.n_iterations      = 1; % set this to 1 for default - change if want more subs.
-    
-    % filter?
-    input.hz_filter = 0;
     
     % Time bins for startbox
     input.delay_bin         = 10; % this is for the binned startbox script - you can change this
