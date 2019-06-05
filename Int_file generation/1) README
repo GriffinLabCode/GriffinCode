@@ -30,9 +30,18 @@ Steps for generating the Int file:
        explorer window: 
        
                               X:\03. Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat
+    
+    2) Open view_VT_data.m. You will need to define which room to use and whether or not to interpolate
+       missing data (see what happens before and after interpolation). Next, run the script. You will notice a figure
+       appear with boxes that denote locations on the maze. If you wish to adjust the boxes, you do so by editing either the 
+       section '%% L room (up/down)' if recordings were in the left room, or '%% R room (sideways)' if in right room. Once you
+       are comfortable with the boundaries used to define locations (i.e. stem, tjunction, etc...), copy the section that 
+       corresponds to the room you used (so if you used Left room, copy from rRW_fld to LAL_fld (including the LAL_fld variable).
        
-    2) After you have converted your video-tracking data (VT1.mat), you open the Int_DNMP_master.m script and define 
-       whether you want to interpolate missing video-tracking data.
+    3) Paste the copied boundaries to the 'whereishe_master.' function under the '%% copy/paste new field dimensions...' section.
+       
+    4) After you've copied into the whereishe_master, you open the Int_DNMP_master.m script, define the directory for the session
+       of interest, and define whether you want to interpolate missing video-tracking data.
               - We advise to interpolate the missing data or correct it yourself. To see why corrections are important,
                 don't interpolate the data, go through the rest of the instructions here, open the check_int.m script, 
                 define the same parameters for maze locations, and run the script. What you will find is there are cases 
@@ -41,4 +50,4 @@ Steps for generating the Int file:
                 camera lost the animal, then picked him back up after t-junction entry, your t-junction entry time-stamp will 
                 be beyond t-junction entry and therefore not accurately depicting what you defined.
                       
-
+Your Int_file.mat should be saved under the folder that you defined as 'datafolder' and is ready for future analysis.
