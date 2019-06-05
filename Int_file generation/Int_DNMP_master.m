@@ -8,6 +8,9 @@
 clearvars -except datafolder
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions')
 
+% define whether to interpolate missing position data
+interp_missing_VT_data = 1;
+
 % Load position data
 load(strcat(datafolder,'\VT1.mat'));
 
