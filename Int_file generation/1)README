@@ -23,6 +23,22 @@ Int_file description: The int file is a matrix composed of time-stamps that give
                                 
 ______________________________________________________________________________________________________________
 Steps for generating the Int file:
-    1) 
+
+    1) Convert your position data to .mat files by running NL2Mat_complete_short.m - note you will have to define
+       your session directory, named 'datafolder'. Also note that NL2Mat_complete_short.m utilizes neuralynx code
+       that is note shared on this website. To access it, copy and paste the following directory into the file
+       explorer window: 
+       
+                              X:\03. Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat
+       
+    2) After you have converted your video-tracking data (VT1.mat), you open the Int_DNMP_master.m script and define 
+       whether you want to interpolate missing video-tracking data.
+              - We advise to interpolate the missing data. To see for yourself, don't interpolate the data, go through
+                the rest of the instructions here, open the check_int.m script, define the same parameters for maze
+                locations, and run the script. What you will find is there are cases where the camera loses the rat,
+                causing inappropriate time-stamps to be defined as a maze location. For example, you may define the 
+                t-junction and get the time-stamps for when the animal entered the t-junction, but if the camera lost
+                the animal, then picked him back up after t-junction entry, your t-junction entry time-stamp will be
+                beyond t-junction entry and therefore not accurately depicting what you defined.
                       
 
