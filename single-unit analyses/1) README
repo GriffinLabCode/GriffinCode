@@ -1,4 +1,4 @@
-%% Prior to usage, you must preprocess your data. 
+%% Prior to usage, you must preprocess your data %% 
 
 The scripts and functions in this folder should be used a scaffold to guide writing of your own, unless data
 is formatted the same as mine (John) was.
