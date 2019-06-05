@@ -1,7 +1,8 @@
 %% CreateNeuron
-% this function creates a structure array called 'neuron' that contains
-% multiple parameters for each cell in structure array. This is
-% advantageous if you want to select out specific neurons
+% this script creates a variable called neuron. 
+%
+% neuron is a structure array containing cluster ID, as well as various
+% metrics of interest.
 %
 % written by John Stout
 
