@@ -1,0 +1,11 @@
+This folder is used to generate the Int file. This document walks you through the appropriate steps to do so.
+_____________________________________________________________________________________________________________
+
+Int_file description: The int file is a matrix composed of time-stamps that give the user an approximation for when the animal
+                      entered certain locations. The rows indicate maze-traversals - for the DNMP task, odd rows are sample
+                      runs, even rows are choice runs. Every group of two rows indicates 1 trial. The columns indicate maze
+                      positions that we've deemed relevant. To demonstrate these two points: Int(1,1) is the time during the first
+                      trial, on the first sample run, at stem entry. Below is a description of what each column indicates:
+                      
+                      % 
+                      jasdfk
