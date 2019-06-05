@@ -40,123 +40,6 @@ for NoNans = 1:size(input.rat,2)
    svm.late{NoNans}(isnan((svm.late{NoNans})))=0;        
    disp('NaNs replaced with zero')
 end
-
-   %% format for peak rate filter
-    % format - this works irrespective of pseudosimultaneous or withinrat
-       format.sb    = horzcat(svm.sb{:});
-       format.stem  = horzcat(svm.stem{:});
-       format.t     = horzcat(svm.t_junct{:});
-       format.GA    = horzcat(svm.goalArm{:});
-       format.GZ    = horzcat(svm.goalZone{:});
-       format.RA    = horzcat(svm.retArm{:});   
-       format.early = horzcat(svm.early{:});
-       format.late  = horzcat(svm.late{:});
-       
-       if input.correct == 0 && input.incorrect == 0
-           % split data
-           delay   = mean(format.sb((1:size(format.sb,1)/2),:));
-           iti     = mean(format.sb((size(format.sb,1)/2)+1:...
-               (size(format.sb,1)),:));
-           stm_sam = mean(format.stem((1:size(format.stem,1)/2),:));
-           stm_cho = mean(format.stem((size(format.stem,1)/2)+1:...
-               (size(format.stem,1)),:));
-           t_sam = mean(format.t((1:size(format.t,1)/2),:));
-           t_cho = mean(format.t((size(format.t,1)/2)+1:...
-               (size(format.t,1)),:));       
-           ga_sam = mean(format.GA((1:size(format.GA,1)/2),:));
-           ga_cho = mean(format.GA((size(format.GA,1)/2)+1:...
-               (size(format.GA,1)),:));   
-           gz_sam = mean(format.GZ((1:size(format.GZ,1)/2),:));
-           gz_cho = mean(format.GZ((size(format.GZ,1)/2)+1:...
-               (size(format.GZ,1)),:));     
-           ra_sam = mean(format.RA((1:size(format.RA,1)/2),:));
-           ra_cho = mean(format.RA((size(format.RA,1)/2)+1:...
-               (size(format.RA,1)),:));  
-           del_early = mean(format.early((1:size(format.early,1)/2),:));
-           iti_early = mean(format.early((size(format.early,1)/2)+1:...
-               (size(format.early,1)),:));
-           del_late = mean(format.late((1:size(format.late,1)/2),:));
-           iti_late = mean(format.late((size(format.late,1)/2)+1:...
-               (size(format.late,1)),:));
-       elseif input.correct == 1
-           % this needs to be finished
-            delay = format.sb(find(accuracy_sb == 1));
-            delay   = mean(format.sb((1:size(format.sb,1)/2),:));
-            iti     = mean(format.sb((size(format.sb,1)/2)+1:...
-               (size(format.sb,1)),:));           
-       end
-       
-       % data variable format
-       data = vertcat(iti,delay,stm_sam,stm_cho,t_sam,t_cho,...
-           ga_sam,ga_cho,gz_sam,gz_cho,ra_sam,ra_cho,del_early,iti_early,...
-           del_late,iti_late);
-       data_labels = char({'iti','delay','stem sample','stem choice','t-sample',...
-            't-choice','goal-arm sample','goal-arm choice',...
-            'goal-zone sample','goal-zone choice','return-arm sample',...
-            'return-arm choice','early delay','early iti','late delay',...
-            'late iti'});
-        
-%% run filter_spkPeak function
-if input.hz_filter > 0
-    [filtered_data,filter_idx] = filter_spkPeak(data,hz_filter);
-    X = ['units were filtered out if their mean rates across',...
-        ' all maze locations and between task phases didnt exceed '...
-        ,num2str(hz_filter),'Hz'];
-    disp(X);
-    % use the filter index to filter out data
-    if input.withinRat_design == 1
-        if input.mPFC_good == 1 || input.Prelimbic == 1
-            % find values to filter for each rat 
-            idx1 = find(filter_idx <= size(svm_var{1},2));
-            idx2 = find(filter_idx > size(svm_var{1},2) & filter_idx <=...
-                size(svm_var{1},2)+size(svm_var{1,2},2));
-            idx3 = find(filter_idx > size(svm_var{1},2)+size(svm_var{1,2},2)...
-                & filter_idx < size(svm_var{1},2)+size(svm_var{1,2},2)+...
-                size(svm_var{1,3},2));   
-            idx4 = find(filter_idx > size(svm_var{1},2)+size(svm_var{1,2},2)+...
-                size(svm_var{1,3},2) & filter_idx < size(svm_var{1},2)+...
-                size(svm_var{1,2},2)+size(svm_var{1,3},2)+size(svm_var{1,4},2));      
-            idx5 = find(filter_idx > size(svm_var{1},2)+size(svm_var{1,2},2)+...
-                size(svm_var{1,3},2)+size(svm_var{1,4},2) & filter_idx < ...
-                size(svm_var{1},2)+size(svm_var{1,2},2)+...
-                size(svm_var{1,3},2)+size(svm_var{1,4},2)+size(svm_var{1,5},2));
-            % filter values for each rat
-            idx_val{1} = filter_idx(idx1);
-            idx_val{2} = filter_idx(idx2)-size(svm_var{1},2);
-            idx_val{3} = filter_idx(idx3)-(size(svm_var{1},2)+...
-                size(svm_var{1,2},2));
-            idx_val{4} = filter_idx(idx4)-(size(svm_var{1},2)+...
-                size(svm_var{1,2},2)+size(svm_var{1,3},2));
-            idx_val{5} = filter_idx(idx5)-(size(svm_var{1},2)+...
-                size(svm_var{1,2},2)+size(svm_var{1,3},2)+...
-                size(svm_var{1,4},2)); 
-        if input.AnteriorCingulate == 1
-            idx1 = find(filter_idx <= size(svm_var{1},2));
-            idx2 = find(filter_idx > size(svm_var{1},2) & filter_idx <=...
-                size(svm_var{1},2)+size(svm_var{1,2},2));
-            idx3 = find(filter_idx > size(svm_var{1},2)+size(svm_var{1,2},2)...
-                & filter_idx < size(svm_var{1},2)+size(svm_var{1,2},2)+...
-                size(svm_var{1,3},2));          
-            idx_val{1} = filter_idx(idx1);
-            idx_val{2} = filter_idx(idx2)-size(svm_var{1},2);
-            idx_val{3} = filter_idx(idx3)-(size(svm_var{1},2)+...
-                size(svm_var{1,2},2));
-        end
-        
-        % use index to remove units
-        for row = 1:size(svm_var,1)
-            for col = 1:size(svm_var,2)
-                svm_var{row,col}(:,(idx_val{col}))=[];
-            end
-        end
-        end
-    else
-       % use index to remove units
-        for row = 1:size(svm_var,1)
-            svm_var{row}(:,filter_idx)=[];
-        end   
-    end
-end   
     
 %% create svm_var
 svm_var = vertcat(svm.early,svm.late,svm.stem,svm.t_junct,svm.goalArm,svm.goalZone,...
@@ -195,7 +78,12 @@ end
 %% subsample
 % store original data
 svm_data_og = svm_data;
+
+% iterations can be used to create sub-sampled distributions and compare
+% accuracies between two variables
 for iterations = 1:input.n_iterations;
+    % this can be used to compare two outcomes that have different sample
+    % sizes
     if input.subsample == 1
         [subsampled_svmData,sub_idx] = svm_subsample(svm_data_og,input);
         svm_data = [];
@@ -263,7 +151,7 @@ for iterations = 1:input.n_iterations;
                     ones_var = ones(size(svm_var{row,col},1)/2,1)';
                     neg_ones = (-ones(size(svm_var{row,col},1)/2,1))';
                     var = [ones_var;neg_ones];  
-                    labels = var(:)
+                    labels = var(:);
                     % svm classifier
                     for i = 1:size(labels,1)
                         svm_temp = svm_data{row,col};
