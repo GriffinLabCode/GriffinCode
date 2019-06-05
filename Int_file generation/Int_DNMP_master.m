@@ -2,8 +2,6 @@
 %
 % Must define datafolder as a string variable containing the directory to
 % your session of interest
-%
-% this script was not written by me
 
 clearvars -except datafolder
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions')
