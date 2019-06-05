@@ -5,7 +5,24 @@ Int_file description: The int file is a matrix composed of time-stamps that give
                       entered certain locations. The rows indicate maze-traversals - for the DNMP task, odd rows are sample
                       runs, even rows are choice runs. Every group of two rows indicates 1 trial. The columns indicate maze
                       positions that we've deemed relevant. To demonstrate these two points: Int(1,1) is the time during the first
-                      trial, on the first sample run, at stem entry. Below is a description of what each column indicates:
+                      trial, on the first sample run, at stem entry. Below is a description of what each column indicates in the order
+                      that the rat runs the maze. Note that columns are out of order - this was inherited and could be fixed in future
+                      releases:
                       
-                      % 
-                      jasdfk
+                      Column 1: stem entry (AKA start-box exit)
+                      Column 5: stem exit (AKA t-junction entry)
+                      Column 6: t-junction exit
+                      Column 2: goal-zone entry
+                      Column 7: goal-zone exit (AKA return-arm entry)
+                      Column 8: start-box entry (AKA return-arm exit)
+                      
+                      Column 3: trajectory where 1s are left turns and 0s are right turns
+                      Column 4: behavioral accuracy where 1s are incorrect trials and 0s are correct.
+                                Note that for column 4, an incorrect trial will have 1s on both the sample
+                                and choice runs
+                                
+______________________________________________________________________________________________________________
+Steps for generating the Int file:
+    1) 
+                      
+
