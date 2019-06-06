@@ -1,5 +1,7 @@
 # Some code used for a variety of analyses in the Griffin lab
 
+For new users: Make sure to convert all of your files before attempting analysis!
+
 VERY IMPORTANT FOR USERS RECORDING FROM MULTIPLE REGIONS:
 Future users who record single-units from multiple regions should not store data separately in
 folders as I (John) did. Instead, save the region single-units under specific .txt files. For
