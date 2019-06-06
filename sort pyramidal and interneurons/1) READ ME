@@ -6,3 +6,4 @@ Traditionally, the lab determines pyramidal cells from interneurons based on a v
       
 The scripts/ functions in this folder do not sort pyramidal and interneurons, but instead provide metrics to 
 quantify what the user has already sorted. Future iterations will be aimed at making this process less manual.
+Future scripts and functions will include autocorrelograms for futher identification of pyramidal and interneurons.
