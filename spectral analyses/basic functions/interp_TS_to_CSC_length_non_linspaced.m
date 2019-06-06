@@ -30,6 +30,7 @@ Outputs:
 Can plot to see diff, temporal structure will be maintained but Timestamps_new will be lengthened to match length of linearized CSC vector.
         figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
 
+written by Andrew Garcia
 
 %}
 function [Timestamps_new, Samples_new] = interp_TS_to_CSC_length_non_linspaced(Timestamps, Samples)
