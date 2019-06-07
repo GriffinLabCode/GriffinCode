@@ -6,7 +6,7 @@ routines and as a back-up storage cloud for analysis code.
 
 _________________________________________________________________________________________________________
 
-SOME NOTES: 
+SOME IMPORTANT NOTES ON CONVERSION: 
 Our lab records neural activity using the neuralynx (digitalynx) hardware and cheetah software.
 CSC and video-tracking data are converted using neuralynx functions and are not provided in this
 library, despite being used by some functions. You can find them in the griffin lab drive here:
@@ -15,14 +15,31 @@ library, despite being used by some functions. You can find them in the griffin 
 Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat
 ~~~
 
+Note that when you save CSC and VT data to a directory, you should not change that directory. For example,
+if you save CSC1.mat to directory A, but then move CSC1.mat to directory B, you will have to go through some
+loops to load CSC1.mat. It's easier to keep the CSC and VT1.mat files in the directories where you converted them.
 
-FOR NEW USERS: 
-Make sure to start out in the 'basic functions and scripts' folders. You will
-want to convert your CSC and video-tracking files prior to analysis. If using a
-t-maze, you will want to generate an Int file. Most analysis scripts are made
-with the intentions of use with the Int file but can be modified to fit your
-needs.
-               
+TO BEGIN:
+Go to the basic functions and scripts folder and read through the 1) README file.
+
+__________________________________________________________________________________________________________
+
+NOTE ON ANALYSIS:
+
+For analysis, our lab frequently uses custom written scripts and functions (some included in this library),
+and the chronux toolbox (can be downloaded for free online) and is found under the griffin lab drive here:
+
+~~~
+Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous
+~~~
+
+Note that not all functions in this folder are written by chronux, over the years, functions were added. But
+if you ever want to know for certain which functions were, you can find a newer edition here:
+
+~~~
+Lab Procedures and Protocols\MATLABToolbox\chronux_2_12
+~~~
+__________________________________________________________________________________________________________              
 
 IMPORTANT FOR USERS RECORDING FROM MULTIPLE REGIONS:
 Future users who record single-units from multiple regions should not store data separately in
