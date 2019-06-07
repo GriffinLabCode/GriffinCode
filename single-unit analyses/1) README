@@ -1,18 +1,18 @@
 %% Prior to usage, you must preprocess your data %% 
 
-The scripts and functions in this folder should be used a scaffold to guide writing of your own, unless data
+The scripts and functions in this folder should be used as a scaffold to guide writing of your own, unless data
 is formatted the same as mine (John) was.
 
 You can find other iterations of scripts and functions and some other things I've analyzed by going to the following
 directories:
 
-    X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Linear Classifier
-    X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate
+    Lab Procedures and Protocols\MATLABToolbox\John code and edits\Linear Classifier
+    Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate
     
 You can also find scripts and functions Henry or Andrew wrote by going to the following directories:
 
-    X:\03. Lab Procedures and Protocols\MATLABToolbox\Henry Code
-    X:\03. Lab Procedures and Protocols\MATLABToolbox\Andrew code
+    Lab Procedures and Protocols\MATLABToolbox\Henry Code
+    Lab Procedures and Protocols\MATLABToolbox\Andrew code
     
 I only uploaded my own since I'm most familiar with them.
     
@@ -26,6 +26,5 @@ Some important notes:
     All svm analyses utilized the svmlib toolbox
     
     
-To use:
-    1) you will need all files converted. The way to convert files can be found in the preprocessing folder
+To use you will need all files converted. The way to convert files can be found in the basic functions and scripts folder
     
