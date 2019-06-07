@@ -29,7 +29,7 @@ Steps for generating the Int file:
        that is note shared on this website. To access it, copy and paste the following directory into the file
        explorer window: 
        
-                              X:\03. Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat
+                              Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat
     
     2) Open view_VT_data.m. You will need to define which room to use and whether or not to interpolate
        missing data (see what happens before and after interpolation). Next, run the script. You will notice a figure
