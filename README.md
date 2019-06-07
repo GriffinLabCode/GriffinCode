@@ -1,4 +1,4 @@
-# Analysis code and an online protocol for converting files
+# Griffin Lab Code
 
 Welcome to the Griffin lab online library for custom written scripts and functions used to
 analyze our data! :) This page was primarily created as an online protocol for file conversion 
