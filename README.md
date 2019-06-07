@@ -6,16 +6,22 @@ routines and as a back-up storage cloud for analysis code.
 
 _________________________________________________________________________________________________________
 
-~~~ SOME NOTES: 
+SOME NOTES: 
 Our lab records neural activity using the neuralynx (digitalynx) hardware and cheetah software.
-Some conversions
+CSC and video-tracking data are converted using neuralynx functions and are not provided in this
+library, despite being used by some functions. You can find them in the griffin lab drive here:
+
+~~~ 
+Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat
 ~~~
 
-FOR NEW USERS: Make sure to start out in the 'basic functions and scripts' folders. You will
-               want to convert your CSC and video-tracking files prior to analysis. If using a
-               t-maze, you will want to generate an Int file. Most analysis scripts are made
-               with the intentions of use with the Int file but can be modified to fit your
-               needs.
+
+FOR NEW USERS: 
+Make sure to start out in the 'basic functions and scripts' folders. You will
+want to convert your CSC and video-tracking files prior to analysis. If using a
+t-maze, you will want to generate an Int file. Most analysis scripts are made
+with the intentions of use with the Int file but can be modified to fit your
+needs.
                
 
 IMPORTANT FOR USERS RECORDING FROM MULTIPLE REGIONS:
