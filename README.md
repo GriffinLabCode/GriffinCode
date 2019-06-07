@@ -4,6 +4,12 @@ Welcome to the Griffin lab online library for custom written scripts and functio
 analyze our data! :) This page was primarily created as an online protocol for file conversion 
 routines and as a back-up storage cloud for analysis code.
 
+_________________________________________________________________________________________________________
+
+~~~ SOME NOTES: 
+Our lab records neural activity using the neuralynx (digitalynx) hardware and cheetah software.
+Some conversions
+~~~
 
 FOR NEW USERS: Make sure to start out in the 'basic functions and scripts' folders. You will
                want to convert your CSC and video-tracking files prior to analysis. If using a
