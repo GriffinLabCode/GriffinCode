@@ -1,1 +1,3 @@
-
+Prior to any LFP analysis, your CSC and Timestamp variables need to be the same length. CSC starts in a 512xN format.
+You can convert to a vector like so: 'Samples(:)'. Timestamps should be converted to be same length. Old way is in 
+the coherence script but can be done so with linspace
