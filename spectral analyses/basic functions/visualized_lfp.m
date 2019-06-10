@@ -1,11 +1,19 @@
 %% visualize LFP
+%
+% this script is used to visualize lfp at the location of interest
+% to change the location of interest, scroll down to 'time' variable and
+% change it
+%
+% written by John Stout
+
+
 clear; clc; close all
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\LFP Analyses');
 %datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Baby Groot 9-12-18';   
 input = get_lfp_inputs;
 
-%% folders checked - only between Int 1 and 6
+%% folders checked - only between Int 1 and 6 for PrL saved as Int_lfp.mat
 %Prelimbic
    %baby g
     %datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Prelimbic\Baby Groot 9-11-18';
