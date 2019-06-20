@@ -1,6 +1,6 @@
 %% get l-ratio 
 %
-% this script utilizes David Redish MClust L_ratio to estimate L_ratio. It
+% This script utilizes David Redish MClust L_ratio to estimate L_ratio. It
 % should be used over SpikeSort3D, since the neuralynx program fails to
 % estimate L-ratios using less than 4 wires. This method was published by
 % Schmitzer Torbert et al., 2005 from the Redish lab
@@ -17,10 +17,8 @@
 %                   will have errors in indexing accurate values to your
 %                   cluster name
 %
-% Note: this function will provide l-ratios that are not consistent with
-%       spikesort3D. Not really sure why, but this function would be an
-%       iteration of the one used in the original Schmitzer et al., 2005
-%       paper from the Redish lab suggesting the usage of L-ratio
+% Note: this function will provide l-ratios that are consistent with
+%       spikesort3D.
 %
 % written by John Stout
 

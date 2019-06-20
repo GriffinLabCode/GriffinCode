@@ -14,8 +14,9 @@
 %
 % Samples: a 32x4xN 3D array containing spike data. 32 samples per ms, 4
 %           channels (tetrode), N spikes
-% Features: an 8xN array containing peak and troughs for each spike. 8 (4
-%            trough recordings from 4 wires 'aka channels' and 4 peak
+% Features: an 4xN array containing peak and troughs for each spike. Use
+%           the first 4 features (Schmitzer-Torbert et al., 2005). If only
+%           3 avaialble, use the first 3, etc...
 %            recordings from 4 wires) x N number of spikes
 % CellNumbers: a vector whereby the number denotes a spike belonging to a
 %               specific cluster. For example, if CellNumbers(1)=1, that
