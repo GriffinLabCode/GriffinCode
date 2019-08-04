@@ -1,23 +1,19 @@
 %% This script calculates coherence during the interval of interest
-% note that to change this interval, you will need to manually go into the
-% function 'coherence_firingrates.m' and 'rat_location.m' to change this.
-% Future updates will target changing this from the inputs function
+% note that to change this interval, you need to manually change it.
+% look for the variable 'time'
 %
-% Int_lfp is only corrected for stem entry-tjunction exit in col9. col10 is
-% taskphase 0 sample 1 choice
+% Int_ col9 has 1s where the trial should be eliminated due to clipping events. 
+% col10 is taskphase 0 sample 1 choice
 %
 % This script controls for:
 % 1) behavior by including only correct trials
 % 2) poor lfp - all sessions included from stem entry to t-junction were
 %       visually inspected for clipping artifacts
-% 3) number of sample and choice trials by subsampling
-% 4) trajectory - differing numbers of sampleL sampleR choiceL and 
-%       choiceR; there is the same amount of each trial-type
+% 3) number of sample and choice trials by removing a sample or choice traversal 
+%       that preceeds a poor lfp traversal
 %
 % written by John Stout
 clear; clc
-
-correct_trajectory = 0;
 
 %addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
@@ -148,19 +144,6 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
     if Int(1,10) == 1 || Int(end,10) == 0
         disp('Int file not formatted correctly')
         return
-    end
-    
-    % control for differing number of left and right trials during sample
-    % and choice. But also make sure theres an equal number of different
-    % trial-type combinations (sampleL sampleR choiceL choiceR)
-    if correct_trajectory == 1
-        [Int_corrected,corrected_trials,num_orig{nn-2},num_types{nn-2},...
-            turn_nam{nn-2}]=correct_trajectory_differences(Int);
-        Int_og2 = Int;
-        Int = [];
-        Int = Int_corrected;
-    else
-        Int = Int;
     end
    
     % split into sample and choice trials
