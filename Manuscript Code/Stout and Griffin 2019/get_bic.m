@@ -5,7 +5,7 @@
 % code from chapter28 of MxC Analyzing neural time series data code. 
 %
 % INPUTS:
-% data: 
+% data: 2xN (N observations)
 % nr: number of realizations (number of trials)
 % nl: length of those realizations (timepoints)
 % maxorder: scalar indicating the maximum order to go up to
