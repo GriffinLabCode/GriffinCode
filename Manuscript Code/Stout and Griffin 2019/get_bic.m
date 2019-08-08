@@ -12,8 +12,7 @@
 
 function [bic]=get_bic(data,nr,nl,maxorder)
 
-    % test BIC for optimal model order at each time point
-    % (this code is used for the following cell)
+    % Estimate BIC
     for bici=1:maxorder
         % run model
         [Axy,E] = armorf(data,nr,nl,bici);
