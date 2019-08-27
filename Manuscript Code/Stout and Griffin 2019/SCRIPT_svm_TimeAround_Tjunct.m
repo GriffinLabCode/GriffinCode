@@ -1,11 +1,10 @@
-%% time around t-junction
+%% Linear classifier in the time bins surrounding T-junction entry
 %
 % this script was used to analyze spike data in 1s bins surrounding the
 % tjunction. Make sure to set input.tjunct_bin to 10. This script
 % unfortunately is not flexible with that yet - future iterations will be.
 %
-%
-%
+% written by John Stout
 
 % clear workspace and command window
 clear; clc; 
@@ -47,6 +46,7 @@ addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\L
     
     for nn = 3:length(folder_names)%[3:14 24:31]%3:length(folder_names)
     
+        % define datafolder (changes across each iteration)
         Datafolders = Datafolders;
         cd(Datafolders);
         folder_names = dir;
@@ -82,12 +82,8 @@ addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\L
                 spikeTimes = textread(clusters(ci).name);
                 cluster    = clusters(ci).name(1:end-4);
 
-                    % define a matrix used to store fr data
-                    firingrate_array = cell([1 (input.tjunct_bin-1)]);
-
-                % last row of firing_rate is the last trial
-                % first row is 1 second from stem entry, 2nd row is 2 seconds and
-                % so forth
+                % define a cell array used to store fr data
+                firingrate_array = cell([1 (input.tjunct_bin-1)]);
 
                 for i = 1:length(sample_trials)
 
@@ -266,29 +262,16 @@ addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\L
 %% svm
 svm_var = session_cells;
 
-    % zscore
-    %{
-    if input.standardize == 1
-        for z = 1:size(svm_var,1)
-            for zz = 1:size(svm_var,2)
-                svm_z{z,zz}  = zscore(svm_var{z,zz});
-            end
+    % define a new variable to mess with - not really necessary
+    svm_var2 = svm_var;
+    
+    %{ not sure what I did here or why - probably a relic
+    for hh = 1:size(svm_var,1)
+        for cc = 1:size(svm_var,2)
+            svm_var2{hh,cc} = svm_var{hh,cc};
         end
-        svm_temp = svm_z;
-    elseif input.standardize == 0
-        for hh = 1:size(svm_var,1)
-            for cc = 1:size(svm_var,2)
-                svm_var2{hh,cc} = svm_var{hh,cc};
-            end
-        end
-    end
+    end   
     %}
- 
-        for hh = 1:size(svm_var,1)
-            for cc = 1:size(svm_var,2)
-                svm_var2{hh,cc} = svm_var{hh,cc};
-            end
-        end    
     
     % since this is pseudosimultanous within rats, then classifier accuracy
     % across rats, we need to concatenate binned data. So column 1 = bin 1
@@ -351,7 +334,8 @@ svm_var = session_cells;
     end
     
     for bruh = 1:size(svm_data,2)
-        %{
+    
+        %{ automated shuffling - not easily reproducible
         ones_var = ones(size(svm_data{1},1)/2,1)';
         neg_ones = -ones(size(svm_data{1},1)/2,1)';
         var = [ones_var;neg_ones];  
@@ -363,7 +347,8 @@ svm_var = session_cells;
         
         shuffled_labels = vertcat(shuffled_labels1,shuffled_labels2);
         %}
-        % this is shuffled labels. Done once for the purpose of replication
+        
+        % this is shuffled labels. Done once for the purpose of reproduction of results
         labels = [-1;-1;1;1;1;-1;-1;1;1;-1;-1;1;1;-1;1;-1;-1;1;1;-1;-1;-1;-1;1;-1;-1;1;1;1;1;-1;-1;1;1;-1;1];
         for i = 1:size(labels,1)
             svm_temp = svm_data{bruh};
@@ -431,25 +416,9 @@ for i = 1:size(trial_accuracy,2)
     [fisher_p{i},var_fisher{i}] = fisher_test(trial_accuracy{i},trial_accuracy_rand{i})
 end
 
-[h,p]=kstest2(svm_perf,svm_perf_rand)
-
-
-% filter
-for i = 1:length(svm_data)
-   mean_rates{i} = mean(svm_data{i}); 
-end
-
-for i = 1:length(mean_rates)
-    find_cells{i} = find(mean_rates{i}<1);
-end
-
-svm_og = svm_data;
-for i = 1:length(find_cells)
-    svm_data{i}(:,find_cells{i})=[];
-end
-
 %% figure for roc analysis
-
+% you will need to change the cell you're interested in manually. Each
+% cell corresponds to svm data from the time bins
 figure('color',[1 1 1]);
 plot(roc.X{5},roc.Y{5},'k')
 hold on; 
@@ -464,60 +433,3 @@ box off
 % determine if normally distributed
 [h,p_norm]=swtest(roc.Y{5})
 [p,h,stat]=signrank(roc.Y{5},roc.Y_rand{5})
-
-
-%% rate maps
-% choice rates on top, sample on bottom
-for i = 1:length(svm_og)
-    rates_choice{i} = svm_og{i}(1:18,:);
-    rates_sample{i} = svm_og{i}(19:end,:);
-end
-
-% get means
-for i = 1:length(svm_og)
-    mean_rates_choice{i} = mean(rates_choice{i});
-    mean_rates_sample{i} = mean(rates_sample{i});
-end
-
-% concat
-rates_choice_concat = vertcat(mean_rates_choice{:});
-rates_sample_concat = vertcat(mean_rates_sample{:});
-
-% zrates
-zscore_choice = (zscore(rates_choice_concat))';
-zscore_sample = (zscore(rates_sample_concat))';
-%zscore_rates = zscore(vertcat(rates_choice_concat,rates_sample_concat));
-
-% invert
-%zscore_choice = zscore_rates(1:9,:)';
-%zscore_sample = zscore_rates(10:end,:)';
-
-% sort
-[~,indx] = sort(zscore_sample);
-sortedChoice = zscore_choice(indx);
-
-figure('color',[1 1 1]);
-%heatmap(zscore_choice)
-imagesc(sortedChoice)
-colorbar
-
-figure('color',[1 1 1]);
-%heatmap(zscore_choice)
-imagesc(sort(zscore_sample))
-colorbar
-
-% similarity
-for i = 1:size(sortedChoice,2)
-   dotprods(i)=dot(sort(zscore_sample(:,i)),sortedChoice(:,i)); 
-end
-figure('color',[1 1 1]);
-bar(dotprods)
-
-% diffscore
-diffscore = (rates_choice_concat-rates_sample_concat)./...
-    (rates_choice_concat+rates_sample_concat);
-
-figure('color',[1 1 1]);
-%heatmap(zscore_choice)
-imagesc(sort(diffscore'))
-colorbar
