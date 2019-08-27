@@ -1,1 +1,7 @@
-This folder is used for storing code that was used on published data.
+This folder is used for storing code that was used on our 2019 manuscript that examined mPFC single unit activity
+during rat DNMP performance and mPFC-Re-dHPC LFP interactions.
+
+Note that not all functions are included in this folder. For example, we didn't include the chronux toolbox and 
+BSMART toolbox. However, some other functions can be found in the GriffinCode folders.
+
+
