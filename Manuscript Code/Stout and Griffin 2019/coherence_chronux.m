@@ -29,21 +29,21 @@ function [C,f] = coherence_chronux(datafolder,input,Int,params)
                 region = '\mPFC.mat';
             end
 
-            % Henry mentioned he detrended data for all LFP analyses. THis data
-            % is preemtively detrended via locdetrend. Each trial is cleaned
-            % via rmlinesmovingwin
+            % load pfc data
             load(strcat(datafolder,region),'Samples','Timestamps','SampleFrequencies'); 
                 %EEG_pfc = Samples(:)';
                 EEG1 = Samples(:)';
         end
         
         if input.coh_hpc == 1
+            % load hpc data
             load(strcat(datafolder,'\HPC.mat'),'Samples','Timestamps','SampleFrequencies');   
                 %EEG_hpc = Samples(:)';
                  EEG2 = Samples(:)';
         end
         
         if input.coh_re == 1
+            % load re data
             load(strcat(datafolder,'\Re.mat'),'Samples','Timestamps','SampleFrequencies')
                 EEG3 = Samples(:)';
         end
@@ -65,9 +65,7 @@ function [C,f] = coherence_chronux(datafolder,input,Int,params)
         % define the sampling rate parameter
         params.Fs = SampleFrequencies(1,1);   
 
-        %% reformat timestamps
-        % linspace(Timestamps(1,1),Timestamps(1,end),length(EEG_pfc));  % old way
-        %cd ('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
+        % Interpolate timestamps to match samples
         [Timestamps_new, ~] = interp_TS_to_CSC_length_non_linspaced(Timestamps, Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
 
         Timestamps_og = Timestamps;
@@ -81,8 +79,6 @@ function [C,f] = coherence_chronux(datafolder,input,Int,params)
         %%  Extract location data
         for triali=1:size(Int,1) % trial
 
-            % vector of start and stop times
-
             % note: you can't use delay iti here yet since int file is gonna rely
             % on Int being defined as sample or choice Int 
             time = [];
@@ -93,10 +89,10 @@ function [C,f] = coherence_chronux(datafolder,input,Int,params)
                     % 1 second surrounding T
                     time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];
                 elseif input.T_before == 1
-                    % before
+                    % before (1/2 sec before T-entry)
                     time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5))];
                 elseif input.T_after == 1
-                    % after 
+                    % after  (1/2 sec after T-entry)
                     time = [(Int(triali,5)) (Int(triali,5)+(0.5*1e6))];
                 end
             end
@@ -108,11 +104,6 @@ function [C,f] = coherence_chronux(datafolder,input,Int,params)
             %figure(); plot(x_label,data1{triali},'r'); hold on; plot(x_label,data2{triali},'b');
             %xlabel('time (sec)'); ylabel('voltage');
             %legend('pfc','hpc','Location','southeast'); box off
-            
-            %% clean lfp
-            % do this after you extract because it can change the length of
-            % the lfp by a small amount - also saves so much time
-            % first detrend
 
             % detrend            
             data1_cleantemp{triali} = locdetrend(data1{triali});
