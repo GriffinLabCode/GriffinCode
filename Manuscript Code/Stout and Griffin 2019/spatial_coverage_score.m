@@ -1,9 +1,10 @@
-%% spatial specificity 
-% this function calculates the spatial specificity using the data from the
-% rate map function. This was inspired by Jadhav et al., 2016s spatial
-% specificity score
+%% spatial coverage 
+% this function calculates the spatial coverage using the data from the
+% rate map function. This was inspired by Jadhav lab spatial coverage/specificity score.
+% a similar score was also published by Kay et al., 2016. To be honest, I'm not sure where
+% it originated.
 %
-% Spatial specificity is calculated by finding 25% of the smoothed
+% Spatial coverage is calculated by finding 25% of the smoothed
 % peak-rate from the rate-map, then dividing the number of instances of
 % times where the rate exceeded 25% by the total number of instances of
 % firing-rates that were binned on the maze
@@ -18,8 +19,8 @@
 % clusters
 %
 % OUTPUTS:
-% spatial_specificity: a scalar value between 0 and 1, where values closer
-%                      to 0 exhibit stronger specificity
+% spatial_coverage: a scalar value between 0 and 1, where values closer
+%                      to 0 exhibit stronger coverage
 %
 % written by Henry Hallock (rate-map portion) and John Stout (spatial
 % specificty portion and subsampling)
