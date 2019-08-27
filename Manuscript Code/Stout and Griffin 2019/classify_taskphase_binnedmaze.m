@@ -1,4 +1,9 @@
-%% taskphase classifier
+%% Taskphase classifier across stem bins
+%
+% This script uses SVM to predict rat location in sample or choice phase
+% from firing rate data across maze bins.
+%
+% written by John Stout
 clear; clc
 
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Linear Classifier')
@@ -6,35 +11,18 @@ input = get_classifier_inputs();
 
 % get classifier data
 [stem] = svm_stem_taskphase_binned(input,input.numbins);
-%[tjunct] = svm_tjunction(input);
-%[goalarm] = svm_goalarm_taskphase(input,input.numbins);
-%[goalzone] = svm_goalzone(input);
-%[returnarm] = svm_retarm_taskphase(input,input.numbins);
 
-%{
-% format data
-for i = 1:size(tjunct,2)
-    tjun{i} = horzcat(tjunct{i}{:});
-end
-tjun = horzcat(tjunct{i}{:});
-stm = stem{1};
+% if you wanted you could include other places, however the stem output
+% includes T-junction. Since the bins were same sized, I used that approach
+% instead.
+    %[tjunct] = svm_tjunction(input);
+    %[goalarm] = svm_goalarm_taskphase(input,input.numbins);
+    %[goalzone] = svm_goalzone(input);
+    %[returnarm] = svm_retarm_taskphase(input,input.numbins);
 
-% concatenate data
-binned_stem = horzcat(stm,tjun');
-%}
-
+% extract data
 binned_stem = stem{1};
-if input.standardize_across_vars == 1
-
-    % reseparate
-    trials = [1,36;37,72;73,108;109,144;145,180;181,216;217,252;253,288;...
-        289,324;325,360;361,396;397,432;433,468;469,504];  
-
-    [svm_data] = get_standardized_svmData(input,binned_stem',trials);
-
-    % invert for consistency sake
-    svm_data = svm_data';
-elseif input.standardize_within_var == 1
+if input.zscore == 1
     for col = 1:size(binned_stem,2)
         for row = 1:size(binned_stem,1)
             svm_z{row,col}  = zscore(binned_stem{row,col});
