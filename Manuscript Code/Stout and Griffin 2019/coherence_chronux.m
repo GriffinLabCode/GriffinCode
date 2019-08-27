@@ -1,17 +1,14 @@
-%% Coherence function that utilizes chronux toolbox
-%
-% This function utilizes coherence to pinpoint when to extract spiking data
-% and phase data.
+%% Estimate coherence using chronux toolbox
 % 
 % ----- INPUTS ----- 
 % datafolder: string variable that tells which session to pull from
-% input:      struct array - see 'get_instLFP_inputs.mat'
+% input:      struct array - see 'get_coh_inputs'
 % Int:        matrix containing timestamps data for maze locations
+% params:     params in the format dictated by chronux toolbox
 %
 % ----- OUTPUTS ----- 
-% Coh_data: cell array containing coherence data
-% Coh_mean: cell array containing mean coherence data
-% time_mean: averaged time spent in location of interest
+% C: coherence data
+% f: frequency corresponding to the coherence value
 %
 % written by John Stout
 
