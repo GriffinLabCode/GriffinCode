@@ -8,7 +8,7 @@
 function [] = GetAllGrangerStateSpace_Fun(input)
 % define if you want to correct trajectories - I don't recommend as it will
 % require random sub-sampling and removal of trials when the number of
-% trajectories are probably similar in count
+% trajectories are similar in count
 correct_trajectory = 0;
 
 % flip over all folders    
