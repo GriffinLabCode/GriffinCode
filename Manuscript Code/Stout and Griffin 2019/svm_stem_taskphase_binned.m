@@ -3,12 +3,12 @@
 % This function estimates classifier accuracy by training and testing
 % on binned firing rate data. To bin, it pulls the averaged minimum and
 % maximum position x and y coordinates, then automatically estimates the
-% maze bins for the rat. The alternative would be to manually select maze
-% bins.
+% maze bins{nn-2} for the rat. The alternative would be to manually select maze
+% bins{nn-2}.
 %
 % written by John Stout
 
-function [svm_data] = svm_stem_taskphase_binned(input,numbins)
+function [svm_data,bins] = svm_stem_taskphase_binned(input,numbins)
 
 %% Function that calculates firing rate across multiple stem points
 % Written by John Stout
@@ -86,22 +86,30 @@ for iii = 1:size(input.rat,2)
          % correct tracking errors     
         [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder); 
         
+        % after examining all the bins for all sessions, the min and max
+        % are super similar. For example, 137 is a common minimum and lower
+        % 390s are max. Hardcode this to 135 min and 400 max
         % ymin
+        %{
             ymin = [];
             for i = 1:size(Int(:,1),1)
                 ymin(i) = ExtractedY(find(TimeStamps == Int(i,1)));
             end
             ymin(find(ymin == 0))=[];
             ymin = round(mean(ymin));
+            %ymin = min(ymin);
         % ymax
             ymax = [];
             for i = 1:size(Int(:,1),1)
                 ymax(i) = ExtractedY(find(TimeStamps == Int(i,6)));
             end
             ymax(find(ymax == 0))=[];
-            ymax = round(mean(ymax));
-
-        bins = round(linspace(ymin,ymax,numbins));
+            %ymax = round(mean(ymax));
+            ymax = max(ymax); % do not use mean here, its underestimates the rats position
+        %}
+        ymin = 135; % do not underestimate - you'll end up in start-box
+        ymax = 400; % over estimate - this doesn't hurt anything
+        bins{nn-2} = round(linspace(ymin,ymax,numbins));
 
 %% load variables and define clusters    
     cd(datafolder);
@@ -139,13 +147,13 @@ for iii = 1:size(input.rat,2)
                     end
 
                 loc_temp = loc_temp';
-                bins = bins';
-                k = dsearchn(loc_temp,bins); 
-                bins = bins'; 
+                bins{nn-2} = bins{nn-2}';
+                k = dsearchn(loc_temp,bins{nn-2}); 
+                bins{nn-2} = bins{nn-2}'; 
                 loc_temp = loc_temp';
                 spk_ts = ts_temp(k); 
 
-                    for j = 1:length(bins)-1
+                    for j = 1:length(bins{nn-2})-1
                         numspikes_ind = find(spikeTimes>spk_ts(j) & ...
                             spikeTimes<=spk_ts(j+1));
                         numspikes = length(numspikes_ind);
@@ -196,15 +204,15 @@ for iii = 1:size(input.rat,2)
                     end
 
                 loc_temp = loc_temp';
-                bins = bins';
-                k = dsearchn(loc_temp,bins); 
-                bins = bins'; 
+                bins{nn-2} = bins{nn-2}';
+                k = dsearchn(loc_temp,bins{nn-2}); 
+                bins{nn-2} = bins{nn-2}'; 
                 loc_temp = loc_temp';
-                spk_ts = ts_temp(k); % spike timestamps is equal to the timestamps dictated by location (timestamps bw stem entry and exit) that is further dependent on the bins
+                spk_ts = ts_temp(k); % spike timestamps is equal to the timestamps dictated by location (timestamps bw stem entry and exit) that is further dependent on the bins{nn-2}
 
-                    for j = 1:length(bins)-1
+                    for j = 1:length(bins{nn-2})-1
                         numspikes_ind = find(spikeTimes>spk_ts(j) & ...
-                            spikeTimes<=spk_ts(j+1)); % find the spikes within the timestamps of the bins (0 and 1, 1 and 2 etc.)
+                            spikeTimes<=spk_ts(j+1)); % find the spikes within the timestamps of the bins{nn-2} (0 and 1, 1 and 2 etc.)
                         numspikes = length(numspikes_ind);
                         time_temp = spk_ts(j+1) - spk_ts(j); 
                         time_temp = time_temp/1e6;
@@ -244,7 +252,7 @@ for iii = 1:size(input.rat,2)
     
 session_cells(1,:) = [];
 
-%format new array thats as long as there are bins. Within each bins,
+%format new array thats as long as there are bins{nn-2}. Within each bins{nn-2},
 %there should be 
 for n = 1:size(session_cells,2)
     svm_var{1,n} = horzcat(session_cells{:,n});

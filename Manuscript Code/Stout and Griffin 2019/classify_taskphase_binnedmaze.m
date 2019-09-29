@@ -1,28 +1,40 @@
-%% Taskphase classifier across stem bins
-%
-% This script uses SVM to predict rat location in sample or choice phase
-% from firing rate data across maze bins.
-%
-% written by John Stout
+%% taskphase classifier
 clear; clc
 
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Linear Classifier')
 input = get_classifier_inputs();
 
 % get classifier data
-[stem] = svm_stem_taskphase_binned(input,input.numbins);
+[stem,bins] = svm_stem_taskphase_binned(input,input.numbins);
+%[tjunct] = svm_tjunction(input);
+%[goalarm] = svm_goalarm_taskphase(input,input.numbins);
+%[goalzone] = svm_goalzone(input);
+%[returnarm] = svm_retarm_taskphase(input,input.numbins);
 
-% if you wanted you could include other places, however the stem output
-% includes T-junction. Since the bins were same sized, I used that approach
-% instead.
-    %[tjunct] = svm_tjunction(input);
-    %[goalarm] = svm_goalarm_taskphase(input,input.numbins);
-    %[goalzone] = svm_goalzone(input);
-    %[returnarm] = svm_retarm_taskphase(input,input.numbins);
+%{
+% format data
+for i = 1:size(tjunct,2)
+    tjun{i} = horzcat(tjunct{i}{:});
+end
+tjun = horzcat(tjunct{i}{:});
+stm = stem{1};
 
-% extract data
+% concatenate data
+binned_stem = horzcat(stm,tjun');
+%}
+
 binned_stem = stem{1};
-if input.zscore == 1
+if input.standardize_across_vars == 1
+
+    % reseparate
+    trials = [1,36;37,72;73,108;109,144;145,180;181,216;217,252;253,288;...
+        289,324;325,360;361,396;397,432;433,468;469,504];  
+
+    [svm_data] = get_standardized_svmData(input,binned_stem',trials);
+
+    % invert for consistency sake
+    svm_data = svm_data';
+elseif input.standardize_within_var == 1
     for col = 1:size(binned_stem,2)
         for row = 1:size(binned_stem,1)
             svm_z{row,col}  = zscore(binned_stem{row,col});
@@ -75,8 +87,8 @@ end
                     sqrt(length(total_accuracy)))*100;
 
                 % use dec_values to determine how accurate classifier is
-                %[roc.X{bruh},roc.Y{bruh},roc.T{bruh},roc.AUC{bruh}]...
-                %= perfcurve(labels,dec_values,1);
+                [roc.X{col},roc.Y{col},roc.T{col},roc.AUC{col}]...
+                = perfcurve(labels,dec_values,1);
 
                 clear svm_temp labels_temp testing_label testing_data...
                     model predict_label accuracy dec_values labels ...
@@ -126,8 +138,8 @@ end
                     sqrt(length(total_accuracy)))*100;
 
                 % use dec_values to determine how accurate classifier is
-                %[roc.X{bruh},roc.Y{bruh},roc.T{bruh},roc.AUC{bruh}]...
-                %= perfcurve(labels,dec_values,1);
+                [roc.Xrand{col},roc.Yrand{col},roc.Trand{col},roc.AUCrand{col}]...
+                = perfcurve(labels,dec_values,1);
 
                 clear svm_temp labels_temp testing_label testing_data...
                     model predict_label accuracy dec_values labels ...
@@ -141,13 +153,21 @@ sem_perf1 = svm_sem; sem_perf2 = svm_sem_rand;
 
 % figure - run script separately twice while changing inputs to generate
 x_label = (1:size(mean_perf1,2));
+x_tick_num = 1:length(mean_perf1);
+for i = 1:length(x_tick_num)
+    if i == length(x_tick_num)
+        x_name{i} = 't-junction';
+    else
+        x_name{i} = 'stem';
+    end
+end
 
 figure('color',[1 1 1]);
 shadedErrorBar(x_label,mean_perf1,sem_perf1,'-k',1);
 hold on;
 shadedErrorBar(x_label,mean_perf2,sem_perf2,'-r',1);
-set(gca, 'XTick',[1,2,3,4,5,6,7])
-set(gca, 'xticklabel',{'stem','stem','stem','stem','stem','t-junction'})
+set(gca, 'XTick',x_tick_num)
+set(gca, 'xticklabel',x_name)
 ax = gca;
 ax.XTickLabelRotation = 45;    
 box off
@@ -160,7 +180,9 @@ hold on
 %plot(xlim,[50 50],'LineWidth',1,'Color','r','linestyle','--')
 box off
 set(gca,'FontSize',14)
+axis tight
 
+%{
 figure();
 e = errorbar(x_label,mean_perf1,sem_perf1,'g');
 e.LineWidth = 2;
@@ -181,13 +203,37 @@ hold on;
 xlim=get(gca,'xlim');
 hold on
 plot(xlim,[50 50],'LineWidth',1,'Color','r','linestyle','--')
-
+%}
 % stats
 %[h,p,ci,stats]=ttest2(svm_perf(:,end),svm_perf_rand(:,end))
-[h,p,kstat]=kstest2(svm_perf,svm_perf_rand)
+%[h,p,kstat]=kstest2(svm_perf,svm_perf_rand)
 
 if input.pseudosimultaneous == 1
     for i = 1:size(trial_accuracy,2)
-        [fisher_p{i},~] = fisher_test(trial_accuracy{i},trial_accuracy_rand{i});
+        [fisher_p{i},stat] = fisher_test(trial_accuracy{i},trial_accuracy_rand{i});
     end
+    %{
+    for i = 1:size(trial_accuracy_prl,2)
+        [fisher_p{i},~] = fisher_test(trial_accuracy_prl{i},trial_accuracy_acc{i});
+    end
+    %}
 end
+
+i = 6;
+figure('color',[1 1 1]);
+plot(roc.X{i},roc.Y{i},'k')
+hold on; 
+plot(roc.Xrand{i},roc.Yrand{i},'r') % 'r'
+axis tight
+%legend('mPFC early','mPFC late','location','southeast') % 
+%legend('AUC Choice-Point','AUC 20s Delay','location','east') % 
+xlabel('False Positive Rate')
+ylabel('True Positive Rate')
+box off
+set(gca,'FontSize',14)
+
+% determine if normally distributed
+[h,p_norm]=swtest(roc.Y{i}-roc.Yrand{i})
+[p,h,stat]=ttest2(roc.Y{i},roc.Yrand{i})
+
+[h,p,d]=kstest2(roc.Y{i},roc.Yrand{i})
