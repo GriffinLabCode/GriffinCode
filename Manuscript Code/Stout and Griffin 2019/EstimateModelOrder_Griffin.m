@@ -1,3 +1,6 @@
+%% MVGC statespace code
+% this code was taken from the MVGC statespace code. 
+% It was adjusted according to our needs
 
 function [pf,ssmo] = EstimateModelOrder_Griffin(data)
 %% Parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
