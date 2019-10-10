@@ -57,6 +57,7 @@ for i = 1:3 % loop across region combos
         cd(datafolder); 
 
         % only analyze sessions with Re, hpc, and prl recordings
+        % this is a relic
         if input.all_sites == 1
             Files=dir(fullfile(datafolder,'*detrend.mat'));
             if size(Files,1) < 3 
