@@ -1,4 +1,4 @@
-function [fx2y,fy2x,freqs,ssmo] = StateSpaceGranger(data)
+function [fx2y,fy2x,freqs,ssmo] = StateSpaceGranger(data,ssmo)
 % MVGC state-space demo
 
 
@@ -9,25 +9,15 @@ function [fx2y,fy2x,freqs,ssmo] = StateSpaceGranger(data)
 
 ntrials   = data.num_trials;       % number of trials
 nobs      = data.num_observations; % number of observations per trial
-fs        = data.srate;            % sample rate (Hz)
+fs        = data.srate;            % sample rate (Hz) is actually 
 
 % Actual VAR model generation parameters
-
-nvars     = 2;      % number of variables
-next = 0;
-ssmoact   = 10;      % SS model order
-
-% VAR model order estimation
-
-varmosel  = 'AIC';  % VAR model order selection ('ACT', 'AIC', 'BIC', 'HQC', 'LRT', or supplied numerical value)
-varmomax  = nvars*ssmoact; % maximum model order for VAR model order selection
+nvars     = size(data.signals,1);  % number of variables
 
 % SS model order estimation
-
 ssmosel   = 'SVC';  % SS model order selection ('ACT', 'SVC', 'AIC', 'BIC', 'HQC', 'LRT', or supplied numerical value)
 
 % MVGC (frequency domain)
-
 fres      = [];     % spectral MVGC frequency resolution (empty for automatic calculation)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,44 +33,76 @@ if ~exist('plotm',  'var'), plotm    = 0;    end % plot mode (figure number offs
 X = demean(data.signals,true);
 
 %% VAR model order estimation
-
+%{
 % Calculate and plot VAR model order estimation criteria up to specified maximum model order.
+ssmoact   = 10; % start with a small model order
 
-ptic('\n*** tsdata_to_varmo... ');
-%if isnumeric(plotm), plotm = plotm+1; end
-plotm=0;
-[varmoaic,varmobic,varmohqc,varmolrt] = tsdata_to_varmo(X,varmomax,'LWR',[],[],plotm);
-ptoc;
+% VAR model order estimation - LRT seems consistent
+% AIC should be used in cases where a false negative is misleading while
+% BIC should be used in cases where a false positive is misleading
+% AIC has a high chance of over estimating order, which can be seen with
+% baby groot 9-13-18 since it is so high while bic is so low. the field
+% uses BIC https://www.methodology.psu.edu/resources/AIC-vs-BIC/
 
-% Select and report VAR model order.
+varmosel  = 'BIC';  % VAR model order selection ('ACT', 'AIC', 'BIC', 'HQC', 'LRT', or supplied numerical value)
+varmomax  = nvars*ssmoact; % maximum model order for VAR model order selection
 
-varmo = moselect(sprintf('VAR model order selection (max = %d)',varmomax),varmosel,'AIC',varmoaic,'BIC',varmobic,'HQC',varmohqc,'LRT',varmolrt);
-assert(varmo > 0,'selected zero model order! GCs will all be zero!');
-if varmo >= varmomax, fprintf(2,'*** WARNING: selected VAR maximum model order (may have been set too low)\n'); end
+next = 0;
+while next == 0
+    ptic('\n*** tsdata_to_varmo... ');
+    %if isnumeric(plotm), plotm = plotm+1; end
+    plotm=0;
+    [varmoaic,varmobic,varmohqc,varmolrt] = tsdata_to_varmo(X,varmomax,'LWR',[],[],plotm);
+    ptoc;
+
+    % Select and report VAR model order.
+    varmo = moselect(sprintf('VAR model order selection (max = %d)',varmomax),varmosel,'AIC',varmoaic,'BIC',varmobic,'HQC',varmohqc,'LRT',varmolrt);
+    assert(varmo > 0,'selected zero model order! GCs will all be zero!');
+    if varmo >= varmomax
+        fprintf(2,'*** WARNING: selected VAR maximum model order (may have been set too low)\n'); 
+        % Calculate and plot VAR model order estimation criteria up to specified maximum model order.
+        ssmoact   = ssmoact+1; % multiply this by 2 to get more orders to choose from
+        varmomax  = nvars*ssmoact; % maximum model order for VAR model order selection
+    else
+        next = 1; % move on
+    end
+end
 
 %% SS model order estimation
 
 pf = 2*varmo; % Bauer recommends 2 x VAR AIC model order
 
-ptic('\n*** tsdata_to_sssvc... ');
-%if isnumeric(plotm), plotm = plotm+1; end
-[ssmosvc,ssmomax] = tsdata_to_sssvc(X,pf,[],plotm);
-ptoc;
+next = 0;
+while next == 0
+    try
+        ptic('\n*** tsdata_to_sssvc... ');
+        %if isnumeric(plotm), plotm = plotm+1; end
+        [ssmosvc,ssmomax] = tsdata_to_sssvc(X,pf,[],plotm);
+        ptoc;
 
-% Select and report SS model order.
-ssmo = moselect(sprintf('SS model order selection (max = %d)',ssmomax),ssmosel,'ACT',ssmoact,'SVC',ssmosvc);
+        % Select and report SS model order.
+        ssmo = moselect(sprintf('SS model order selection (max = %d)',ssmomax),ssmosel,'ACT',ssmoact,'SVC',ssmosvc);
 
-% this is cool because if model order is too low, it accounts for it and
-% corrects for it. The warning is not so warranted since the correction
-% occurs.
-assert(ssmo > 0,'selected zero model order! GCs will all be zero!');
-if ssmo >= ssmomax, fprintf(2,'*** WARNING: selected SS maximum model order (may have been set too low)\n'); end
+        % Interface
+        assert(ssmo > 0,'selected zero model order! GCs will all be zero!');
+        if ssmo >= ssmomax
+            fprintf(2,'*** WARNING: selected SS maximum model order (may have been set too low)\n'); 
+            pf = pf+1; % double the pf variable to get more model order possibilities
+        else
+            next = 1; % move on
+        end
+    catch
+        next = 0; % re-loop
+        pf = pf-1; % may be maxing out to what can  be tested
+    end
+end
 
+%}
 %% SS model estimation
 
 % Estimate SS model order and model paramaters
 
-[A,C,K,V] = tsdata_to_ss(X,pf,ssmo);
+[A,C,K,V] = tsdata_to_ss(X,data.pf,ssmo);
 
 % Report information on the estimated SS, and check for errors.
 

@@ -8,7 +8,7 @@
 function [] = GetAllGrangerStateSpace_Fun(input)
 % define if you want to correct trajectories - I don't recommend as it will
 % require random sub-sampling and removal of trials when the number of
-% trajectories are similar in count
+% trajectories are probably similar in count
 correct_trajectory = 0;
 
 % flip over all folders    
@@ -258,6 +258,8 @@ for nn = 3:length(folder_names)
                 time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5))];
           elseif input.T_after == 1 
                 time = [(Int(triali,5)) (Int(triali,5)+(0.5*1e6))];
+          elseif input.T_entry == 1
+                time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];                
           end
           
             % get data
@@ -327,26 +329,29 @@ for nn = 3:length(folder_names)
         end
         
            % format
-           data.signals = signal;
+           data.signals = signal;         
+
+           % run granger for sample and choice - this is to control model
+           % order between task phases
+           [data.pf,ssmo{nn-2}] = EstimateModelOrder_Griffin(data);
            
            % run granger function
            signals_sample = data.signals(:,:,1:2:end); % odd are sample
            signals_choice = data.signals(:,:,2:2:end); % even are choice
            
-           % run granger for sample and choice
            for i = 1:2
                if i == 1
                    data.signals          = [];
                    data.signals          = signals_sample;
                    data.num_trials       = size(data.signals,3);
                    data.num_observations = size(data.signals,2);        
-                   [fx2y.sam{nn-2},fy2x.sam{nn-2},freq.sam{nn-2},ssmo.sam{nn-2}] = StateSpaceGranger(data);
+                   [fx2y.sam{nn-2},fy2x.sam{nn-2},freq.sam{nn-2}] = StateSpaceGranger(data,ssmo{nn-2});
                elseif i == 2
                    data.signals          = [];
                    data.signals          = signals_choice;
                    data.num_trials       = size(data.signals,3);
                    data.num_observations = size(data.signals,2);                   
-                   [fx2y.cho{nn-2},fy2x.cho{nn-2},freq.cho{nn-2},ssmo.cho{nn-2}] = StateSpaceGranger(data);
+                   [fx2y.cho{nn-2},fy2x.cho{nn-2},freq.cho{nn-2}] = StateSpaceGranger(data,ssmo{nn-2});
                end
            end
            
@@ -361,7 +366,7 @@ for nn = 3:length(folder_names)
          timespent_sample timespent_choice fx2y fy2x freq ssmo
      
 end
-cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data\StateSpace_granger')
+cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data')
 
 % make variables for saving - this is the region
 if input.pfc == 1 && input.hpc == 1
@@ -377,6 +382,8 @@ if input.T_before == 1
     X_save_loc = 'beforeT';
 elseif input.T_after == 1
     X_save_loc = 'afterT';
+elseif input.T_entry == 1
+    X_save_loc = 'entryT';
 end
 
 % save data
