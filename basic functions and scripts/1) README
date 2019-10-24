@@ -21,6 +21,11 @@ Int_file description: The int file is a matrix composed of time-stamps that give
                                 Note that for column 4, an incorrect trial will have 1s on both the sample
                                 and choice runs
                                 
+                      Some iterations of Int files will also have the following (particularly Ints created for LFP on DNMP):
+                      
+                      Column 9: 1s indicate a trial that had LFP with clipping artifacts, 0s indicate good LFP
+                      Column 10: 0s indicate sample, 1s indicate choice phases
+                                
 _____________________________________________________________________________________________________________
 Steps for generating the Int file:
 
