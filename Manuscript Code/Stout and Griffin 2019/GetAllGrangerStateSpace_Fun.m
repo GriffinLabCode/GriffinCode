@@ -96,7 +96,45 @@ for nn = 3:length(folder_names)
                 continue
             end 
         end
-    else  
+    elseif input.Stem == 1
+        if input.pfc == 1
+            try
+                load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = ['successfully loaded Int_lfp_StemT_Col10.mat from ', C{end}];
+                disp(X);               
+            catch
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = [C{end}, ' had no Int_lfp_StemT_Col10.mat file'];
+                disp(X);              
+                continue
+            end 
+        elseif input.hpc == 1 && input.re == 1
+            try
+                load (strcat(datafolder,'\Int_HPCRE_StemTCol10.mat')); 
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = ['successfully loaded Int_HPCRE_StemTCol10.mat from ', C{end}];
+                disp(X);               
+            catch
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = [C{end}, ' had no Int_HPCRE_StemTCol10.mat file'];
+                disp(X);              
+                continue
+            end 
+        end        
+    else
         try
             load (strcat(datafolder,'\Int_lfp.mat')); 
             % display
@@ -254,22 +292,31 @@ for nn = 3:length(folder_names)
         % for tjunction stuff     
            %time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];
           % before
-          if input.T_before == 1
-                time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5))];
-          elseif input.T_after == 1 
-                time = [(Int(triali,5)) (Int(triali,5)+(0.5*1e6))];
-          elseif input.T_entry == 1
-                time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];                
+          if input.Tjunction == 1
+              if input.T_before == 1
+                    time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5))];
+              elseif input.T_after == 1 
+                    time = [(Int(triali,5)) (Int(triali,5)+(0.5*1e6))];
+              elseif input.T_entry == 1
+                    time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];                
+              end
           end
           
+          if input.Stem == 1
+              if input.T_minus1 == 1
+                  time = [(Int(triali,5)-(1*1e6)) (Int(triali,5))];      
+              elseif input.T_plus1 == 1
+                  time = [(Int(triali,5)) (Int(triali,5)+(1*1e6))]; 
+              end
+          end
+ 
             % get data
             signalx_raw{triali} = EEG_1(data.Timestamps>time(1,1) & data.Timestamps<time(1,2));
             signaly_raw{triali} = EEG_2(data.Timestamps>time(1,1) & data.Timestamps<time(1,2));  
             
-            
             % downsample? using a new sampling rate of 250 would allow us 
             % to utilize a model order of 25 to get 100 ms of data
-            if input.Tjunction == 1
+            if input.Tjunction == 1 || input.Stem == 1
 
                     % detrend the down-sampled data
                     signalx_det{triali} = locdetrend(signalx_raw{triali});
@@ -331,10 +378,21 @@ for nn = 3:length(folder_names)
            % format
            data.signals = signal;         
 
-           % run granger for sample and choice - this is to control model
-           % order between task phases
-           [data.pf,ssmo{nn-2}] = EstimateModelOrder_Griffin(data);
-           
+           if input.EstimateModelOrder == 1
+               % run granger for sample and choice - this is to control model
+               % order between task phases
+               [pf{nn-2},ssmo{nn-2}] = EstimateModelOrder_Griffin(data);
+           elseif input.LoadModelOrder == 1
+               cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data\StateSpaceGranger_BIC_Tentry')               
+                if input.pfc == 1 && input.hpc == 1 && input.re == 0;
+                    load('ModelOrder_PfcHpc.mat');
+                elseif input.pfc == 1 && input.hpc == 0 && input.re == 1;
+                    load('ModelOrder_PfcRe.mat');
+                elseif input.pfc == 0 && input.hpc == 1 && input.re == 1;
+                    load('ModelOrder_HpcRe.mat');
+                end
+           end
+               
            % run granger function
            signals_sample = data.signals(:,:,1:2:end); % odd are sample
            signals_choice = data.signals(:,:,2:2:end); % even are choice
@@ -345,13 +403,13 @@ for nn = 3:length(folder_names)
                    data.signals          = signals_sample;
                    data.num_trials       = size(data.signals,3);
                    data.num_observations = size(data.signals,2);        
-                   [fx2y.sam{nn-2},fy2x.sam{nn-2},freq.sam{nn-2}] = StateSpaceGranger(data,ssmo{nn-2});
+                   [fx2y.sam{nn-2},fy2x.sam{nn-2},freq.sam{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});
                elseif i == 2
                    data.signals          = [];
                    data.signals          = signals_choice;
                    data.num_trials       = size(data.signals,3);
                    data.num_observations = size(data.signals,2);                   
-                   [fx2y.cho{nn-2},fy2x.cho{nn-2},freq.cho{nn-2}] = StateSpaceGranger(data,ssmo{nn-2});
+                   [fx2y.cho{nn-2},fy2x.cho{nn-2},freq.cho{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});
                end
            end
            
@@ -363,7 +421,7 @@ for nn = 3:length(folder_names)
     clearvars -except Datafolders folder_names nn input ...
          correct_trajectory frequencies granger_sample_x2y ...
          granger_choice_x2y granger_sample_y2x granger_choice_y2x error_var ...
-         timespent_sample timespent_choice fx2y fy2x freq ssmo
+         timespent_sample timespent_choice fx2y fy2x freq ssmo pf
      
 end
 cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data')
@@ -377,13 +435,23 @@ elseif input.hpc == 1 && input.re == 1
     X_regs = 'HpcRe';
 end
 
-% info on before or after T
-if input.T_before == 1
-    X_save_loc = 'beforeT';
-elseif input.T_after == 1
-    X_save_loc = 'afterT';
-elseif input.T_entry == 1
-    X_save_loc = 'entryT';
+if input.Tjunction == 1
+    % info on before or after T
+    if input.T_before == 1
+        X_save_loc = 'beforeT';
+    elseif input.T_after == 1
+        X_save_loc = 'afterT';
+    elseif input.T_entry == 1
+        X_save_loc = 'entryT';
+    end
+end
+
+if input.Stem == 1
+    if input.T_minus1 == 1
+        X_save_loc = 'Tentry_minus1';
+    elseif input.T_plus1 == 1
+        X_save_loc = 'Tentry_plus1';
+    end
 end
 
 % save data

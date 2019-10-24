@@ -7,7 +7,7 @@
 %
 % written by John Stout
 
-function [input]=get_coh_inputs() 
+function [input]=get_power_inputs() 
     
     % region
     input.mPFC_good = 1;
@@ -20,31 +20,24 @@ function [input]=get_coh_inputs()
     input.MedialOrbital     = 0;
     input.VentralOrbital    = 0;
     
-    % do you want to analyze 1 second surrounding tjunction entry?
-    input.Tjunction = 0; % set to zero if say you want the stem
+    % specgram or freq plot?
+    input.specgram = 1;
+    input.freqplot = 0;
     
-        % if you've selected input.Tjunction = 1, select which epoch
-        input.T_entry  = 0; % 1 sec surrounding t entry
-        input.T_before = 0; % 1 sec before t entry 
-        input.T_after  = 0; % 1 sec after t entry    
-    
-    input.tjunction_bin = 0; % tjunction bin
-    input.stem_bin      = 1; % stem bin
-        
-    % do you want a time-frequency plot or a broad-band spectrum?
-    input.time_freq = 0; % 1 is a time-frequency plot for heatmap creation
+    %
+    input.Tjunction = 1;
     
     % VERY important - you can only have two of these set to one at a
     % single time.
-    input.coh_pfc = 1;
-    input.coh_hpc = 1;
+    input.pow_pfc = 0;
+    input.pow_hpc = 1;
     % if you select 1 here, select all_sites = 1 below. No Re recordings
     % occured without HPC or mPFC recordings.
-    input.coh_re  = 0; 
+    input.pow_re  = 0; 
     
     % only analyze sessions with all three sites? 1 for yes, 0 for no
     % if analyzing Re, make sure you select this
-    input.all_sites = 0; % keep this at 0 if examining tjunction
+    input.all_sites =0;
     
     % phase bandpass
     input.phase_bandpass = [0 100];

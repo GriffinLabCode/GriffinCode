@@ -23,12 +23,19 @@ function [input]=get_granger_inputs()
     % define time to examine - make this so you define here
     % time = [(data.Int(triali,1)) (data.Int(triali,1)+(1.5*1e6))];  
     input.Tjunction = 1;
-    
+    input.Stem = 0;
+  
         % if you've selected input.Tjunction = 1, select which epoch
-        input.T_entry  = 1; % 1 sec surrounding t entry
-        input.T_before = 0; % 1 sec before t entry 
-        input.T_after  = 0; % 1 sec after t entry
+        input.T_entry  = 0; % 1 sec surrounding t entry
+        input.T_before = 0; % 0.5 sec before t entry 
+        input.T_after  = 0; % 0.5 sec after t entry
+        
+        input.T_minus1 = 0; % minus 1 sec from Int(i,5)
+        input.T_plus1  = 0;
     
+    input.EstimateModelOrder = 0;
+    input.LoadModelOrder     = 1;
+        
     % downsample data? this is extremely useful to circumvent the problem
     % of not having enough time or cycles in your data. If you define the
     % following variable, you must designate your target down-sampled rate

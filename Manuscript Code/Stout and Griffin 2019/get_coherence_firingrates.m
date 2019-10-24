@@ -112,23 +112,43 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
                 continue
             end 
         end
-    else  
+    elseif input.Tjunction == 0 && input.coh_hpc == 1 && input.coh_re == 1  
         try
-            load (strcat(datafolder,'\Int_lfp.mat')); 
+            load (strcat(datafolder,'\Int_HPCRE_StemTCol10.mat')); 
             % display
             C = [];
             C = strsplit(datafolder,'\');
             X = [];
-            X = ['successfully loaded Int_lfp.mat from ', C{end}];
+            X = ['successfully loaded Int_HPCRE_StemTCol10.mat from ', C{end}];
             disp(X);               
         catch
             % display
             C = [];
             C = strsplit(datafolder,'\');
             X = [];
-            X = [C{end}, ' had no Int_lfp.mat file'];
+            X = [C{end}, ' had no Int_HPCRE_StemTCol10.mat file'];
             disp(X);              
             continue
+        end
+    elseif input.Tjunction == 0
+        if input.coh_pfc == 1 && (input.coh_re == 1 || input.coh_hpc == 1)
+            try
+                load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = ['successfully loaded Int_lfp_StemT_Col10.mat from ', C{end}];
+                disp(X);               
+            catch
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = [C{end}, ' had no Int_lfp_StemT_Col10.mat file'];
+                disp(X);              
+                continue
+            end
         end
     end
     cd(Datafolders);
