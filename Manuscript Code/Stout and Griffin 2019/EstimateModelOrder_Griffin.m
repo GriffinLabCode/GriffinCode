@@ -1,13 +1,13 @@
-%% MVGC statespace code
-% this code was taken from the MVGC statespace code. 
-% It was adjusted according to our needs
 
 function [pf,ssmo] = EstimateModelOrder_Griffin(data)
 %% Parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%load('data_hc_re.mat');
 
-ntrials   = size(data.signals,3); % number of trials
+% Test data generation
+
+ntrials   = size(data.signals,3);       % number of trials
 nobs      = size(data.signals,2); % number of observations per trial
-fs        = data.srate;           % sample rate (Hz) 
+fs        = data.srate;          % sample rate (Hz) is actually since we're looking at half second epochs
 
 % Actual VAR model generation parameters
 nvars     = size(data.signals,1);      % number of variables
@@ -33,19 +33,19 @@ X = demean(data.signals,true);
 %% VAR model order estimation
 
 % Calculate and plot VAR model order estimation criteria up to specified maximum model order.
-ssmoact   = 10; % start with a small model order for the sake of efficiency
+ssmoact   = 10; % start with a small model order
 
+% VAR model order estimation - LRT seems consistent
 % AIC should be used in cases where a false negative is misleading while
 % BIC should be used in cases where a false positive is misleading
 % AIC has a high chance of over estimating order, which can be seen with
 % baby groot 9-13-18 since it is so high while bic is so low. the field
 % uses BIC https://www.methodology.psu.edu/resources/AIC-vs-BIC/
 
-varmosel  = 'BIC';         % VAR model order selection ('ACT', 'AIC', 'BIC', 'HQC', 'LRT', or supplied numerical value)
+varmosel  = 'BIC';  % VAR model order selection ('ACT', 'AIC', 'BIC', 'HQC', 'LRT', or supplied numerical value)
 varmomax  = nvars*ssmoact; % maximum model order for VAR model order selection
 
-% if the model order selected is the max set by the user, add more possible orders to choose from.
-next = 0; % will break while loop when 1
+next = 0;
 while next == 0
     ptic('\n*** tsdata_to_varmo... ');
     %if isnumeric(plotm), plotm = plotm+1; end
@@ -55,12 +55,10 @@ while next == 0
     % Select and report VAR model order.
     varmo = moselect(sprintf('VAR model order selection (max = %d)',varmomax),varmosel,'AIC',varmoaic,'BIC',varmobic,'HQC',varmohqc,'LRT',varmolrt);
     assert(varmo > 0,'selected zero model order! GCs will all be zero!');
-    if varmo >= varmomax % model order needs to be adjusted
-        % print for user
+    if varmo >= varmomax
         fprintf(2,'*** WARNING: selected VAR maximum model order (may have been set too low)\n'); 
-        
-        % adjust the model order one lag at a time
-        ssmoact   = ssmoact+1;     % add 1 order, iteratively
+        % Calculate and plot VAR model order estimation criteria up to specified maximum model order.
+        ssmoact   = ssmoact+1; % multiply this by 2 to get more orders to choose from
         varmomax  = nvars*ssmoact; % maximum model order for VAR model order selection
     else
         next = 1; % move on
@@ -71,7 +69,7 @@ end
 
 pf = 2*varmo; % Bauer recommends 2 x VAR AIC model order
 
-next = 0; % see above
+next = 0;
 while next == 0
     try
         ptic('\n*** tsdata_to_sssvc... ');
@@ -91,7 +89,7 @@ while next == 0
             next = 1; % move on
         end
     catch
-        next = 0;  % re-loop
-        pf = pf-1; % may be maxing out to what can be tested
+        next = 0; % re-loop
+        pf = pf-1; % may be maxing out to what can  be tested
     end
 end
