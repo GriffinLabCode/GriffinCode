@@ -82,7 +82,7 @@ for nn = 3:length(folder_names)
             disp(X);              
             continue
         end 
-    elseif input.hpc == 1 || input.re == 1
+    elseif input.hpc == 1 && input.re == 1
         try
             load (strcat(datafolder,'\Int_HPCRE_T.mat')); 
             % display
