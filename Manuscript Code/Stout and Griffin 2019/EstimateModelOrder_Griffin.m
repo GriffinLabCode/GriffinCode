@@ -7,7 +7,7 @@ function [pf,ssmo] = EstimateModelOrder_Griffin(data)
 
 ntrials   = size(data.signals,3);       % number of trials
 nobs      = size(data.signals,2); % number of observations per trial
-fs        = data.srate;          % sample rate (Hz) is actually since we're looking at half second epochs
+fs        = data.srate;          % sample rate (Hz)
 
 % Actual VAR model generation parameters
 nvars     = size(data.signals,1);      % number of variables
@@ -58,7 +58,7 @@ while next == 0
     if varmo >= varmomax
         fprintf(2,'*** WARNING: selected VAR maximum model order (may have been set too low)\n'); 
         % Calculate and plot VAR model order estimation criteria up to specified maximum model order.
-        ssmoact   = ssmoact+1; % multiply this by 2 to get more orders to choose from
+        ssmoact   = ssmoact+1; % add 1 to get more orders to choose from
         varmomax  = nvars*ssmoact; % maximum model order for VAR model order selection
     else
         next = 1; % move on
@@ -84,7 +84,7 @@ while next == 0
         assert(ssmo > 0,'selected zero model order! GCs will all be zero!');
         if ssmo >= ssmomax
             fprintf(2,'*** WARNING: selected SS maximum model order (may have been set too low)\n'); 
-            pf = pf+1; % double the pf variable to get more model order possibilities
+            pf = pf+1; % add 1 to pf variable to get more model order possibilities
         else
             next = 1; % move on
         end
