@@ -134,6 +134,7 @@ for nn = 3:length(folder_names)
         return
     end        
 
+    try
         if input.pfc == 1
             % check if pfc data exists
             if input.Prelimbic == 1
@@ -209,7 +210,10 @@ for nn = 3:length(folder_names)
             EEG_phase     = EEG3;
             EEG_amplitude = EEG3;
         end  
-
+    catch
+        continue % if no data, reset loop
+    end
+    
     %% set parameters
     params.tapers           = [3 5];
     params.trialave         = 0;
@@ -357,5 +361,142 @@ for nn = 3:length(folder_names)
                    data_phase_sample data_MI_choice data_phase_choice ...
                    phase_map_sample phase_map_choice
 end
-cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data')
-save('PAC_all.mat');
+cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data\lfp around tjunction')
+%save('PAC_all.mat');
+
+% make variables for saving - this is the region
+if input.modindex == 1
+    X_det = 'ModIndex';
+elseif input.comodgram == 1
+    X_det = 'CoModGram';
+end
+
+if input.pfc == 1 && input.hpc == 1
+    X_regs = 'PfcHpc';
+elseif input.pfc == 1 && input.re == 1
+    X_regs = 'PfcRe';
+elseif input.hpc == 1 && input.re == 1
+    X_regs = 'HpcRe';
+end
+
+
+% info on before or after T
+if input.T_before == 1
+    X_save_loc = 'beforeT';
+elseif input.T_after == 1
+    X_save_loc = 'afterT';
+elseif input.T_entry == 1
+    X_save_loc = 'entryT';
+end
+
+% save data
+X_save = ['PAC_',X_det,'_',X_regs,'_',X_save_loc];
+save(X_save);
+
+% plot and stats
+if input.modindex == 1
+    % difference scores
+    MI_sample = cell2mat(data_MI_sample);
+    MI_choice = cell2mat(data_MI_choice);
+    diffscore_MI = (MI_choice-MI_sample)./(MI_choice+MI_sample);
+
+    [h,p_norm]=swtest(diffscore_MI);
+    if p_norm < 0.05
+        [p_sign_MI,h,stat_MI]=signrank(diffscore_MI);
+    else
+        [h,p_ttest_MI,ci_MI_MI,stat]=ttest(diffscore_MI);
+    end
+
+    phase_sample = cell2mat(data_phase_sample);
+    phase_choice = cell2mat(data_phase_choice);
+    diffscore_phase = (phase_choice-phase_sample)./(phase_choice+phase_sample);
+
+    [h,p_norm]=swtest(diffscore_phase);
+    if p_norm < 0.05
+        [p_sign_phase,h,stat_phase]=signrank(diffscore_phase);
+    else
+        [h,p_ttest_phase,ci_phase,stat_phase]=ttest(diffscore_phase);
+    end
+    
+    % bar graphs
+    figure(); 
+    bar(sort(diffscore_phase),'k'); 
+    box off
+    hold on;
+    %line([mean(diffscore_phase) mean(diffscore_phase)],xlim,'Color',[1 0 0],'linestyle','--')
+    %plot(ylim,[mean(diffscore_phase) mean(diffscore_phase)],'LineWidth',1,'Color','r','linestyle','--')
+    
+    figure(); 
+    bar(phase_sample,'r')
+    hold on
+    plot(phase_sample,'r')
+    hold on;
+    bar(phase_choice,'b')
+    hold on;
+    plot(phase_choice,'b');
+    box off
+
+    figure();
+    plot((phase_sample))
+    hold on
+    plot((phase_choice))
+    box off
+    
+    [h,p]=kstest2(phase_choice,phase_sample)
+    
+elseif input.comodgram == 1
+    phase_map_choice_var = phase_map_choice(~cellfun('isempty',phase_map_choice));
+    phase_map_sample_var = phase_map_sample(~cellfun('isempty',phase_map_sample));
+
+    % make into 3D matrix
+    for i = 1:length(phase_map_choice_var)
+        phase_sample_matrix(:,:,i) = phase_map_sample_var{i};
+        phase_choice_matrix(:,:,i) = phase_map_choice_var{i};
+    end
+    
+    phase_sample = mean(phase_sample_matrix,3);
+    phase_choice = mean(phase_choice_matrix,3);
+    
+    % redefine these
+    phase_bins = 18;
+    amplitude_freq_bins = 1;%signal_data.amplitude_bandpass(2)-signal_data.amplitude_bandpass(1);
+    phase_freq_bins = 1;%signal_data.phase_bandpass(2)-signal_data.phase_bandpass(1);
+    signal_data.phase_bandpass     = [4 12];
+    signal_data.amplitude_bandpass = [30 100];    
+    amplitude_highpass = ((signal_data.amplitude_bandpass(:,1))+amplitude_freq_bins:amplitude_freq_bins:signal_data.amplitude_bandpass(:,2));
+    
+    x_label_temp = linspace(input.phase_bandpass(1),input.phase_bandpass(2),size(phase_sample,2));
+    y_label_temp = linspace(amplitude_highpass(1),amplitude_highpass(end),size(phase_sample,1));
+    
+    figure('color',[1 1 1])
+    pcolor(x_label_temp,y_label_temp,phase_sample); % x pos was M.PhaseAxis
+    set(gca,'fontsize', 13);
+    colormap(jet)
+    colorbar   
+    caxis([0.0548 0.0563])    
+    shading 'interp'
+    ylabel('Frequency (Hz)')
+    xlabel('Theta Phase')
+    
+    figure('color',[1 1 1])
+    pcolor(M.PhaseAxis,amplitude_highpass,phase_choice)
+    set(gca,'fontsize', 13);    
+    colormap(jet)
+    colorbar
+    %caxis([0.0552 0.0561])
+    caxis([0.0548 0.0563])        
+    shading 'interp'
+    ylabel('Frequency (Hz)')
+    xlabel('Theta Phase')    
+    
+    figure('color',[1 1 1])
+    pcolor(M.PhaseAxis,amplitude_highpass,squeeze(mean(cat(3,phase_sample,phase_choice),3)))
+    set(gca,'fontsize', 13);    
+    colormap(jet)
+    colorbar
+    %caxis([0.0552 0.0561])
+    shading 'interp'
+    ylabel('Frequency (Hz)')
+    xlabel('Theta Phase')     
+    
+end

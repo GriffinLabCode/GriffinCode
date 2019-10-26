@@ -105,7 +105,7 @@ function [power,frex] = power_fun(datafolder,input,Int,params)
             %data2_clean{triali} = rmlinesc(data2_cleantemp{triali},params,[],'n');
         end
         % concatenate data
-        signal = horzcat(data1_clean{:});
+        signal = vertcat(data1_clean{:});
         
             %% estimate spectral power
             % loop across the bins

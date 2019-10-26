@@ -21,16 +21,16 @@ function [input]=get_power_inputs()
     input.VentralOrbital    = 0;
     
     % specgram or freq plot?
-    input.specgram = 1;
-    input.freqplot = 0;
+    input.specgram = 0;
+    input.freqplot = 1;
     
     %
     input.Tjunction = 1;
     
     % VERY important - you can only have two of these set to one at a
     % single time.
-    input.pow_pfc = 0;
-    input.pow_hpc = 1;
+    input.pow_pfc = 1;
+    input.pow_hpc = 0;
     % if you select 1 here, select all_sites = 1 below. No Re recordings
     % occured without HPC or mPFC recordings.
     input.pow_re  = 0; 

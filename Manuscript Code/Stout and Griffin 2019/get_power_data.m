@@ -175,7 +175,7 @@ for nn = 3:length(folder_names)
     % set parameters
     params.fpass           = input.phase_bandpass; 
     params.tapers           = [3 5];    %[2 3]
-    params.trialave         = 1;
+    params.trialave         = 0;
     params.err              = [2 .05];
     params.pad              = 0;
     %params.fpass            = [0 100]; % [1 100]
@@ -539,9 +539,9 @@ if isempty('notempty') == 1
     x_label = frex_new;
 
     figure('color',[1 1 1])
-        shadedErrorBar(x_label,power_avg_sample,power_sem_sample,'-r',1);
+        shadedErrorBar(x_label,power_avg_sample,power_sem_sample,'-r',0);
         hold on;
-        shadedErrorBar(x_label,power_avg_choice,power_sem_choice,'-b',1);
+        shadedErrorBar(x_label,power_avg_choice,power_sem_choice,'-b',0);
         %set(gca, 'XTick',[1,2,3,4,5,6,7])
         %set(gca, 'xticklabel',{'stem','stem','stem','stem','stem','t-junction'})
         %ax = gca;

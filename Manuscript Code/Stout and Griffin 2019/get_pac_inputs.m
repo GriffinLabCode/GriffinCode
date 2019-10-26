@@ -22,20 +22,20 @@ function [input]=get_pac_inputs()
     
     % VERY important - you can only have two of these set to one at a
     % single time.
-    input.pfc = 1;
+    input.pfc = 0;
     input.hpc = 1;
     % if you select 1 here, select all_sites = 1 below. No Re recordings
     % occured without HPC or mPFC recordings.
-    input.re  = 0; 
+    input.re  = 1; 
     
     % only analyze sessions with all three sites? 1 for yes, 0 for no
     % if analyzing Re, make sure you select this
     input.all_sites = 0;
     
     % define which signals phase you're interested in
-    input.hpc_phase = 1;
+    input.hpc_phase = 0;
     input.pfc_phase = 0;
-    input.re_phase  = 0;
+    input.re_phase  = 1;
     % define which signals amplitude you're interested in
     input.hpc_amp = 0;
     input.pfc_amp = 1;
@@ -46,8 +46,8 @@ function [input]=get_pac_inputs()
     input.amplitude_bandpass = [30 50];
 
     % modulation index or comodulogram?
-    input.modindex  = 0;
-    input.comodgram = 1;
+    input.modindex  = 1;
+    input.comodgram = 0;
     
     % maze time index
     input.T_entry  = 1;
