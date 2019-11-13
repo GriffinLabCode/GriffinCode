@@ -14,8 +14,8 @@ startup_fun;
 
 [input]=get_granger_inputs();
 
-TEntryEpoch   = 0; % this is -.5 and +.5 around t-entry or some collapsed epoch
-EpochsAroundT = 1; % this assess -.5 to t-entry and t-entry to 0.5 separately
+TEntryEpoch   = 1; % this is -.5 and +.5 around t-entry or some collapsed epoch
+EpochsAroundT = 0; % this assess -.5 to t-entry and t-entry to 0.5 separately
 
 %% loop across input iterations
 
@@ -50,7 +50,7 @@ if EpochsAroundT == 1 % separately assess time around t
         end
     end
 elseif TEntryEpoch == 1 % collapse across T (good for assess slow freqs)
-    input.T_before = 0; input.T_after = 0; input.T_entry = 1; input.T_plus1 = 0; input.T_minus1 = 0; % for this last option, make sure input.Stem == 1 and input.Tjunction == 0
+    input.T_before = 0; input.T_after = 0; input.T_entry = 0; input.T_plus1 = 0; input.T_minus1 = 0; input.Tjunction_DataDriven =1; % for this last option, make sure input.Stem == 1 and input.Tjunction == 0
         for i = 1:3 % loop across region combos
             if i == 1 % hpc-pfc
                 input.pfc = 1; input.hpc = 1; input.re = 0;

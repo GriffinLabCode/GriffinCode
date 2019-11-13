@@ -5,11 +5,26 @@
 %
 % Note: there are no outputs because the data is saved
 
-function [] = GetAllGrangerStateSpace_Fun(input)
+% define if you want to correct trajectories - I don't recommend as it will
+% require random sub-sampling and removal of trials when the number of
+% trajectories are probably similar in count
+clear; clc
+
+cd('X:\03. Lab Procedures and Protocols\MATLABToolbox\mvgc_v2.0')
+addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
+addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\LFP Analyses');
+addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Behavior')
+addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions')
+addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
+addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\mvgc_v2.0\demo')
+startup_fun;
+
 % define if you want to correct trajectories - I don't recommend as it will
 % require random sub-sampling and removal of trials when the number of
 % trajectories are probably similar in count
 correct_trajectory = 0;
+
+[input]=get_granger_inputs();
 
 % flip over all folders    
     if input.Prelimbic == 1;
@@ -34,7 +49,7 @@ correct_trajectory = 0;
     folder_names = dir;    
     
 % loop across folders
-for nn = 3:length(folder_names)
+for nn = 3:35%:length(folder_names)
     
     Datafolders = Datafolders;
     cd(Datafolders);
@@ -58,101 +73,43 @@ for nn = 3:length(folder_names)
 
     %% do Int formatting
    % define and load some variables 
-    if input.Tjunction == 1
-        if input.pfc == 1
-            try
-                load (strcat(datafolder,'\Int_lfp_T.mat')); 
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = ['successfully loaded Int_lfp_T.mat from ', C{end}];
-                disp(X);               
-            catch
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = [C{end}, ' had no Int_lfp_T.mat file'];
-                disp(X);              
-                continue
-            end 
-        elseif input.hpc == 1 && input.re == 1
-            try
-                load (strcat(datafolder,'\Int_HPCRE_T.mat')); 
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = ['successfully loaded Int_HPCRE_T.mat from ', C{end}];
-                disp(X);               
-            catch
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = [C{end}, ' had no Int_HPCRE_T.mat file'];
-                disp(X);              
-                continue
-            end 
-        end
-    elseif input.Stem == 1 || input.Tjunction_DataDriven == 1
-        if input.pfc == 1
-            try
-                load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = ['successfully loaded Int_lfp_StemT_Col10.mat from ', C{end}];
-                disp(X);               
-            catch
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = [C{end}, ' had no Int_lfp_StemT_Col10.mat file'];
-                disp(X);              
-                continue
-            end 
-        elseif input.hpc == 1 && input.re == 1
-            try
-                load (strcat(datafolder,'\Int_HPCRE_StemTCol10.mat')); 
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = ['successfully loaded Int_HPCRE_StemTCol10.mat from ', C{end}];
-                disp(X);               
-            catch
-                % display
-                C = [];
-                C = strsplit(datafolder,'\');
-                X = [];
-                X = [C{end}, ' had no Int_HPCRE_StemTCol10.mat file'];
-                disp(X);              
-                continue
-            end 
-        end        
-    else
-        try
-            load (strcat(datafolder,'\Int_lfp.mat')); 
-            % display
-            C = [];
-            C = strsplit(datafolder,'\');
-            X = [];
-            X = ['successfully loaded Int_lfp.mat from ', C{end}];
-            disp(X);               
-        catch
-            % display
-            C = [];
-            C = strsplit(datafolder,'\');
-            X = [];
-            X = [C{end}, ' had no Int_lfp.mat file'];
-            disp(X);              
-            continue
-        end
-    end
+   %{
+    try
+        load (strcat(datafolder,'\Int_lfp_T.mat')); 
+        % display
+        C = [];
+        C = strsplit(datafolder,'\');
+        X = [];
+        X = ['successfully loaded Int_lfp_T.mat from ', C{end}];
+        disp(X);               
+    catch
+        % display
+        C = [];
+        C = strsplit(datafolder,'\');
+        X = [];
+        X = [C{end}, ' had no Int_lfp_T.mat file'];
+        disp(X);              
+        continue
+    end 
+   %}
+    try
+        load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
+        % display
+        C = [];
+        C = strsplit(datafolder,'\');
+        X = [];
+        X = ['successfully loaded Int_lfp_StemT_Col10.mat from ', C{end}];
+        disp(X);               
+    catch
+        % display
+        C = [];
+        C = strsplit(datafolder,'\');
+        X = [];
+        X = [C{end}, ' had no Int_lfp_StemT_Col10.mat file'];
+        disp(X);              
+        continue
+    end   
+        
     cd(Datafolders);
     folder_names = dir;
     cd(datafolder);
@@ -200,7 +157,6 @@ for nn = 3:length(folder_names)
     end        
 
     try % not all sessions may have all types of LFP files
-        if input.pfc == 1
             % check if pfc data exists
             if input.Prelimbic == 1
                 region = '\PrL.mat';
@@ -218,22 +174,17 @@ for nn = 3:length(folder_names)
                 %EEG_pfc = Samples(:)';
                 EEG1 = Samples(:)';
                 clear Samples
-        end
-        
-        if input.hpc == 1
+
             load(strcat(datafolder,'\HPC.mat'),'Samples',...
                 'Timestamps','SampleFrequencies');   
                 %EEG_hpc = Samples(:)';
                  EEG2 = Samples(:)';
                  clear Samples
-        end
         
-        if input.re == 1
             load(strcat(datafolder,'\Re.mat'),'Samples',...
                 'Timestamps','SampleFrequencies');
                 EEG3 = Samples(:)';
                 clear Samples
-        end
     catch
         continue % skip to the next loop
     end
@@ -241,16 +192,9 @@ for nn = 3:length(folder_names)
         % format EEG_* variable so that it's flexible. We want EEG_1 and
         % EEG_2 to remain constant in terms of the variable name, but we
         % want their lfp to change as a function of the region input.
-        if input.pfc == 1 && input.hpc == 1
-            EEG_1 = EEG1; % pfc (x)
-            EEG_2 = EEG2; % hpc (y)
-        elseif input.pfc == 1 && input.re == 1
-            EEG_1 = EEG1; % pfc (x)
-            EEG_2 = EEG3; % re (y)
-        elseif input.hpc == 1 && input.re == 1
-            EEG_1 = EEG2; % hpc (x)
-            EEG_2 = EEG3; % re (y)
-        end    
+        EEG_1 = EEG1; % pfc (x)
+        EEG_2 = EEG2; % hpc (y)
+        EEG_3 = EEG3; % re  (z)
 
     %% set parameters
     %params.fpass           = input.phase_bandpass; 
@@ -300,6 +244,8 @@ for nn = 3:length(folder_names)
               elseif input.T_entry == 1
                     time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];                
               end
+          elseif input.Tjunction_DataDriven == 1;
+                    time = [(Int(triali,5)-(0.8*1e6)) (Int(triali,5)+(0.2*1e6))];                
           end
           
           if input.Stem == 1
@@ -309,34 +255,37 @@ for nn = 3:length(folder_names)
                   time = [(Int(triali,5)) (Int(triali,5)+(1*1e6))]; 
               end
           end
-          
-          if input.Tjunction_DataDriven == 1
-              time = [(Int(triali,5)-(0.8*1e6)) (Int(triali,5)+(0.2*1e6))];      
-          end
  
             % get data
             signalx_raw{triali} = EEG_1(data.Timestamps>time(1,1) & data.Timestamps<time(1,2));
             signaly_raw{triali} = EEG_2(data.Timestamps>time(1,1) & data.Timestamps<time(1,2));  
+            signalz_raw{triali} = EEG_3(data.Timestamps>time(1,1) & data.Timestamps<time(1,2));  
             
             % downsample? using a new sampling rate of 250 would allow us 
             % to utilize a model order of 25 to get 100 ms of data
-            if input.Tjunction == 1 || input.Stem == 1 || input.Tjunction_DataDriven == 1
+            if input.Tjunction == 1 || input.Stem == 1 || input.Tjunction_DataDriven == 1;
 
                     % detrend the down-sampled data
                     signalx_det{triali} = locdetrend(signalx_raw{triali});
                     signaly_det{triali} = locdetrend(signaly_raw{triali});
+                    signalz_det{triali} = locdetrend(signalz_raw{triali});
 
                     % clean
                     signalx_cle{triali} = rmlinesmovingwinc(signalx_det{triali},[0.5 0.01],10,params,'n');
                     signaly_cle{triali} = rmlinesmovingwinc(signaly_det{triali},[0.5 0.01],10,params,'n');  
+                    signalz_cle{triali} = rmlinesmovingwinc(signalz_det{triali},[0.5 0.01],10,params,'n');  
 
                  if input.signal_derivative == 1
                     % take the derivative of the zscored data to make stationary 
                     signalx{triali} = diff(signalx_cle{triali});
                     signaly{triali} = diff(signaly_cle{triali});
+                    signalz{triali} = diff(signalz_cle{triali});
+                    
                  else
                      signalx=signalx_cle;
                      signaly=signaly_cle;
+                     signalz=signalz_cle;
+                     
                  end
 
                 if input.target_sample ~= 0     
@@ -344,6 +293,7 @@ for nn = 3:length(folder_names)
                     
                     signalx{triali}=signalx{triali}(1:div:end);
                     signaly{triali}=signaly{triali}(1:div:end);
+                    signalz{triali}=signalz{triali}(1:div:end);
                     
                     % provide new srate
                     data.srate = length(1:div:params.Fs);
@@ -353,20 +303,25 @@ for nn = 3:length(folder_names)
                 % detrend the down-sampled data
                 signalx_det{triali} = locdetrend(signalx_raw{triali});
                 signaly_det{triali} = locdetrend(signaly_raw{triali});
+                signalz_det{triali} = locdetrend(signalz_raw{triali});
 
                 % clean
                 signalx_cle{triali} = rmlinesc(signalx_det{triali},params,[],'n');
                 signaly_cle{triali} = rmlinesc(signaly_det{triali},params,[],'n');   
+                signalz_cle{triali} = rmlinesc(signalz_det{triali},params,[],'n');   
 
                 % take the derivative of the zscored data to make stationary 
                 signalx{triali} = diff(signalx_cle{triali});
                 signaly{triali} = diff(signaly_cle{triali});
+                signalz{triali} = diff(signalz_cle{triali});
+
 
                 if input.target_sample ~= 0     
                     div = find_downsample_rate(params.Fs,input.target_sample);
                     
                     signalx{triali}=signalx{triali}(1:div:end);
                     signaly{triali}=signaly{triali}(1:div:end);
+                    signalz{triali}=signalz{triali}(1:div:end);
                     
                     % provide new srate
                     data.srate = length(1:div:params.Fs);
@@ -376,6 +331,7 @@ for nn = 3:length(folder_names)
            % create a variable where rows are number of signals
            signal(1,:,triali) = signalx{triali}'; % signal x
            signal(2,:,triali) = signaly{triali}'; % signal y
+           signal(3,:,triali) = signalz{triali}'; % signal z
            
         end
         
@@ -385,40 +341,37 @@ for nn = 3:length(folder_names)
            if input.EstimateModelOrder == 1
                % run granger for sample and choice - this is to control model
                % order between task phases
+               %[pf{nn-2},ssmo{nn-2}] = EstimateModelOrder_Griffin(data);
                [pf{nn-2},ssmo{nn-2}] = EstimateModelOrder_2(data);
            elseif input.LoadModelOrder == 1
                cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data\StateSpaceGranger_BIC_Tentry')               
-                if input.pfc == 1 && input.hpc == 1 && input.re == 0;
-                    load('ModelOrder_PfcHpc.mat');
-                elseif input.pfc == 1 && input.hpc == 0 && input.re == 1;
-                    load('ModelOrder_PfcRe.mat');
-                elseif input.pfc == 0 && input.hpc == 1 && input.re == 1;
-                    load('ModelOrder_HpcRe.mat');
-                end
+               load('ModelOrder_PfcReHpc.mat');
            end
                
            % run granger function
            signals_sample = data.signals(:,:,1:2:end); % odd are sample
            signals_choice = data.signals(:,:,2:2:end); % even are choice
-           try
-               for i = 1:2
-                   if i == 1
-                       data.signals          = [];
-                       data.signals          = signals_sample;
-                       data.num_trials       = size(data.signals,3);
-                       data.num_observations = size(data.signals,2);        
-                       [fx2y.sam{nn-2},fy2x.sam{nn-2},freq.sam{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});
-                   elseif i == 2
-                       data.signals          = [];
-                       data.signals          = signals_choice;
-                       data.num_trials       = size(data.signals,3);
-                       data.num_observations = size(data.signals,2);                   
-                       [fx2y.cho{nn-2},fy2x.cho{nn-2},freq.cho{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});
-                   end
+           
+           for i = 1:2
+               if i == 1
+                   data.signals          = [];
+                   data.signals          = signals_sample;
+                   data.num_trials       = size(data.signals,3);
+                   data.num_observations = size(data.signals,2);
+                   [fx2y.sam{nn-2},fy2x.sam{nn-2},freqs.sam{nn-2},~,fx2z.sam{nn-2},fz2x.sam{nn-2},fy2z.sam{nn-2},fz2y.sam{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});                   
+                   
+                   %[fx2y.sam{nn-2},fy2x.sam{nn-2},freq.sam{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});
+               elseif i == 2
+                   data.signals          = [];
+                   data.signals          = signals_choice;
+                   data.num_trials       = size(data.signals,3);
+                   data.num_observations = size(data.signals,2); 
+                   [fx2y.cho{nn-2},fy2x.cho{nn-2},freqs.cho{nn-2},~,fx2z.cho{nn-2},fz2x.cho{nn-2},fy2z.cho{nn-2},fz2y.cho{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});                   
+                   
+                   %[fx2y.cho{nn-2},fy2x.cho{nn-2},freq.cho{nn-2}] = StateSpaceGranger(data,ssmo{nn-2},pf{nn-2});
                end
-           catch
-               continue
            end
+           
     % display progress
     X = ['finished with session ', num2str(nn-2)];
     disp(X)
@@ -427,19 +380,13 @@ for nn = 3:length(folder_names)
     clearvars -except Datafolders folder_names nn input ...
          correct_trajectory frequencies granger_sample_x2y ...
          granger_choice_x2y granger_sample_y2x granger_choice_y2x error_var ...
-         timespent_sample timespent_choice fx2y fy2x freq ssmo pf
-     
+         timespent_sample timespent_choice fx2y fy2x freq ssmo pf fx2z fz2x fy2z fz2y freqs
+      
 end
-cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data')
+cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data\lfp around tjunction\Long Epoch')
 
 % make variables for saving - this is the region
-if input.pfc == 1 && input.hpc == 1
-    X_regs = 'PfcHpc';
-elseif input.pfc == 1 && input.re == 1
-    X_regs = 'PfcRe';
-elseif input.hpc == 1 && input.re == 1
-    X_regs = 'HpcRe';
-end
+X_regs = 'PfcHpcRe';
 
 if input.Tjunction == 1
     % info on before or after T
@@ -461,7 +408,11 @@ if input.Stem == 1
 end
 
 if input.Tjunction_DataDriven == 1
-    X_save_loc = 'datadriven';
+    X_save_loc = 'CoherenceWindow';
+end
+
+if input.target_sample == 0
+    X_save_loc = 'NoDownSample_CoherenceWindow';
 end
 
 % save data

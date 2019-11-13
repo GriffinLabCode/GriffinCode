@@ -70,8 +70,18 @@ function [power,frex] = power_fun(datafolder,input,Int,params)
             % note: you can't use delay iti here yet since int file is gonna rely
             % on Int being defined as sample or choice Int 
             time = [];
-            time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];
-            %time = [(Int(triali,6)-(2*1e6)) (Int(triali,6))];
+            
+      % stem to T-exit
+      time = [(Int(triali,5)-(2*1e6)) (Int(triali,5)+(1*1e6))];
+      
+      % effect window
+      %time = [(Int(triali,5)-(0.8*1e6)) (Int(triali,5)+(0.2*1e6))];
+         
+      % before effect window
+      %time = [(Int(triali,5)-(2*1e6)) (Int(triali,5)-(1*1e6))];
+      
+      
+      %time = [(Int(triali,6)-(2*1e6)) (Int(triali,6))];
             %time = [(Int(triali,1)) (Int(triali,1)+(2*1e6))]; 
       %time = [(Int(triali,6)-(1.5*1e6)) Int(triali,6)];  
             %time = [(Int(triali,5)-(1*1e6)) (Int(triali,5))];
@@ -104,8 +114,12 @@ function [power,frex] = power_fun(datafolder,input,Int,params)
             %data1_clean{triali} = rmlinesc(data1_cleantemp{triali},params,[],'n');
             %data2_clean{triali} = rmlinesc(data2_cleantemp{triali},params,[],'n');
         end
-        % concatenate data
-        signal = vertcat(data1_clean{:});
+        if params.trialave == 0
+            % concatenate data
+            signal = vertcat(data1_clean{:});
+        elseif params.trialave == 1
+            signal = horzcat(data1_clean{:});
+        end
         
             %% estimate spectral power
             % loop across the bins

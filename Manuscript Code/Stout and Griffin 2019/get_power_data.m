@@ -60,14 +60,35 @@ for nn = 3:length(folder_names)
     datafolder = pwd;
     cd(datafolder); 
 
-    % only analyze sessions with Re, hpc, and prl recordings
-    if input.all_sites == 1
-        Files=dir(fullfile(datafolder,'*detrend.mat'));
-        if size(Files,1) < 3 
-            continue
+    %% only analyze sessions with Re, hpc, and prl recordings
+    if input.simultaneous == 1 && input.Tentry_longepoch;
+        Files.pfc=dir(fullfile(datafolder,'mPFC.mat'));
+        Files.re=dir(fullfile(datafolder,'Re.mat'));
+        Files.hpc=dir(fullfile(datafolder,'HPC.mat'));
+        if input.Tentry_longepoch == 1
+            Files.int=dir(fullfile(datafolder,'Int_lfp_StemT_Col10.mat'));
+        elseif input.Tjunction == 1
+            Files.int=dir(fullfile(datafolder,'Int_lfp_T.mat'));
         end
+        fn = fieldnames(Files);
+        for fieldi = 1:length(fn)
+            if size(Files.(fn{fieldi}),1) == 0
+                store_size(fieldi) = 0;
+            elseif size(Files.(fn{fieldi}),1) == 1
+                store_size(fieldi) = 1;                    
+            end
+        end
+    
+    % if any of the data is missing, skip to the next loop
+    if isempty(find(store_size == 0)) == 0 % this means one of the store_size values are zero. in other words, this session does not have simultaneous recordings
+        sessionslog{nn-2} = 'skipped';
+        continue
+    else
+        sessionslog{nn-2} = 'included';
+    end
     end
     
+    %% get int and format it
     if input.Tjunction == 1
         if input.pow_pfc == 1
             try
@@ -106,7 +127,63 @@ for nn = 3:length(folder_names)
                 continue
             end 
         end
-    else  
+    elseif input.Tentry_longepoch == 1;
+        if input.pow_pfc == 1 || input.simultaneous == 1
+            try
+                load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = ['successfully loaded Int_lfp_StemT_Col10.mat from ', C{end}];
+                disp(X);               
+            catch
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = [C{end}, ' had no Int_lfp_StemT_Col10.mat file'];
+                disp(X);              
+                continue
+            end
+        elseif (input.pow_re == 1 || input.pow_hpc == 1) && input.simultaneous == 0
+            try
+                load (strcat(datafolder,'\Int_HPCRE_StemTCol10.mat')); 
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = ['successfully loaded Int_HPCRE_StemTCol10.mat from ', C{end}];
+                disp(X);               
+            catch
+                if input.pow_hpc == 1
+                    try
+                        load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
+                        % display
+                        C = [];
+                        C = strsplit(datafolder,'\');
+                        X = [];
+                        X = ['successfully loaded Int_lfp_StemT_Col10.mat from ', C{end}];
+                        disp(X);               
+                    catch
+                        % display
+                        C = [];
+                        C = strsplit(datafolder,'\');
+                        X = [];
+                        X = [C{end}, ' had no Int_lfp_StemT_Col10.mat file'];
+                        disp(X);              
+                        continue
+                    end
+                end
+                % display
+                C = [];
+                C = strsplit(datafolder,'\');
+                X = [];
+                X = [C{end}, ' had no Int_HPCRE_StemTCol10.mat file'];
+                disp(X);              
+            end            
+        end
+    else
         try
             load (strcat(datafolder,'\Int_lfp.mat')); 
             % display
@@ -174,8 +251,8 @@ for nn = 3:length(folder_names)
     
     % set parameters
     params.fpass           = input.phase_bandpass; 
-    params.tapers           = [3 5];    %[2 3]
-    params.trialave         = 0;
+    params.tapers           = [2 3];    %[2 3]
+    params.trialave         = 1;
     params.err              = [2 .05];
     params.pad              = 0;
     %params.fpass            = [0 100]; % [1 100]
@@ -190,12 +267,15 @@ for nn = 3:length(folder_names)
     end
     
     clearvars -except power_sample power_choice power_mean_sample power_mean_choice ...
-        frex_sample frex_choice nn folder_names Datafolders input correct_trajectory
-    
+        frex_sample frex_choice nn folder_names Datafolders input correct_trajectory ...
+        sessionslog
+
     X = ['finished with session ',num2str(nn-2)];
     disp(X)    
 
 end
+
+%{
 
 if input.specgram == 1
     % remove empty variables
@@ -453,7 +533,7 @@ end
     
 end
 
-
+%}
 
 if input.freqplot == 1
 %% correct size differences
@@ -568,29 +648,25 @@ else
     min_lens = min_lens(1);
     
     % frequencies that add up to the smallest sized frequency
-    frex_sample_og = frex_sample;
-    frex_choice_og = frex_choice;
     frex_sample = frex_sample(~cellfun('isempty',frex_sample));
     frex_choice = frex_choice(~cellfun('isempty',frex_choice));
     
     % find whether the smallest sized frequency length was in the the
     % sample or choice phase index of frequency lengths. It changes where
     % you draw the frequencies from
+    % draw from sample since the min_lens(1) will inherently be sample
+    % phase
     if isempty(find(sam_lens == smallest_size_fx))==0;
         for i = 1:length(frex_sample)
-            idx_sam{i} = dsearchn(frex_sample{i}',frex_sample_og{min_lens}');
-            idx_cho{i} = dsearchn(frex_choice{i}',frex_sample_og{min_lens}');
+            idx_sam{i} = dsearchn(frex_sample{i}',frex_sample{min_lens}');
+            idx_cho{i} = dsearchn(frex_choice{i}',frex_sample{min_lens}');
         end
     else
         for i = 1:length(frex_sample)
-            idx_sam{i} = dsearchn(frex_sample{i}',frex_choice_og{min_lens}');
-            idx_cho{i} = dsearchn(frex_choice{i}',frex_choice_og{min_lens}');
+            idx_sam{i} = dsearchn(frex_sample{i}',frex_sample{min_lens}');
+            idx_cho{i} = dsearchn(frex_choice{i}',frex_sample{min_lens}');
         end
     end
-    % save old variables
-    power_choice_og = power_choice;
-    power_sample_og = power_sample;
-
     % remove empty variables
     power_sample = power_sample(~cellfun('isempty',power_sample));
     power_choice = power_choice(~cellfun('isempty',power_choice));
@@ -625,14 +701,9 @@ else
     power_sem_choice = (std(power_choice_matrix))/(sqrt(size(power_choice_matrix,1)));
 
     % plot
-    if isempty(find(sam_lens == smallest_size_fx))==0;
-        x_label = frex_sample_og{min_lens};
-        new_frex = x_label;
-    else
-        x_label = frex_choice_og{min_lens};
-        new_frex = x_label;
-    end    
-    
+    x_label = frex_sample{min_lens};
+    new_frex = x_label;
+  
     figure('color',[1 1 1])
         shadedErrorBar(x_label,power_avg_sample,power_sem_sample,'-r',1);
         hold on;
@@ -712,3 +783,4 @@ diffscore_fastg = (power_fastg.choice-power_fastg.sample)./...
     end  
     
 end
+

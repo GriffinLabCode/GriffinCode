@@ -109,7 +109,7 @@ input = get_lfp_inputs;
     %datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Meusli 6-18-18';
     %datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Meusli 6-19-18';
     %datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Meusli 6-21-18';
-    datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Meusli 6-22-18';
+    %datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Meusli 6-22-18';
    
   % Thanos
     %datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Thanos 12-8-18';
@@ -224,7 +224,7 @@ for triali=loopidx%1:size(Int,1) % trial
     %time = [(Int(triali,5)-(1*1e6)) (Int(triali,5)+(1*1e6))];
     %time = [(Int(triali,1)-(10*1e6)) Int(triali,6)];
     %time  = [(Int(triali-1,8)) Int(triali,1)];
-    time  = [(Int(triali,1)) Int(triali,6)];
+    time  = [(Int(triali,1)) Int(triali,7)];
     
     try
     data1{triali} = EEG_pfc(Timestamps > time(1,1) & Timestamps < time(1,2));

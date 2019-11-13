@@ -12,13 +12,14 @@ addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions')
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
 
 for i = 1:3 % loop across region combos
-    [input]=get_granger_inputs(); % this works for now
+    %[input]=get_granger_inputs(); % this works for now
+    [input]=get_coh_inputs() 
     if i == 1 % hpc-pfc
-        input.pfc = 1; input.hpc = 1; input.re = 0;
+        input.coh_pfc = 1; input.coh_hpc = 1; input.coh_re = 0;
     elseif i == 2 % hpc-re
-        input.pfc = 0; input.hpc = 1; input.re = 1;
+        input.coh_pfc = 0; input.coh_hpc = 1; input.coh_re = 1;
     elseif i == 3 % pfc-re
-        input.pfc = 1; input.hpc = 0; input.re = 1;
+        input.coh_pfc = 1; input.coh_hpc = 0; input.coh_re = 1;
     end
 
     correct_trajectory = 0;
@@ -56,23 +57,38 @@ for i = 1:3 % loop across region combos
         datafolder = pwd;
         cd(datafolder); 
 
-        % only analyze sessions with Re, hpc, and prl recordings
-        % this is a relic
-        if input.all_sites == 1
-            Files=dir(fullfile(datafolder,'*detrend.mat'));
-            if size(Files,1) < 3 
-                continue
+    %% only analyze sessions with Re, hpc, and prl recordings
+    if input.simultaneous == 1 
+        Files.pfc=dir(fullfile(datafolder,'mPFC.mat'));
+        Files.re=dir(fullfile(datafolder,'Re.mat'));
+        Files.hpc=dir(fullfile(datafolder,'HPC.mat'));
+        if input.Tentry_longepoch == 1 || input.T_DataDriven == 1 || input.T_entry_minus2 == 1
+            Files.int=dir(fullfile(datafolder,'Int_lfp_StemT_Col10.mat'));
+        elseif input.T_entry == 1 || input.T_before == 1 || input.T_after == 1
+            Files.int=dir(fullfile(datafolder,'Int_lfp_T.mat'));     
+        end
+        fn = fieldnames(Files);
+        for fieldi = 1:length(fn)
+            if size(Files.(fn{fieldi}),1) == 0
+                store_size(fieldi) = 0;
+            elseif size(Files.(fn{fieldi}),1) == 1
+                store_size(fieldi) = 1;                    
             end
-            % save session name
-            C = [];
-            C = strsplit(datafolder,'\');
+        end
+        
+        % if any of the data is missing, skip to the next loop
+        if isempty(find(store_size == 0)) == 0 % this means one of the store_size values are zero. in other words, this session does not have simultaneous recordings
+            continue
+        end           
+    end
+    
 
-        end    
 
-      %% get data - leave all try and if statemnets
-       % define and load some variables 
+    %% get and format int
+    
+        % define and load some variables 
         if input.Tjunction == 1
-            if input.pfc == 1
+            if input.coh_pfc == 1 || input.simultaneous == 1
                 try
                     load (strcat(datafolder,'\Int_lfp_T.mat')); 
                     % display
@@ -90,7 +106,7 @@ for i = 1:3 % loop across region combos
                     disp(X);              
                     continue
                 end 
-            elseif input.hpc == 1 && input.re == 1
+            elseif (input.pow_re == 1 || input.pow_hpc == 1) && input.simultaneous == 0
                 try
                     load (strcat(datafolder,'\Int_HPCRE_T.mat')); 
                     % display
@@ -109,23 +125,43 @@ for i = 1:3 % loop across region combos
                     continue
                 end 
             end
-        else  
+        elseif input.Tjunction == 0 && input.coh_hpc == 1 && input.coh_re == 1 && (input.T_DataDriven == 1 || input.Tentry_longepoch == 1)
             try
-                load (strcat(datafolder,'\Int_lfp.mat')); 
+                load (strcat(datafolder,'\Int_HPCRE_StemTCol10.mat')); 
                 % display
                 C = [];
                 C = strsplit(datafolder,'\');
                 X = [];
-                X = ['successfully loaded Int_lfp.mat from ', C{end}];
+                X = ['successfully loaded Int_HPCRE_StemTCol10.mat from ', C{end}];
                 disp(X);               
             catch
                 % display
                 C = [];
                 C = strsplit(datafolder,'\');
                 X = [];
-                X = [C{end}, ' had no Int_lfp.mat file'];
+                X = [C{end}, ' had no Int_HPCRE_StemTCol10.mat file'];
                 disp(X);              
                 continue
+            end
+        elseif input.Tjunction == 0 || input.T_DataDriven == 1
+            if input.coh_pfc == 1 && (input.coh_re == 1 || input.coh_hpc == 1)
+                try
+                    load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
+                    % display
+                    C = [];
+                    C = strsplit(datafolder,'\');
+                    X = [];
+                    X = ['successfully loaded Int_lfp_StemT_Col10.mat from ', C{end}];
+                    disp(X);               
+                catch
+                    % display
+                    C = [];
+                    C = strsplit(datafolder,'\');
+                    X = [];
+                    X = [C{end}, ' had no Int_lfp_StemT_Col10.mat file'];
+                    disp(X);              
+                    continue
+                end
             end
         end
         cd(Datafolders);
@@ -175,7 +211,7 @@ for i = 1:3 % loop across region combos
         end        
 
         try % not all sessions may have all types of LFP files
-            if input.pfc == 1
+            if input.coh_pfc == 1
                 % check if pfc data exists
                 if input.Prelimbic == 1
                     region = '\PrL.mat';
@@ -195,7 +231,7 @@ for i = 1:3 % loop across region combos
                     clear Samples
             end
 
-            if input.hpc == 1
+            if input.coh_hpc == 1
                 load(strcat(datafolder,'\HPC.mat'),'Samples',...
                     'Timestamps','SampleFrequencies');   
                     %EEG_hpc = Samples(:)';
@@ -203,7 +239,7 @@ for i = 1:3 % loop across region combos
                      clear Samples
             end
 
-            if input.re == 1
+            if input.coh_re == 1
                 load(strcat(datafolder,'\Re.mat'),'Samples',...
                     'Timestamps','SampleFrequencies');
                     EEG3 = Samples(:)';
@@ -237,8 +273,10 @@ for i = 1:3 % loop across region combos
                         time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(0.5*1e6))];                
                   end
                 %}
-                
-               time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(1.5*1e6))];
+                %time = [(Int(triali,1)) (Int(triali,1)+(3*1e6))];
+               %time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5)+(1.5*1e6))];
+              time = [(Int(triali,5)-(2*1e6)) (Int(triali,5)+(1*1e6))];
+              %time = [(Int(triali,5)-(0.8*1e6)) (Int(triali,5)+(0.2*1e6))];
                 
                 % get position data
                 PosX{triali}       = ExtractedX(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
@@ -259,12 +297,16 @@ for i = 1:3 % loop across region combos
                 end
             end
 
-            % take 25 of the 30 samples due to vt data not always tracking
-            % right
-            for i = 1:length(vel)
-                 speed{i} = abs(vel{i}(1:54)); % take first 27 values
+            % interpolate to sfreq
+            time_diff = (time(2)-time(1))/1e6;
+            for jj = 1:length(vel)
+                 y = []; x = []; x_new = [];
+                 y         = abs(vel{jj});
+                 x         = linspace(-0.8,0.2,length(vel{jj}));
+                 x_new     = linspace(-0.8,0.2,sfreq*time_diff); % interp to time epoch  
+                 speed{jj} = interp1(x,y,x_new);
             end
-
+            
             % get matrix
             speed_mat{nn-2} = vertcat(speed{:});
             speed_avg{nn-2} = mean(speed_mat{nn-2});
@@ -283,11 +325,11 @@ for i = 1:3 % loop across region combos
     cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data')
 
     % make variables for saving - this is the region
-    if input.pfc == 1 && input.hpc == 1
+    if input.coh_pfc == 1 && input.coh_hpc == 1
         X_regs = 'PfcHpc';
-    elseif input.pfc == 1 && input.re == 1
+    elseif input.coh_pfc == 1 && input.coh_re == 1
         X_regs = 'PfcRe';
-    elseif input.hpc == 1 && input.re == 1
+    elseif input.coh_hpc == 1 && input.coh_re == 1
         X_regs = 'HpcRe';
     end
 
@@ -298,6 +340,14 @@ for i = 1:3 % loop across region combos
         X_save_loc = 'afterT';
     elseif input.T_entry == 1
         X_save_loc = 'entryT';
+    end
+    
+    if input.simultaneous == 1
+        X_save_loc = 'simultaneous';
+    end
+    
+    if input.T_DataDriven == 1
+        X_save_loc = '111019_approach';
     end
 
     % save data

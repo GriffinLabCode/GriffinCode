@@ -21,7 +21,7 @@
 
 clear; clc
 
-%addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
+addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux_2_12\spectral_analysis\continuous');
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\LFP Analyses');
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Behavior')
@@ -52,7 +52,7 @@ addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\F
     cd(Datafolders);
     folder_names = dir;    
     
-% loop across folders
+% loop across folders (n = 3:35 if you want to exclude thanos)
 for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(folder_names)
     
     Datafolders = Datafolders;
@@ -63,19 +63,42 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
     datafolder = pwd;
     cd(datafolder); 
 
-    % only analyze sessions with Re, hpc, and prl recordings
-    % this needs to be fixed - not function as of 8/8/19
-    input.all_sites = 0; % hard coded to 0 until fixed
-    if input.all_sites == 1
-        Files=dir(fullfile(datafolder,'*detrend.mat'));
-        if size(Files,1) < 3 
-            continue
+    %% only analyze sessions with Re, hpc, and prl recordings
+    if input.simultaneous == 1 
+        
+        Files.pfc=dir(fullfile(datafolder,'mPFC.mat'));
+        Files.re=dir(fullfile(datafolder,'Re.mat'));
+        Files.hpc=dir(fullfile(datafolder,'HPC.mat'));
+        
+        if input.Tentry_longepoch == 1 || input.T_DataDriven == 1 || input.T_entry_minus2 == 1
+            Files.int=dir(fullfile(datafolder,'Int_lfp_StemT_Col10.mat'));
+        elseif input.T_entry == 1 || input.T_before == 1 || input.T_after == 1
+            Files.int=dir(fullfile(datafolder,'Int_lfp_T.mat'));     
         end
+        
+        fn = fieldnames(Files);
+        
+        for fieldi = 1:length(fn)
+            if size(Files.(fn{fieldi}),1) == 0
+                store_size(fieldi) = 0;
+            elseif size(Files.(fn{fieldi}),1) == 1
+                store_size(fieldi) = 1;                    
+            end
+        end
+        
+        % if any of the data is missing, skip to the next loop
+        if isempty(find(store_size == 0)) == 0 % this means one of the store_size values are zero. in other words, this session does not have simultaneous recordings
+            continue
+        end        
     end
+    
+
+
+    %% get and format int
     
     % define and load some variables 
     if input.Tjunction == 1
-        if input.coh_pfc == 1
+        if input.coh_pfc == 1 || input.simultaneous == 1
             try
                 load (strcat(datafolder,'\Int_lfp_T.mat')); 
                 % display
@@ -93,7 +116,7 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
                 disp(X);              
                 continue
             end 
-        elseif input.coh_hpc == 1 && input.coh_re == 1
+        elseif (input.pow_re == 1 || input.pow_hpc == 1) && input.simultaneous == 0
             try
                 load (strcat(datafolder,'\Int_HPCRE_T.mat')); 
                 % display
@@ -112,7 +135,7 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
                 continue
             end 
         end
-    elseif input.Tjunction == 0 && input.coh_hpc == 1 && input.coh_re == 1  
+    elseif input.Tjunction == 0 && input.coh_hpc == 1 && input.coh_re == 1  && input.simultaneous == 0 && (input.T_DataDriven == 1 || input.Tentry_longepoch == 1 || input.T_beforeEffect == 1)
         try
             load (strcat(datafolder,'\Int_HPCRE_StemTCol10.mat')); 
             % display
@@ -130,8 +153,11 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
             disp(X);              
             continue
         end
-    elseif input.Tjunction == 0
-        if input.coh_pfc == 1 && (input.coh_re == 1 || input.coh_hpc == 1)
+    elseif input.Tjunction == 0 || input.T_DataDriven == 1 || input.T_beforeEffect == 1
+        % if you want to examine pfc-re or pfc-hpc interactions, have
+        % selected the stem-to-t cleaning OR if you've selected
+        % simultaneous pfc-re-hpc recordings and have selected re and hpc
+        if input.coh_pfc == 1 && (input.coh_re == 1 || input.coh_hpc == 1) || (input.coh_re == 1 && input.coh_hpc == 1 && input.simultaneous == 1)
             try
                 load (strcat(datafolder,'\Int_lfp_StemT_Col10.mat')); 
                 % display
@@ -186,11 +212,14 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
     
     % set parameters
     params.fpass = input.phase_bandpass; 
+    %{
     if input.Tjunction == 1
         params.tapers = [2 3]; % good for short time windows Price et al., 2016
     else
         params.tapers = [3 5];
     end
+    %}
+    params.tapers = [2 3];
     params.trialave         = 1;
     params.err              = [2 .05];
     params.pad              = 0;
@@ -199,7 +228,7 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
     params.movingwin        = [0.5 0.01]; %(in the form [window winstep] 500ms window with 10ms sliding window Price and eichenbaum 2016 bidirectional paper
     
     % this is if you want time around tjunction
-    if input.Tjunction == 1
+    if input.coh_time == 1
         [Coh_sample{nn-2},frex_sample{nn-2}] = coherence_chronux(datafolder,input,Int_sample,params);     
         [Coh_choice{nn-2},frex_choice{nn-2}] = coherence_chronux(datafolder,input,Int_choice,params);     
         
@@ -229,7 +258,8 @@ for nn = 3:length(folder_names)%28:35%[3:27,36:length(folder_names)] %3:length(f
 
 end
 
-if input.Tjunction == 1
+%{
+if input.Tjunction == 1 || input.time_freq == 1
     % remove NaNs - may occur if session doesn't have enough trials of lfp
     for i = 1:length(Coh_choice)
         if isnan(Coh_choice{i}) == 1
@@ -259,8 +289,9 @@ if input.Tjunction == 1
         coh_choice_mean = mean(coh_choice_3d,3);
         coh_sample_mean = mean(coh_sample_3d,3);
         % figure
-        x_label = linspace(-0.5,0.5,size(coh_choice_mean,1));
+        %x_label = linspace(-0.5,0.5,size(coh_choice_mean,1));
         y_label = mean(vertcat(frex_choice{:}));
+        x_label = linspace(-2,1,size(coh_choice_mean,1));
         
         figure('color',[1 1 1])
             pcolor(x_label,y_label,coh_choice_mean')
@@ -340,18 +371,17 @@ if input.Tjunction == 1
             
           % across sessions
           clear p bands matrix_choice matrix_sample mean_choice mean_sample stat p_norm diffscores
-          bands{1} = find(mean_frex>4 & mean_frex<12);
-          bands{2} = find(mean_frex>20 & mean_frex<55);
-          bands{3} = find(mean_frex>65 & mean_frex<100);
-          bands{4} = dsearchn(mean_frex',4);
+          bands{1} = find(mean_frex>7 & mean_frex<9);
+          %bands{2} = find(mean_frex>20 & mean_frex<55);
+          %bands{3} = find(mean_frex>65 & mean_frex<100);
+          %bands{4} = dsearchn(mean_frex',4);
           
           for i = 1:length(bands)
             matrix_choice{i} = coh_matrix_choice(:,bands{i});
             matrix_sample{i} = coh_matrix_sample(:,bands{i});
             mean_choice{i}   = mean(matrix_choice{i},2);
             mean_sample{i}   = mean(matrix_sample{i},2); 
-            diffscores{i}    = (mean_choice{i}-mean_sample{i})./...
-                (mean_choice{i}+mean_sample{i});
+            diffscores{i}    = (mean_choice{i}-mean_sample{i});
             % stats
             [h,p_norm{i}]=swtest(diffscores{i});
             if p_norm{i}<0.05
@@ -1154,3 +1184,4 @@ else
 
     end
 end
+%}

@@ -98,7 +98,15 @@ function [C,f] = coherence_chronux(datafolder,input,Int,params)
                 elseif input.T_after == 1
                     % after 
                     time = [(Int(triali,5)) (Int(triali,5)+(0.5*1e6))];
+                elseif input.T_entry_minus2 == 1;
+                    time = [(Int(triali,5)-(2*1e6)) (Int(triali,5))];                        
                 end
+            elseif input.Tentry_longepoch == 1;
+                time = [(Int(triali,5)-(2*1e6)) (Int(triali,5)+(1*1e6))];
+            elseif input.T_DataDriven == 1
+                time = [(Int(triali,5)-(0.8*1e6)) (Int(triali,5)+(0.2*1e6))];    
+            elseif input.T_beforeEffect == 1
+                time = [(Int(triali,5)-(2*1e6)) (Int(triali,5)-(1*1e6))];                    
             end
         
             data1{triali} = EEG_1(Timestamps > time(1,1) & Timestamps < time(1,2));
@@ -119,7 +127,7 @@ function [C,f] = coherence_chronux(datafolder,input,Int,params)
             data2_cleantemp{triali} = locdetrend(data2{triali});                
 
             % clean           
-            if input.Tjunction == 1
+            if input.Tjunction == 1 || input.time_freq == 1 || input.T_entry_minus2 == 1 || input.T_DataDriven == 1 || input.T_beforeEffect == 1
                 data1_clean{triali} = rmlinesmovingwinc(data1_cleantemp{triali},[0.5 0.01],10,params,'n');
                 data2_clean{triali} = rmlinesmovingwinc(data2_cleantemp{triali},[0.5 0.01],10,params,'n');
             else
