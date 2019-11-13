@@ -1,12 +1,11 @@
 %% lagged_LFP
 
-% This function calculates lagged coherence by shifting vector y with
-% respect to vector x, calculating coherence along the way. Sort of like
-% convolution.
+% This function calculates lagged coherence by shifting vector x with
+% respect to a centered vector y, calculating coherence along the way. 
 %
 % this function is currently not flexible, and only works in 150ms windows
 % (300 samples). Therefore, one signal should have 600 extra points as
-% another if examining a single trial.
+% another if examining a single trial and if the srate is 2000 samples/sec.
 %
 % INPUTS: 
 % signalx_trials: this is a cell array containing your lagged signals
@@ -21,6 +20,8 @@
 % f: frequency 
 % lag: lag - mostly used for x-axis plotting
 %
+% last edit 11-13-2019
+%
 % written by John Stout
 
 function [C,f,lag]=lagged_coherence(signalx_trials,signaly_trials,params)
@@ -33,7 +34,7 @@ for triali = 1:length(signalx_trials)
     % like convolution. Notice how I skip a pnt (1:2:N). This is because
     % I'm interested in 1ms windows, my srate was 2000 samples/second or
     % 2samples/ms
-    for i = 1:2:600
+    for i = 1:2:600 % 300 ms
         % notice how I used length(signaly_trials). This is because
         % signaly_trials is the correct size that I need (lets say 1000). 
         % So this line takes i (lets say 1), then finds 1 through the first
@@ -59,7 +60,7 @@ for lagi = 1:length(signalx_AllLags)
     % store data into signalXtrials format
     signalx_lag{lagi} = horzcat(signalx_AllLags{:,lagi});
 end
-signaly = horzcat(signaly_trials{:});
+signaly = horzcat(signaly_trials{:}); % centered signal Y
 
 % note that as of now, you should have 1 signaly variable that has a
 % signal. You're signalx_lag will be a cell array of vectors lagged by 2
