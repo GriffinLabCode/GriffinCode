@@ -9,10 +9,15 @@
 rng('shuffle')
 clear; clc
 
-load('data_classify_LvR_sample_greaterThan2Hz')
+dataName = 'data_mPFC_Choice_FRLvR_7bins_Classifier';
+
+load(dataName)
+
+data1 = FRdata.lefts;
+data2 = FRdata.rights;
 
 addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous\libsvm-3.20\matlab')
-clearvars -except data1 data2
+clearvars -except data1 data2 dataName
 
 % define a dynamic variable
 data1Master  = data1; % to get this, run formatData_Cleaning_...
@@ -22,20 +27,23 @@ data2Master  = data2;
 numObs = 6;
 
 % select a bin to draw from
-binDraw = 7; % t-junction
+binDraw = 2; % t-junction
 
 % make an index for numbers of neurons to draw
-selectIdx = 5:5:85;
+selectIdx = 5:5:185;
+
+% How many iterations?
+Niterat = 5000;
 
 for numi = 1:length(selectIdx)
-    disp([num2str(selectIdx(numi)), ' neurons added to the classifier'])
     % run the classifier on all combinations of 1 neuron, all combinations of 2 neurons, all combinations of 3 neurons, etc...
     % due to the time it would take to do this, the data will be compared
-    % against a theoretical 50% line
+    % against a theoretical 50% line drawn from the last iteration from the
+    % same dataset (load in the classifier data, grab chance level from shuffled dist).
  
-    % randomly do each selection process 1000x
-    for n = 1:1000
-        disp(['Iteration ',num2str(n)])
+    % randomly do each selection process N-times
+    for n = 1:Niterat
+        disp(['Iteration ',num2str(n),' ',num2str(selectIdx(numi)), ' neurons added to the classifier'])
     
         % randomly selected numi number of values
         randSelect = randperm(length(data1Master),selectIdx(numi));
@@ -109,7 +117,7 @@ svm_avg = cellfun(@mean,svm_perf);
 svm_std = cellfun(@std,svm_perf);
 
 % chance level - pulled from full blown classifier
-data_comp = load('data_classify_LvR_sample_greaterThan2Hz');
+data_comp = load(dataName);
 chance_dist = data_comp.svm_perf_rand{binDraw};
 
 % ztest
