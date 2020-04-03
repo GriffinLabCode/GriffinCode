@@ -1,2 +1,5 @@
 Note: There are plenty more basic functions. However, only functions written by the lab was included here. 
 We utilize chronux toolbox for spectral analysis. This can be found under the chronux folder.
+
+Note that any analyses that utilize chronux routines for cleaning/detrending should be replaced with
+DetrendDenoise
