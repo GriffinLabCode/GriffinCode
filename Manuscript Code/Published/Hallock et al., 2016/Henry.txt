@@ -1,0 +1,118 @@
+load('Int.mat')
+load('CSC8.mat')
+load('VT1.mat')
+load TT1_SS_02.txt
+load TT1_SS_12.txt
+load TT2_SS_07.txt
+load TT3_SS_03.txt
+load TT3_SS_25.txt
+load TT4_SS_05.txt
+load TT4_SS_30.txt
+samples_new = Samples(:)';
+timestamps_new = linspace(Timestamps(1,1),Timestamps(1,end),length(samples_new));
+samples_trial = samples_new(timestamps_new>Int(4,8) & timestamps_new<Int(5,1));
+timestamps_trial = find(timestamps_new>Int(4,8) & timestamps_new<Int(5,1));
+[time_spent, velocity, performance] = time_spent(Int);
+clear time_spent velocity performance
+[high_amp_theta] = theta_only(samples_trial, 2034);
+plot(high_amp_theta)
+axis tight
+clear high_amp_theta
+[fr_DA, fr_CD] = task_fr(TT1_SS_02, Int, Int, 0);
+clear fr_DA fr_CD
+[DI, KS, P, fr_right, fr_left] = stem_left_right(TT1_SS_02, 10, Int, ExtractedX, TimeStamps, 0);
+[DI, KS, P, fr_right, fr_left] = stem_left_right(TT1_SS_02, 20, Int, ExtractedX, TimeStamps, 0);
+[DI, KS, P, fr_right, fr_left] = stem_left_right(TT1_SS_02, 10, Int, ExtractedX, TimeStamps, 0);
+[DI, KS, P, fr_right, fr_left] = stem_left_right(TT1_SS_02, 6, Int, ExtractedX, TimeStamps, 0);
+[DI, KS, P, fr_right, fr_left] = stem_left_right(TT1_SS_02, 10, Int, ExtractedX, TimeStamps, 0);
+clear P KS DI
+clear fr_left fr_right
+[spk_triggered_plot, spk_triggered_sem] = spk_triggered_avg(Samples, Timestamps, TT1_SS_02, 2034, [-0.5 0.5], 0);
+[spk_triggered_plot, spk_triggered_sem] = spk_triggered_avg(Samples, Timestamps, TT1_SS_02, 2034, [-1 1], 0);
+clear spk_triggered_plot spk_triggered_sem
+[filteredeeg] = skaggs_filter_var(samples_trial, 5, 11, 2034);
+subplot(211)
+plot(samples_trial)
+axis tight
+subplot(212)
+plot(filteredeeg)
+axis tight
+[filteredeeg] = skaggs_filter_var(samples_trial, 25, 55, 2034);
+plot(filteredeeg)
+axis tight
+clear filteredeeg
+signal_data.timestamps = timestamps_trial;
+signal_data.phase_EEG = samples_trial;
+signal_data.amplitude_EEG = samples_trial;
+signal_data.phase_bandpass = [5 11];
+signal_data.amplitude_bandpass = [25 55];
+signal_data.srate = 2034;
+signal_data.phase_extraction = 0;
+phase_bins = 18;
+[mu, sigma, MI, z, p] = shuffle_MI(signal_data, phase_bins, 0);
+[filtered_map, rate_map, binned_pos, binned_spike] = rate_map(ExtractedX, ExtractedY, TimeStamps, TT1_SS_02, Int, 200, 5, 0);
+[filtered_map, rate_map, binned_pos, binned_spike] = rate_map(ExtractedX, ExtractedY, TimeStamps, TT1_SS_02, Int, 200, 2.5, 0);
+clear filtered_map rate_map binned_pos binned_spike
+[filtered_map, rate_map, binned_pos, binned_spike] = rate_map(ExtractedX, ExtractedY, TimeStamps, TT1_SS_02, Int, 200, 2.5, 0);
+clear filtered_map rate_map binned_pos binned_spike
+[filtered_map, rate_map, binned_pos, binned_spike] = rate_map(ExtractedX, ExtractedY, TimeStamps, TT1_SS_02, Int, 100, 2.5, 0);
+clear filtered_map rate_map binned_pos binned_spike
+clear MI mu p sigma z
+signal_data.phase_bandpass = [5 11];
+signal_data.amplitude_bandpass = [20 150];
+signal_data.phase_extraction = 2;
+amplitude_freq_bins = 1;
+phase_freq_bins = 1;
+[phase_map] = phase_map(signal_data, phase_bins, amplitude_freq_bins, phase_freq_bins, 0);
+clear phase_map
+[filteredeeg] = skaggs_filter_var(samples_trial,5,11,2034);
+[Phase, InstCycleFrequency, PerCycleFreq, signal_filtered] = phase_freq_detect(filteredeeg, timestamps_trial, 5, 11, 2034);
+subplot(311)
+plot(samples_trial)
+axis tight
+subplot(312)
+plot(filteredeeg)
+axis tight
+subplot(313)
+plot(Phases)
+plot(Phase)
+axis tight
+clear Phase PerCycleFreq signal_filtered
+clear InstCycleFrequency
+[p, b] = PETH_delay(TT1_SS_02, Int, 30, 0.2);
+[p, b] = PETH_delay(TT1_SS_02, Int, 30, 1);
+clear p b
+[tfZ, tf_smooth] = morlet_spectrogram(samples_trial, 2034, 1, 150, 0);
+clear tfZ tf_smooth
+signal_data.phase_bandpass = [5 11];
+signal_data.amplitude_bandpass = [25 55];
+signal_data.phase_extraction = 1;
+[data] = makedatafile(signal_data);
+[M] = modindex(data,'y',18);
+[data] = makedatafile_morlet(signal_data);
+[M] = modindex(data,'y',18);
+clear M data
+[LFP_triggered_plot, LFP_triggered_sem] = LFP_triggered_avg(samples_trial, samples_trial, 5, 11, 2034, [-0.5 0.5], 0, 0);
+[LFP_triggered_plot, LFP_triggered_sem] = LFP_triggered_avg(samples_trial, samples_trial, 5, 11, 2034, [-0.5 0.5], 1, 0);
+clear LFP_triggered_plot LFP_triggered_sem
+[fr_sb, fr_stem, fr_cp, fr_reward, fr_return] = firing_rate_maze(TT1_SS_02, Int, 0);
+clear fr_sb fr_stem fr_cp fr_reward fr_return
+[mrl pval z mrl_subsampled] = entrainment(Int, Timestamps, Samples, TT1_SS_02, [5 11], 2034, 0);
+clear mrl pval z mrl_subsampled
+[detrended_signal] = detrend_LFP(samples_trial');
+detrended_signal = detrended_signal';
+plot(detrended_signal)
+axis tight
+clear detrended_signal
+[DI,KS,P] = delay_left_right(TT1_SS_02, Int, 30, 0.2);
+clear DI KS P
+signal_data.phase_bandpass = [1 30];
+signal_data.amplitude_bandpass = [20 150];
+signal_data.phase_extraction = 2;
+[heatmap, heatmap_smooth] = cfc_heatmap(signal_data, phase_bins, amplitude_freq_bins, phase_freq_bins, 0);
+clear heatmap heatmap_smooth
+pca_trajectories
+peak_waveform
+phase_locked_MUA
+svm
+commandhistory

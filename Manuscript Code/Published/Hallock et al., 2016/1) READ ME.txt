@@ -1,0 +1,6 @@
+Most of the code in this folder was written by Henry Hallock. I say 'most' because I think circ_... functions weren't.
+
+Code in this folder was used for Hallock et al., 2016, but I'm not really sure about previous paper. This code
+was stored on our lab drive, but I wanted to make it available on our public page.
+
+- John Stout 4/3/2020
