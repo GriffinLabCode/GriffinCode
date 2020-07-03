@@ -108,7 +108,7 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
 
                         % get an index of timestamps and timestamps
                         ts_ind = find(TimeStamps > Int(trials(triali),1) & ...
-                            TimeStamps < Int(trials(triali),6)); 
+                            TimeStamps < Int(trials(triali),6)); % was 6 as of 6/29/20
                         ts_temp = TimeStamps(ts_ind); 
 
                         % use X or Y data depending on the maze orientation
@@ -135,14 +135,14 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
                             % total spike count per bin
                             numspikes = length(numspikes_ind);
                             % time diff
-                            time_temp(triali,j) = times_around(j+1) - times_around(j); 
-                            time_temp(triali,j) = time_temp(triali,j)/1e6;
+                            time_temp = times_around(j+1) - times_around(j); 
+                            time_temp = time_temp/1e6;
                             % storage - FR bins shell1 = trial type
                             % shell 2 = session, shell3 =
                             % cluster, within the cluster shell there rows are
                             % trials columns are bins, each element is the
                             % corresponding firing rate
-                            FRbins{nn-2}{ci}(triali,j) = numspikes/time_temp(triali,j);
+                            FRbins{nn-2}{ci}(triali,j) = numspikes/time_temp;
                         end                   
                     end 
                     
