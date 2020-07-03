@@ -1,7 +1,8 @@
 %% svmFormatting_trajectoryCoding
-% this function formats data for classification of trajectory using stem
-% bins
+% this function formats data for classification of task phase during stem
+% traversals. It is for DNMP task.
 %
+% NOT FINISHED
 %
 % ~~~ INPUTS ~~~
 % Datafolders: Master directory
@@ -10,22 +11,17 @@
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
+% correct: correct trials
 %
-% written by John Stout. Last update 2/15/20
+% written by John Stout. Last update 2/21/20
 
-function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_name,vt_name,task_type,stem_dir,numbins)
-
+function [FRdata] = svmFormatting_taskPhaseCoding_binnedStem(Datafolders,int_name,vt_name,task_type,stem_dir,numbins,correct)
 
     % calculate firing rate for all sessions
     addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
     addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions');
     cd(Datafolders);
     folder_names = dir;
-    
-    if strfind(task_type,'DNMP') == 1
-        prompt = 'Sample or choice? [S/C] ';
-        trial_type = input(prompt,'s');
-    end
     
     % adjust the looping index?
     prompt  = 'Adjust the looping index? [Y/N] ';
@@ -39,7 +35,7 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
     end
 
     % loop across folders
-    for nn = looper
+    for nn = looper    
 
             Datafolders = Datafolders;
             cd(Datafolders);
@@ -51,14 +47,8 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
 
             % load animal parameters 
             load(int_name);
-            vtData = load(vt_name);
-            ExtractedX = vtData.ExtractedX;
-            ExtractedY = vtData.ExtractedY;
-            try
-                TimeStamps = vtData.TimeStamps_VT; % rename
-            catch % sometimes the ..._VT variable is not defined
-                TimeStamps = vtData.TimeStamps;
-            end
+            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
+            TimeStamps = TimeStamps_VT; % rename
             
             % correct tracking errors     
             [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
@@ -67,36 +57,17 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
             clusters = dir('TT*.txt');
 
             % only include correct trials
-            Int = Int(find(Int(:,4)==0),:);
-
-            % if DNMP was selected, separate sample and choice trials
-            if strfind(task_type,'DNMP') == 1
-                if trial_type == 'S'
-                    trials = (1:2:size(Int,1));
-                elseif trial_type == 'C'
-                    trials = (2:2:size(Int,1)); 
-                end
-                task_params = 2;
-            elseif strfind(task_type,'DA') == 1 || strfind(task_type,'CA') == 1 || strfind(task_type,'CD') == 1
-                task_params = 1;
+            if correct == 1
+                Int = Int(find(Int(:,4)==0),:);
             end
             
             %% create bins
-            if stem_dir == 'Y'
-                PosMin = 135; % do not underestimate - you'll end up in start-box
-                PosMax = 400; % over estimate - this doesn't hurt anything
-            elseif stem_dir == 'X'
-                PosMin = 215;
-                PosMax = 641;
-            end
-            bins = round(linspace(PosMin,PosMax,numbins));
+            ymin = 135; % do not underestimate - you'll end up in start-box
+            ymax = 400; % over estimate - this doesn't hurt anything
+            bins = round(linspace(ymin,ymax,numbins));
 
             %% Create firing rate arrays
-                if task_params == 2 
-                    trials = trials;
-                elseif task_params == 1
-                    trials = 1:size(Int,1);
-                end
+            trials = 1:size(Int,1);
             
                 for ci=1:length(clusters)
                     cd(datafolder);
@@ -104,7 +75,7 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
                     cluster    = clusters(ci).name(1:end-4);
                     neuron_temp(1,ci).name = clusters(ci).name(1:end-4);                    
 
-                    for triali = 1:length(trials)    
+                    for triali = 1:size(Int,1)    
 
                         % get an index of timestamps and timestamps
                         ts_ind = find(TimeStamps > Int(trials(triali),1) & ...
@@ -147,20 +118,24 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
                     end 
                     
                     % find left and right trials
-                    Int_trials   = Int(trials,:);
-                    left_trials  = find(Int_trials(:,3)==1);
-                    right_trials = find(Int_trials(:,3)==0); 
+                    Int_trials    = Int(trials,:);
+                    sample_trials = 1:2:size(Int,1);
+                    choice_trials = 2:2:size(Int,1);
 
-                    FRlefts{nn-2}{ci}  = FRbins{nn-2}{ci}(left_trials,:);
-                    FRrights{nn-2}{ci} = FRbins{nn-2}{ci}(right_trials,:);
+                    FRsam{nn-2}{ci}  = FRbins{nn-2}{ci}(sample_trials,:);
+                    FRcho{nn-2}{ci}  = FRbins{nn-2}{ci}(choice_trials,:);
+                    behCho{nn-2}{ci} = Int(choice_trials,:);
+                    behSam{nn-2}{ci} = Int(sample_trials,:);
                 end
              X = ['finished with session ',num2str(nn-2)];
              disp(X)
     end
     
     % reformat
-    FRdata.lefts  = horzcat(FRlefts{:});
-    FRdata.rights = horzcat(FRrights{:}); 
+    FRdata.sample = horzcat(FRsam{:});
+    FRdata.choice = horzcat(FRcho{:}); 
+    FRdata.behSam = horzcat(behSam{:});
+    FRdata.behCho = horzcat(behCho{:});
     
     clearvars -except FRdata Datafolders int_name numbins stem_dir task_type vt_name correct
     
@@ -176,6 +151,6 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
     save_var = unique_name;
 
     cd(dir_name);
-    save(save_var);        
+    save(save_var);    
     
 end   

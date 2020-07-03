@@ -1,4 +1,8 @@
 %% Pseudo-simultaneous and individual classification
+%
+% NOTE: The train on 75% test on 25% is not fully functional yet. 
+% Use the leave-1-out approach.
+%
 % This code uses a classifier found from Henry to classify two classes
 % designed by you. This code supports a few different features: 1) You can
 % train on 75% and test on 25% iteratively, 2) you can take the leave 1 out
@@ -48,8 +52,10 @@
  cd('X:\03. Lab Procedures and Protocols\MATLABToolbox\1. Matlab Pipeline\Sample Data')
  load('data_mPFC_sampleChoice.mat')
 %}
+%
+% written by John Stout
 
- method_75Training_25Testing = 0; 
+ method_75Training_25Testing = 0; % not functional
  permute_labels   = 1; 
  leave1out        = 1; 
  pseudosimult     = 1; 

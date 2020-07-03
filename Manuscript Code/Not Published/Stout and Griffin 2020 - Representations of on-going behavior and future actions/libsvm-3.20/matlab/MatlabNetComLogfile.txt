@@ -1,0 +1,5 @@
+NetCom Log File Opened - File Name:  MatlabNetComLogfile.txt
+Time Opened: (mm/dd/yyyy): 10/02/2017 At Time: 12:13:06
+NetCom Version 3.0.1
+
+-*  ERROR  *- (mm/dd/yyyy): 10/02/2017 At Time: 12:13:27 - NetworkNodeClient::ConnectToServer - Error Connecting To Server, error code: WSAETIMEDOUT - Attempt to connect timed out without establishing a connection.

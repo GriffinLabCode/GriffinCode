@@ -62,7 +62,7 @@ function [FRdata] = svmFormatting_delayTrajectoryCodingProspective(Datafolders,i
 
             %% Create firing rate arrays
             if task_params == 2
-                trials = choice_trials; % retrospective
+                trials = sample_trials; % set to choice_trials if prospective
             elseif task_params == 1
                 trials = 2:size(Int,1);
             end

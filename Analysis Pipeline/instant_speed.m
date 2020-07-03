@@ -12,11 +12,12 @@
 % speed: instantaneous speed. Unit depends on input. If recorded camera,
 % then pixels/sec^2
 % velocity: instantaneous velocity
+% tDiff: difference in time (ie instantaneous time)
 %
 % Written by John Stout
 % last edit 3/8/2020
 
-function [speed,vel] = instant_speed(x,y,t)
+function [speed,vel,pos,tDiff] = instant_speed(x,y,t)
 
 % sampling frequency
 sfreq = round(29.97);
@@ -26,6 +27,13 @@ for jj = 1:length(t)-1
     vel(jj) = ((sqrt(((x(jj+1)-x(jj))^2)+...
         ((y(jj+1)-y(jj))^2))))/...
         (t(jj+1)-t(jj));
+    
+    % instant position
+    pos(jj) = sqrt(((x(jj+1)-x(jj))^2)+...
+        ((y(jj+1)-y(jj))^2));
+    
+    % instant time diff
+    tDiff(jj) = t(jj+1)-t(jj);
 end  
     
 % speed has no direction
