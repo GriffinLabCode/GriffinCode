@@ -54,9 +54,9 @@
  leave1out        = 1; 
  pseudosimult     = 1; 
  individual       = 0; 
- downsample_data  = 1; % controls for different sizes of trials
+ downsample_data  = 0; % controls for different sizes of trials
  controlLeftRight = 0; % control for the number of lefts/rights? This is only important if you have DNMP task
- firstFewTrials   = 0; % set this to 1 if you want to examine the first few trials (1:numObs)
+ firstFewTrials   = 1; % set this to 1 if you want to examine the first few trials (1:numObs)
  
  % if taskphase, do 15 trials. If trajectory, do 6 trials.
  numbins = 7; % numbins will be 1 less than when you estimate it

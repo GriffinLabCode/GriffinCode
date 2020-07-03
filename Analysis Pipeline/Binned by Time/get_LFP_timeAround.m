@@ -1,6 +1,5 @@
-%% get_LFP_StemTimeEpochs
-% gets lfp in stem bins, binned by time
-%
+%% get_LFP_timeAround
+% gets lfp surrounding an int location of interest
 %
 % ~~~ INPUTS ~~~
 % Datafolders: Master directory
@@ -9,6 +8,18 @@
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
+% mazeIdx: set this to whatever you're interested in looking at with
+%           respect to Int. For example, if you want time between stem
+%           entry and t-entry, mazeIdx = [1 5]; ... if you want to look at
+%           timing around t-entry, set mazeIdx = [5 5]; and define
+%           time_around (below).
+% time_around: timing around the event of interest. Make sure to scale this
+%               number (i.e. 1 second = 1*1e6). Example: time_around =
+%               [2*1e6 1*1e6] means it will take 2 seconds before and 1
+%               second after the int location designated by mazeIdx.
+%               mazeIdx should be the same value. Example: mazeIdx = [5 5];
+%               If you don't want to use this, set it to empty array.
+%               Example: time_around = [];
 % CSC1: name of first CSC: 'CSC1.mat'
 % CSC2: name of second CSC
 % CSC3: name of third CSC
@@ -18,7 +29,7 @@
 % 
 % written by John Stout. Last update 3/23/20
 
-function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_type,CSC1,CSC2,CSC3)
+function [LFPdata] = get_LFP_timeAround(Datafolders,int_name,vt_name,task_type,mazeIdx,time_around,CSC1,CSC2,CSC3)
 
     % calculate firing rate for all sessions
     addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
@@ -48,13 +59,21 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
             datafolder = pwd;
             cd(datafolder);    
 
-            % load animal parameters 
+            % load int file 
             try
                 load(int_name);
             catch
                 disp(['Could not load ', int_name])
                 continue
             end
+            
+            % if int file is empty, skip
+            if isempty(Int) == 1
+                disp('Int file empty - skipping session')
+                continue
+            end              
+            
+            % load video tracking data for position data
             load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
             TimeStamps = TimeStamps_VT; % rename
             
@@ -63,8 +82,8 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
 
             % only include correct trials
             IntCorrect   = find(Int(:,4)==0);
-            IntIncorrect = find(Int(:,4)==1);
-            
+            IntIncorrect = find(Int(:,4)==1); 
+    
             %% get lfp data
             
             % load data
@@ -84,11 +103,22 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
             params.pad       = 0;
             params.fpass     = [0 100]; % [1 100]
             params.movingwin = [0.5 0.01]; %(in the form [window winstep] 500ms window with 10ms sliding window Price and eichenbaum 2016 bidirectional paper
-            params.Fs        = data1.SampleFrequencies(1);
+            
+            % define sampling rate. note that this will overwrite, but
+            % thats okay. I want to make sure we're actually defining it.
+            try params.Fs = data1.SampleFrequencies(1); catch; end
+            try params.Fs = data2.SampleFrequencies(1); catch; end
+            try params.Fs = data3.SampleFrequencies(1); catch; end
 
             % convert timestamps
-            LFPtimes = interp_TS_to_CSC_length_non_linspaced(data1.Timestamps, data1.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
-           
+            if exist("data1")
+                LFPtimes = interp_TS_to_CSC_length_non_linspaced(data1.Timestamps, data1.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
+            elseif exist("data2")
+                LFPtimes = interp_TS_to_CSC_length_non_linspaced(data2.Timestamps, data2.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)                
+            elseif exist("data3")
+                LFPtimes = interp_TS_to_CSC_length_non_linspaced(data3.Timestamps, data3.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
+            end                
+                
             % convert lfp data
             try data1LFP = data1.Samples(:)'; catch; end
             try data2LFP = data2.Samples(:)'; catch; end
@@ -97,35 +127,20 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
             % index of trials
             trials = 1:size(Int,1);   
             
-            for lagi = 1:6
-                for triali = 1:size(Int,1) % loop across trials
-                    % define where you want to perform the analysis
-                    time = [];
+            for triali = 1:size(Int,1) % loop across trials
+                % define where you want to perform the analysis
+                time = [];
+                time = [(Int(triali,mazeIdx(1))-(time_around(1))) (Int(triali,mazeIdx(2))+(time_around(2)))];
 
-                    if lagi == 1 
-                        time = [(Int(triali,5)-(2*1e6)) (Int(triali,5)-(1.5*1e6))];
-                    elseif lagi == 2
-                        time = [(Int(triali,5)-(1.5*1e6)) (Int(triali,5)-(1*1e6))];                                        
-                    elseif lagi == 3 
-                        time = [(Int(triali,5)-(1*1e6)) (Int(triali,5)-(0.5*1e6))]; 
-                    elseif lagi == 4
-                        time = [(Int(triali,5)-(0.5*1e6)) (Int(triali,5))]; 
-                    elseif lagi == 5
-                        time = [(Int(triali,5)) (Int(triali,5)+(0.5*1e6))];    
-                    elseif lagi == 6
-                        time = [(Int(triali,5)+(0.5*1e6)) (Int(triali,5)+(1*1e6))];
-                    end
+                % get data
+                try data1LFP_binned{triali} = data1LFP(LFPtimes>time(1,1) & LFPtimes<time(1,2)); catch; end
+                try data2LFP_binned{triali} = data2LFP(LFPtimes>time(1,1) & LFPtimes<time(1,2)); catch; end
+                try data3LFP_binned{triali} = data3LFP(LFPtimes>time(1,1) & LFPtimes<time(1,2)); catch; end    
 
-                    % get data
-                    try data1LFP_binned{triali}{lagi} = data1LFP(LFPtimes>time(1,1) & LFPtimes<time(1,2)); catch; end
-                    try data2LFP_binned{triali}{lagi} = data2LFP(LFPtimes>time(1,1) & LFPtimes<time(1,2)); catch; end
-                    try data3LFP_binned{triali}{lagi} = data3LFP(LFPtimes>time(1,1) & LFPtimes<time(1,2)); catch; end    
-
-                    % get position data
-                    posX{triali}{lagi} = ExtractedX(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
-                    posY{triali}{lagi} = ExtractedY(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
-                    TS{triali}{lagi}   = TimeStamps_VT(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
-                end
+                % get position data
+                posX{triali} = ExtractedX(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
+                posY{triali} = ExtractedY(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
+                TS{triali}   = TimeStamps_VT(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
             end
 
             % get correct and incorrect
@@ -159,7 +174,7 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
             % offline steps should include cleaning, removing artifacts,
             % then running analyses.
             
-            clearvars -except LFPdata Datafolders int_name task_type vt_name CSC1 CSC2 CSC3 info
+            clearvars -except LFPdata Datafolders int_name task_type vt_name CSC1 CSC2 CSC3 info mazeIdx time_around
     end
     
     % update history

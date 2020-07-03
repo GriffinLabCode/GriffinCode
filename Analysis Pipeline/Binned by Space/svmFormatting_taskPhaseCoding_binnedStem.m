@@ -106,14 +106,14 @@ function [FRdata] = svmFormatting_taskPhaseCoding_binnedStem(Datafolders,int_nam
                             % total spike count per bin
                             numspikes = length(numspikes_ind);
                             % time diff
-                            time_temp(triali,j) = times_around(j+1) - times_around(j); 
-                            time_temp(triali,j) = time_temp(triali,j)/1e6;
+                            time_temp = times_around(j+1) - times_around(j); 
+                            time_temp = time_temp/1e6;
                             % storage - FR bins shell1 = trial type
                             % shell 2 = session, shell3 =
                             % cluster, within the cluster shell there rows are
                             % trials columns are bins, each element is the
                             % corresponding firing rate
-                            FRbins{nn-2}{ci}(triali,j) = numspikes/time_temp(triali,j);
+                            FRbins{nn-2}{ci}(triali,j) = numspikes/time_temp;
                         end                   
                     end 
                     
