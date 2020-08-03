@@ -1,0 +1,2 @@
+Note that not all functions were created in house. The title refers to the fact that these functions
+are not apart of an official library with some being made in house.
