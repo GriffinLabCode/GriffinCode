@@ -1,9 +1,8 @@
 # Griffin Lab Code
 
 Welcome to the Griffin lab online library for custom written scripts and functions used to
-analyze our data! :) This page was primarily created as an online protocol for file conversion 
-routines and as a back-up storage cloud for analysis code.
-
+analyze our data! :) This page was created to store our 'master' code for easy access to both 
+our members and individuals outside of the lab.
 _________________________________________________________________________________________________________
 
 SOME IMPORTANT NOTES ON CONVERSION: 
@@ -12,7 +11,7 @@ CSC and video-tracking data are converted using neuralynx functions and are not 
 library, despite being used by some functions. You can find them in the griffin lab drive here:
 
 ~~~ 
-Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat
+TO BEGIN
 ~~~
 
 Note that when you save CSC and VT data to a directory, you should not change that directory. For example,
@@ -20,25 +19,26 @@ if you save CSC1.mat to directory A, but then move CSC1.mat to directory B, you 
 loops to load CSC1.mat. It's easier to keep the CSC and VT1.mat files in the directories where you converted them.
 
 TO BEGIN:
-Go to the basic functions and scripts folder and read through the 1) README file.
+Open the 'Using the Matlab Pipeline' powerpoint. This document will walk users through the following:
+    1) How to convert CSC and VT data to a matlab readible format
+    2) How to extract, load, and use various files
+    3) How to create the "Int" file, a record of timestamps that corresponds to specific locations of interest
+    4) How to use and execute the functions in these folders
+    5) How to store and name data for ease of use and replication with this repo.
 
 __________________________________________________________________________________________________________
 
-NOTE ON ANALYSIS:
+For lab users with access to our shared drive:
 
-For analysis, our lab frequently uses custom written scripts and functions (some included in this library),
-and the chronux toolbox (can be downloaded for free online) and is found under the griffin lab drive here:
+This repo contains everything you should need to replicate past work and run your own analyses. Note that
+it is a work-in-progress, and new analyses should be added as time goes on. 
 
-~~~
-Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous
-~~~
-
-Note that not all functions in this folder are written by chronux, over the years, functions were added. But
-if you ever want to know for certain which functions were, you can find a newer edition here:
+In the past, our users frequently stored and used functions/scripts in this folder:
 
 ~~~
-Lab Procedures and Protocols\MATLABToolbox\chronux_2_12
+Lab Procedures and Protocols\MATLABToolbox
 ~~~
+
 __________________________________________________________________________________________________________              
 
 IMPORTANT FOR USERS RECORDING FROM MULTIPLE REGIONS:
@@ -49,3 +49,14 @@ from mPFC and 10 from hippocampus, you should name the saved .txt something like
 instead of them all starting with 'TT...'with the dots indicating the rest of the name. Then when you go 
 to load the TT files, you can specify to load the specific region based on the TT name, instead of based 
 on an entirely different folder. This saves drive space and is more organized.
+
+__________________________________________________________________________________________________________
+
+~~~
+Please update the correspondent below, when the past user is no longer responsible for the repo.
+~~~
+
+As of 8/6/2020, please refer any questions to John Stout at the following email: john.j.stout.jr@gmail.com
+
+
+
