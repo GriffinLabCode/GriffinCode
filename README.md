@@ -5,7 +5,8 @@ analyze our data! :) This page was created to store our 'master' code for easy a
 our members and individuals outside of the lab.
 __________________________________________________________________________________________________________
 
-TO BEGIN:
+                                            TO BEGIN:
+
 Download the GriffinCode repository and open the Matlab Pipeline folder. This is where the bulk of our 
 analysis code is stored. 
 
