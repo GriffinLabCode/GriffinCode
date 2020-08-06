@@ -3,7 +3,23 @@
 Welcome to the Griffin lab online library for custom written scripts and functions used to
 analyze our data! :) This page was created to store our 'master' code for easy access to both 
 our members and individuals outside of the lab.
-_________________________________________________________________________________________________________
+__________________________________________________________________________________________________________
+
+TO BEGIN:
+Download the GriffinCode repository and open the Matlab Pipeline folder. This is where the bulk of our 
+analysis code is stored. 
+
+The Matlab Pipeline was designed to condense and organize the labs code so that future users can readily 
+extend and replicate past work. Importantly, it was also developed with new matlab users in mind. Users 
+can follow the instructions below to begin.
+
+Open the 'Using the Matlab Pipeline' powerpoint. This document will walk users through the following:
+    1) How to convert CSC and VT data to a matlab readible format
+    2) How to extract, load, and use various files
+    3) How to create the "Int" file, a record of timestamps that corresponds to specific locations of interest
+    4) How to use and execute the functions in these folders
+    5) How to store and name data for ease of use and replication with this repo.
+__________________________________________________________________________________________________________
 
 SOME IMPORTANT NOTES ON CONVERSION: 
 Our lab records neural activity using the neuralynx (digitalynx) hardware and cheetah software.
@@ -13,14 +29,6 @@ library, despite being used by some functions. You can find them in the griffin 
 Note that when you save CSC and VT data to a directory, you should not change that directory. For example,
 if you save CSC1.mat to directory A, but then move CSC1.mat to directory B, you will have to go through some
 loops to load CSC1.mat. It's easier to keep the CSC and VT1.mat files in the directories where you converted them.
-
-TO BEGIN:
-Open the 'Using the Matlab Pipeline' powerpoint. This document will walk users through the following:
-    1) How to convert CSC and VT data to a matlab readible format
-    2) How to extract, load, and use various files
-    3) How to create the "Int" file, a record of timestamps that corresponds to specific locations of interest
-    4) How to use and execute the functions in these folders
-    5) How to store and name data for ease of use and replication with this repo.
 
 __________________________________________________________________________________________________________
 
