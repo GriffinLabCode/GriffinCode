@@ -3,6 +3,7 @@
 %
 % last edit 8/3/20 - JS
 
+% clear workspace and command window
 clear; clc;
 
 % DEFINE ME!!! - if downloaded from github, make the analysis pipeline the
