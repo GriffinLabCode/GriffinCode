@@ -7,7 +7,7 @@ clear; clc;
 
 % DEFINE ME!!! - if downloaded from github, make the analysis pipeline the
 % directory
-main_directory = 'X:\03. Lab Procedures and Protocols\MATLABToolbox\1. Matlab Pipeline\2. Analysis Pipeline';
+main_directory = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline\2. Analysis Pipeline';
 
 % adjust the looping index?
 prompt  = 'Have you opened Startup_main and defined "main_directory" as the Analysis Pipeline directory? [Y/N] ';
