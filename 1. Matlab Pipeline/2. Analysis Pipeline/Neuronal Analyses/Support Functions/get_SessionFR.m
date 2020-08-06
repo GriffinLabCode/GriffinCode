@@ -20,7 +20,6 @@
 function [FRdata] = get_SessionFR(Datafolders,int_name,vt_name)
 
     % calculate firing rate for all sessions
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\1. Matlab Pipeline\2. Analysis Pipeline');
     cd(Datafolders);
     folder_names = dir;  
     

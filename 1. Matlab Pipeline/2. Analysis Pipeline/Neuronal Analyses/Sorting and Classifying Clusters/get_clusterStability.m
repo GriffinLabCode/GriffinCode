@@ -6,10 +6,6 @@
 % written by John Stout
 clear; clc
 
-% add directory with cluster_stability function to path
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Cluster Stability')
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat');
-
 % define two folders to combine
 Datafolders1 = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex';
 

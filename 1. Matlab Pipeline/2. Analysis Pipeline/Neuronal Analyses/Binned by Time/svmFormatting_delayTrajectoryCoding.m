@@ -18,7 +18,6 @@
 function [FRdata] = svmFormatting_delayTrajectoryCoding(Datafolders,int_name,vt_name,task_type)
 
     % calculate firing rate for all sessions
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
     cd(Datafolders);
     folder_names = dir; 
     

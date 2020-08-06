@@ -18,8 +18,6 @@
 function [BehData] = get_ratSpeed(Datafolders,int_name,vt_name,task_type,stem_dir,numbins,correct)
 
     % calculate firing rate for all sessions
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions');
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Useful Functions')
     cd(Datafolders);
     folder_names = dir;
     
@@ -45,13 +43,6 @@ function [BehData] = get_ratSpeed(Datafolders,int_name,vt_name,task_type,stem_di
             
             % correct tracking errors     
             [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
-
-            %{
-            % convert - this is for the left room in Wolf hall, may need
-            % adjusting
-            ExtractedX = round(ExtractedX./2.09);
-            ExtractedY = round(ExtractedY./2.04);            
-            %}
             
             % load TTs
             clusters = dir('TT*.txt');

@@ -24,9 +24,6 @@
 
 clear; clc
 
-% addpath
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Cluster sorting')
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat')
 % define Datafolders
 %Datafolders = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex';
 Datafolders = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Orbital Frontal';

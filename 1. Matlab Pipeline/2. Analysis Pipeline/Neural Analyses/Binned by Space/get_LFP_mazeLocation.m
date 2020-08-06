@@ -21,8 +21,6 @@
 function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,locID,cleanData,CSC1,CSC2,CSC3)
 
     % calculate firing rate for all sessions
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions');
     cd(Datafolders);
     folder_names = dir;
     

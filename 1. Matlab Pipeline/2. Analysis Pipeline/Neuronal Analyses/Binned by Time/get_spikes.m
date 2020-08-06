@@ -16,8 +16,6 @@
 function [SpkTSdata] = get_spikes(Datafolders,int_name,vt_name,task_type)
 
     % calculate firing rate for all sessions
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions');
     cd(Datafolders);
     folder_names = dir;
     

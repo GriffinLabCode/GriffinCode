@@ -146,7 +146,6 @@ for bini = 1:numbins
             end   
         end
 
-        addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous\libsvm-3.20\matlab')           
 
         % need to make this a loop across bins
         clear performance predict_label accuracy p

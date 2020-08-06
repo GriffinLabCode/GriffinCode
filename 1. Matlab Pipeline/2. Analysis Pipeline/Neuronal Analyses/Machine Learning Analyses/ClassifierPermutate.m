@@ -48,6 +48,8 @@
  cd('X:\03. Lab Procedures and Protocols\MATLABToolbox\1. Matlab Pipeline\Sample Data')
  load('data_mPFC_sampleChoice.mat')
 %}
+%
+% written by John Stout
 
  method_75Training_25Testing = 0; % doesn't work too well yet
  permute_labels   = 0; % for shuffled distribution 
@@ -78,13 +80,6 @@
      downsample_data  = 0;
      disp('Corrected for error in task selection - permutation style classifier de-selected')
  end
- 
-% written by John Stout
-
-% add libraries
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\1. Matlab Pipeline\2. Analysis Pipeline\Binned by Time\Support Functions')
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous\libsvm-3.20\matlab');
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Useful Functions')
 
 %% classifier on all data
 if pseudosimult == 1
@@ -234,7 +229,6 @@ if pseudosimult == 1
                     dataPerm{bini}(find(isnan(dataPerm{bini})==1)) = 0;
                 end
 
-                addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous\libsvm-3.20\matlab')           
 
                 % loop iteratively
                 for nn = 1:1000
@@ -556,7 +550,6 @@ if pseudosimult == 1
                     end
                 end
 
-                addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous\libsvm-3.20\matlab')
 
                 % loop across bins and run classifier
                 for bini = 1:numbins
@@ -758,7 +751,6 @@ if pseudosimult == 1
     % shaded error bar
     x_label = linspace(1,4,length(shuff_mean));
 
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Cool Plots');
     
     % figure
     figure('color',[1 1 1]); hold on

@@ -23,9 +23,6 @@ function [pos_X,pos_Y,ExtractedX,ExtractedY] = rat_location_time2pos(datafolder,
         load('Events.mat');
 
         %% interpolate missing data
-        addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
-        addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions')
-
         [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);
         
         % convert to cm
