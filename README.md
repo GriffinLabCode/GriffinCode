@@ -10,10 +10,6 @@ Our lab records neural activity using the neuralynx (digitalynx) hardware and ch
 CSC and video-tracking data are converted using neuralynx functions and are not provided in this
 library, despite being used by some functions. You can find them in the griffin lab drive here:
 
-~~~ 
-TO BEGIN
-~~~
-
 Note that when you save CSC and VT data to a directory, you should not change that directory. For example,
 if you save CSC1.mat to directory A, but then move CSC1.mat to directory B, you will have to go through some
 loops to load CSC1.mat. It's easier to keep the CSC and VT1.mat files in the directories where you converted them.
@@ -52,9 +48,8 @@ on an entirely different folder. This saves drive space and is more organized.
 
 __________________________________________________________________________________________________________
 
-~~~
 Please update the correspondent below, when the past user is no longer responsible for the repo.
-~~~
+__________________________________________________________________________________________________________
 
 As of 8/6/2020, please refer any questions to John Stout at the following email: john.j.stout.jr@gmail.com
 
