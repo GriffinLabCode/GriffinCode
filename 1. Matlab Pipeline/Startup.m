@@ -15,12 +15,12 @@ analysis_directory = '\2. Analysis Pipeline';
 add_directory = [main_directory,analysis_directory];
 
 % adjust the looping index?
-prompt  = 'Have you opened Startup_main and defined "main_directory" as the Analysis Pipeline directory? [Y/N] ';
+prompt  = 'Have you opened Startup_main and defined "add_directory" as the Analysis Pipeline directory? [Y/N] ';
 resp = input(prompt,'s');
 
 if resp == 'Y' || resp == 'y' 
 else
-    disp('Open Startup_main and define main_directory');
+    disp('Open Startup_main and define add_directory');
     return
 end
 
@@ -38,7 +38,7 @@ for nn = 3:size(folder_names,1)
     
     % temporary variable to house current directory
     cur_dir = [];
-    cur_dir = [main_directory,'\',folder_name];
+    cur_dir = [add_directory,'\',folder_name];
     
     % addpath to outside folder
     addpath(cur_dir)
