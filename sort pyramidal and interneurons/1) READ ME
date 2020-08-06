@@ -1,9 +1,0 @@
-Traditionally, the lab determines pyramidal cells from interneurons based on a variety of features:
-      1) spike width: pyramidal neurons tend to have a longer spike width
-      2) mean firing-rate: interneurons tend to have a higher mean firing-rate
-      3) interspike interval: this is visually inspected on spikesort3D (neuralynx)
-      4) waveform shape: similar to spike width, visual identification of shorter action potentials
-      
-The scripts/ functions in this folder do not sort pyramidal and interneurons, but instead provide metrics to 
-quantify what the user has already sorted. Future iterations will be aimed at making this process less manual.
-Future scripts and functions will include autocorrelograms for futher identification of pyramidal and interneurons.
