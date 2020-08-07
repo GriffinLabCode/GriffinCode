@@ -14,9 +14,7 @@ clear
 datafolder = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\Baby Groot 9-12 Sample data'; 
 
 % Interpolate missing data? Alternatives is to exclude missing data, or ignore missing data.
-interp_missing_data  = 1;
-exclude_missing_data = 0;
-ignore_missing_data  = 0;
+missing_data = 'interp'; % can also be 'exclude' or 'ignore'
 
 %% extracting vt data
 
@@ -24,18 +22,8 @@ ignore_missing_data  = 0;
 cd(datafolder);
 
 % get X, Y, and timestamps
-ExtractedX = []; ExtractedY = []; TimeStamps = [];
-if interp_missing_data == 1
-    % interpolate missing vt data
-    [ExtractedX,ExtractedY,TimeStamps] = correct_tracking_errors(datafolder);
-elseif exclude_missing_data == 1
-    % exclude missing vt data
-    [ExtractedX,ExtractedY,TimeStamps] = exclude_missing_VTdata(datafolder);        
-elseif ignore_missing_data == 1
-    % ignore missing vt data
-    [ExtractedX,ExtractedY,TimeStamps] = ignore_missing_VTdata(datafolder);
-end
-pos_x = ExtractedX; pos_y = ExtractedY; pos_t = TimeStamps;
+missing_data = 'interp'; % this could be 'exclude' or 'ignore'
+[pos_x,pos_y,pos_t] = getVTdata(datafolder,missing_data);
 
 %% example for modifying 2-D fields below (important)
 

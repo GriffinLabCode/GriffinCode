@@ -29,12 +29,14 @@ for i = 1:length(lfp_1)
     lfp_2{i} = horzcat(lfp_2{i}{:});
 end
 
+%{
 % detrend and denoise signals
 for i = 1:length(lfp_1)
     lfp1_cle{i} = DetrendDenoise(lfp_1{i},srate);
     lfp2_cle{i} = DetrendDenoise(lfp_2{i},srate);
     disp(['cleaned data from session ',num2str(i)])
 end
+%}
 
 % down-sample data
 target_sample = 125; % hz

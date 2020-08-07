@@ -11,14 +11,13 @@
 % locID: with respect to the int file, define this as a vector (locID = [1
 %         5], would tell the function to get data between int(i,1) and int(i,5)
 %         for each iteration (triali) of i.
-% cleanData: set to 1 if clean
 % CSC1: name of first CSC: 'CSC1.mat'
 % CSC2: name of second CSC
 % CSC3: name of third CSC
 % 
-% written by John Stout. Last update 3/23/20
+% written by John Stout. Written on 3/23/20. Last update 8/7/2020.
 
-function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,locID,cleanData,CSC1,CSC2,CSC3)
+function [LFPdata] = get_LFP_mazeLocation(Datafolders,int_name,locID,CSC1,CSC2,CSC3)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -48,16 +47,11 @@ function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,locID,clean
 
             % load animal parameters 
             load(int_name);
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
             
             % if the int file is empty, skip the session
             if isempty('Int') == 1
                 continue
             end
-            
-            % correct tracking errors     
-            [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
 
             % only include correct trials
             IntCorrect   = find(Int(:,4)==0);
@@ -123,41 +117,32 @@ function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,locID,clean
                 if isempty(CSC1)==0
                     data1LFP_trials{triali} = data1LFP(LFPtimes>Int(trials(triali),locID(1)) & ...
                         LFPtimes<Int(trials(triali),locID(2)));
-                    if cleanData == 1
-                        data1LFP_clean{triali} = DetrendDenoise(data1LFP_trials{triali},params.Fs);
-                    end
                 end
                 if isempty(CSC2)==0
                     data2LFP_trials{triali} = data2LFP(LFPtimes>Int(trials(triali),locID(1)) & ...
-                        LFPtimes<Int(trials(triali),locID(2)));
-                    if cleanData == 1
-                        data2LFP_clean{triali} = DetrendDenoise(data2LFP_trials{triali},params.Fs);
-                    end                    
+                        LFPtimes<Int(trials(triali),locID(2)));                  
                 end
                 if isempty(CSC3)==0
                     data3LFP_trials{triali} = data3LFP(LFPtimes>Int(trials(triali),locID(1)) & ...
-                        LFPtimes<Int(trials(triali),locID(2)));
-                    if cleanData == 1
-                        data3LFP_clean{triali} = DetrendDenoise(data3LFP_trials{triali},params.Fs);
-                    end                    
+                        LFPtimes<Int(trials(triali),locID(2)));                
                 end 
                 
             end 
 
             % get correct and incorrect
             if isempty(CSC1)==0
-                LFPdata.data1LFP_cor{nn-2} = data1LFP_binned(IntCorrect);
-                LFPdata.data1LFP_inc{nn-2} = data1LFP_binned(IntIncorrect);    
+                LFPdata.data1LFP_cor{nn-2} = data1LFP_trials(IntCorrect);
+                LFPdata.data1LFP_inc{nn-2} = data1LFP_trials(IntIncorrect);    
             end
             
             if isempty(CSC2)==0
-                LFPdata.data2LFP_cor{nn-2} = data2LFP_binned(IntCorrect);
-                LFPdata.data2LFP_inc{nn-2} = data2LFP_binned(IntIncorrect);
+                LFPdata.data2LFP_cor{nn-2} = data2LFP_trials(IntCorrect);
+                LFPdata.data2LFP_inc{nn-2} = data2LFP_trials(IntIncorrect);
             end
             
             if isempty(CSC3)==0
-                LFPdata.data3LFP_cor{nn-2} = data3LFP_binned(IntCorrect);          
-                LFPdata.data3LFP_inc{nn-2} = data3LFP_binned(IntIncorrect);
+                LFPdata.data3LFP_cor{nn-2} = data3LFP_trials(IntCorrect);          
+                LFPdata.data3LFP_inc{nn-2} = data3LFP_trials(IntIncorrect);
             end
 
             % store bhavior
