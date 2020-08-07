@@ -1,0 +1,58 @@
+%% This script creates an "Int" variable for DNMP sessions. 
+%
+% Must define datafolder as a string variable containing the directory to
+% your session of interest
+%
+% this script was not written by me
+
+% datafolder directory
+datafolder = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\Baby Groot 9-12 Sample data'; 
+datafolderNew = datafolder;
+cd(datafolder);
+clearvars -except datafolder datafolderNew
+
+% get video tracking data
+missing_data = 'interp'; % this could be 'exclude' or 'ignore'
+[ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data);
+
+% define some old school variables
+pos_x = ExtractedX; pos_y = ExtractedY; pos_t = TimeStamps;
+
+% Define the beginning and end of the session
+start  = TimeStamps(1);
+finish = TimeStamps(end); 
+Int = [];
+
+% Define the Int variable
+[Int] = whereishe_master(pos_x,pos_y,pos_t);
+
+% set up for populating correct/incorrect column 4
+ind         = find(pos_t>=start & pos_t<=finish);
+pos_t1=pos_t(ind); pos_x1=pos_x(ind); pos_y1=pos_y(ind);
+Int_ind     = find(Int(:,1)>start & Int(:,8)<finish);
+starttrials = Int_ind(1,1);
+endtrials   = Int_ind(end);
+Int         = Int(1:endtrials,:);
+
+% Populate column 4 of the Int variable 
+% 0 = Correct, 1 = Incorrect
+numtrials = size(Int,1);
+for i = 1:numtrials-1
+    if Int(i,3) == 1 && Int(i+1,3) == 0 || Int(i,3) == 0 && Int(i+1,3) == 1
+        Int(i+1,4) = 0;
+    else
+        Int(i+1,4) = 1;
+    end
+end
+percentCorrect = (((numtrials/2)-(sum(Int(:,4))/2))/(numtrials/2))*100;
+
+% display progress
+C = [];
+C = strsplit(datafolder,'\');
+X = [];
+X = [C{end},' behavioral accuracy = ',num2str(percentCorrect),'%'];
+disp(X);
+
+% save data
+cd(datafolder); clear datafolder
+save('Int_DA.mat','Int');

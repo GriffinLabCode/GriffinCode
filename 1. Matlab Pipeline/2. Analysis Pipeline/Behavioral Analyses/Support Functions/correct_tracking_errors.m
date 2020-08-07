@@ -18,11 +18,15 @@
 %                       earlier-than-2016b-if-not-how-can-i-use-spline-
 %                       interpolatio
 
-function [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder)
+function [ExtractedX,ExtractedY,TimeStamps] = correct_tracking_errors(datafolder)
 
 % load video tracking data
 cd(datafolder);
-VT_data = load('VT1.mat');
+
+% account for variability in how data used to be stored. Note that using
+% updated functions will not have this problem. If you run into any issues
+% with naming, add another elseif line
+[VT_data.ExtractedX,VT_data.ExtractedY,VT_data.TimeStamps] = ignore_missing_VTdata(datafolder);
 
 % correct for tracking errors that result in zeroes
 [ExtractedX, ExtractedY] = interp_missing_VT_data(VT_data);
@@ -86,5 +90,6 @@ X(m2) = round(s2);
 ExtractedX = []; ExtractedY = [];
 ExtractedY = Y;
 ExtractedX = X;  
+TimeStamps = VT_data.TimeStamps;
 
 end

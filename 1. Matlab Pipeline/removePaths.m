@@ -7,12 +7,13 @@
 % directory
 main_directory     = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline';
 analysis_directory = '\2. Analysis Pipeline';
+format_directory   = '\1. Formatting Data';
 
 % concatenate directories
 add_directory = [main_directory,analysis_directory];
 
-% adjust the looping index?
-prompt  = 'Have you opened Startup_main and defined "add_directory" as the Analysis Pipeline directory? [Y/N] ';
+% interface with user
+prompt  = 'Have you opened "Startup.m" and defined "main_directory" as the Matlab Pipeline directory? [Y/N] ';
 resp = input(prompt,'s');
 
 if resp == 'Y' || resp == 'y' 
@@ -87,6 +88,30 @@ for nn = 3:size(folder_names,1)
         
     end
         
+end
+
+% adding data formatting paths
+format_full = [main_directory,format_directory];
+cd(format_full);
+folder_names = dir;
+
+for nn = 3:size(folder_names,1)
+    
+    % define a naming variable
+    folder_name = folder_names(nn).name;
+    
+    % -- add paths to outside folders -- %
+    
+    % temporary variable to house current directory
+    cur_dir = [];
+    cur_dir = [format_full,'\',folder_name];
+    
+    % addpath to outside folder
+    rmpath(cur_dir)
+    
+    % display path added to outside folder
+    disp(['Removed path ', folder_name])
+           
 end
 
 % display

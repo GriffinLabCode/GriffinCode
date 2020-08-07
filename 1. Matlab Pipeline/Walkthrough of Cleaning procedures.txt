@@ -1,0 +1,5 @@
+If you are using LFP data and want to detect clipping events (hard flat line events in the data),
+consider using the cleanInt4LfpClippings function, or the SCRIPT_visualizeLfp4Clippings script. 
+
+The function goes through the datasets, detects clippings, removes the trial from the int file, then 
+saves a new int file. You can also manually do this with the script.
