@@ -6,24 +6,27 @@
 % clear workspace and command window
 clear; clc;
 
-% DEFINE ME!!! - if downloaded from github, make the analysis pipeline the
-% directory
-main_directory     = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline';
+% This is the directory where the "Startup" function is located
+main_directory = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline';
+
+% interface with user to redefine main_directory
+disp(main_directory)
+prompt = 'Is the directory above the same directory where your "Startup" function is located? [Y/N] ';
+resp = input(prompt,'s');
+
+if strfind(resp,'N') || strfind(resp,'n')
+    prompt = 'Please enter the directory where "Startup" is located, then press "Enter" '
+    main_directory = input(prompt,'s');
+else
+end
+
+% these will have to change if you change the names of the formatting and
+% analysis pipeline directory names
 analysis_directory = '\2. Analysis Pipeline';
 format_directory   = '\1. Formatting Data';
 
 % concatenate directories
 add_directory = [main_directory,analysis_directory];
-
-% interface with user
-prompt  = 'Have you opened "Startup.m" and defined "main_directory" as the Matlab Pipeline directory? [Y/N] ';
-resp = input(prompt,'s');
-
-if resp == 'Y' || resp == 'y' 
-else
-    disp('Open Startup_main and define add_directory');
-    return
-end
 
 % addpath to main folder
 cd(add_directory)
