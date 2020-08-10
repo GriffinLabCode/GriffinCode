@@ -14,7 +14,7 @@ disp(main_directory)
 prompt = 'Is the directory above the same directory where your "Startup" function is located? [Y/N] ';
 resp = input(prompt,'s');
 
-if strfind(resp,'N') || strfind(resp,'n')
+if isempty(strfind(resp,'N'))==0 || isempty(strfind(resp,'n'))==0
     prompt = 'Please enter the directory where "Startup" is located, then press "Enter" '
     main_directory = input(prompt,'s');
 else
@@ -129,9 +129,9 @@ for nn = 3:size(folder_names,1)
            
 end
 
-
 % display
 disp('Paths necessary for Matlab Pipeline have been added')
 
-
+% clear workspace
+clear;
 
