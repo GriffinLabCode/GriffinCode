@@ -11,7 +11,7 @@ disp(main_directory)
 prompt = 'Is the directory above the same directory where your "Startup" function is located? [Y/N] ';
 resp = input(prompt,'s');
 
-if isempty(strfind(resp,'N'))==0 || isempty(strfind(resp,'n'))==0
+if contains(resp,'N') || contains(resp,'n')
     prompt = 'Please enter the directory where "Startup" is located, then press "Enter" ';
     main_directory = input(prompt,'s');
 else
