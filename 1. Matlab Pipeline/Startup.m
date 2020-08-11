@@ -131,6 +131,7 @@ end
 
 % display
 disp('Paths necessary for Matlab Pipeline have been added')
+cd(main_directory);
 
 % clear workspace
 clear;
