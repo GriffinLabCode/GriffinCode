@@ -6,18 +6,16 @@
 %
 % ~~~ INPUTS ~~~
 % Datafolders: Master directory
-% int_name: the name of the int_file you want to use (ie 'Int_file.mat')
 % vt_name: the name of the video tracking file (ie 'VT1.mat')
-% task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
-% stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
-% correct: 1 or 0, 1 if you want correct only
+% missing_data: how to handle missing vt data. Can be 'ignore','interp',or
+%               'exclude'
 %
 % ~~~ OUTPUTS ~~~
 % FRdata: a struct array containing data
 %
 % written by John Stout. Last update 2/23/20
 
-function [FRdata] = get_SessionFR(Datafolders,int_name,vt_name)
+function [FRdata] = get_SessionFR(Datafolders,vt_name,missing_data)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -43,17 +41,9 @@ function [FRdata] = get_SessionFR(Datafolders,int_name,vt_name)
             cd(temp_folder);
             datafolder = pwd;
             cd(datafolder);    
-
-            % load animal parameters 
-            load(int_name);
-            vtData = load(vt_name);
-            ExtractedX = vtData.ExtractedX;
-            ExtractedY = vtData.ExtractedY;
-            try
-                TimeStamps = vtData.TimeStamps_VT; % rename
-            catch % sometimes the ..._VT variable is not defined
-                TimeStamps = vtData.TimeStamps;
-            end
+         
+            % load vt data
+            [~,~,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);                      
 
             % load TTs
             clusters = dir('TT*.txt');
