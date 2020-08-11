@@ -11,10 +11,13 @@
 clear
 
 % datafolder directory
-datafolder = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\Baby Groot 9-12 Sample data'; 
+datafolder = 'C:\Users\jstout\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\DA and CD rat'; 
 
 % Interpolate missing data? Alternatives is to exclude missing data, or ignore missing data.
 missing_data = 'interp'; % can also be 'exclude' or 'ignore'
+
+% vt_name
+vt_name = 'VT1.mat';
 
 %% extracting vt data
 
@@ -23,7 +26,7 @@ cd(datafolder);
 
 % get X, Y, and timestamps
 missing_data = 'interp'; % this could be 'exclude' or 'ignore'
-[pos_x,pos_y,pos_t] = getVTdata(datafolder,missing_data);
+[ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
 %% example for modifying 2-D fields below (important)
 

@@ -11,6 +11,9 @@ Datafolders = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordin
 % define what units will be entrained to
 lfpName = 'HPC.mat';
 
+% int name
+int_name = 'Int_file.mat';
+
 % define folder to save data
 folderSave = 'X:\07. Manuscripts\In preparation\StoutGriffin2020\Data figures and manuscript\Stout&Griffin data and matlab figures';
 
@@ -71,7 +74,7 @@ for nn = looper    % 35 is for simultaneous sessions % length(folder_names) % ma
     
     % Populate Int
     try 
-       load('Int_file.mat');
+        load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);           
     catch
         continue
     end
@@ -80,7 +83,7 @@ for nn = looper    % 35 is for simultaneous sessions % length(folder_names) % ma
     cd(datafolder);    
     
     % get correct trials  
-    Int(find(Int(:,4)==1),:)=[];
+    Int((Int(:,4)==1),:)=[];
     
     % remove clipped trials
     %Int(Int(:,9)==1,:)=[];
@@ -92,9 +95,9 @@ for nn = looper    % 35 is for simultaneous sessions % length(folder_names) % ma
     end
     
     if left == 1
-        Int = Int(find(Int(:,3)==1),:);
+        Int = Int((Int(:,3)==1),:);
     elseif right == 1
-        Int = Int(find(Int(:,3)==0),:);
+        Int = Int((Int(:,3)==0),:);
     end
     
     % population VT data

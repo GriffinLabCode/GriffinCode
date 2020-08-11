@@ -6,6 +6,11 @@
 % approach is simple and easy. Additionally, this approach removes
 % significant outliers in your dataset using Hampel Outlier Identification.
 %
+% A major downside to this function is that it seems to leave a noticeable
+% reduction in 60Hz noise power. The reduction seems to violate the 1/f
+% power law relationship in the data when averaged across multiple
+% instances.
+%
 % ~~~ INPUTS ~~~
 % Fs: the sampling frequency of your dataset
 % y: your data in a 1-D format (ie 1xN vector)
@@ -25,19 +30,21 @@ function [y_filt] = DetrendDenoise(y,Fs)
     d = designfilt('bandstopiir','FilterOrder',2, ...
                    'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
                    'DesignMethod','butter','SampleRate',Fs);
-               
+        
+    %{
     % design a filter to filter out 300Hz noise - looked suspicious
     d2 = designfilt('bandstopiir','FilterOrder',2, ...
                    'HalfPowerFrequency1',299,'HalfPowerFrequency2',301, ...
                    'DesignMethod','butter','SampleRate',Fs); 
-               
+    %} 
+                   
     % filter out the noise
     y_filtTemp = filtfilt(d,y);
     
     % filter out 300hz noise
-    y_filt = filtfilt(d2,y_filtTemp);
+    %y_filt = filtfilt(d2,y_filtTemp);
     
     % remove significant outliers in your dataset
-    y_filt = hampel(y_filt);
+    y_filt = hampel(y_filtTemp);
 
 end

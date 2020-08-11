@@ -29,7 +29,7 @@
 % 
 % written by John Stout. Last update 3/23/20
 
-function [LFPdata] = get_LFP_timeAround(Datafolders,int_name,vt_name,task_type,mazeIdx,time_around,CSC1,CSC2,CSC3)
+function [LFPdata] = get_LFP_timeAround(Datafolders,int_name,mazeIdx,time_around,CSC1,CSC2,CSC3)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -57,9 +57,9 @@ function [LFPdata] = get_LFP_timeAround(Datafolders,int_name,vt_name,task_type,m
             datafolder = pwd;
             cd(datafolder);    
 
-            % load int file 
+            % load animal parameters 
             try
-                load(int_name);
+                load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);           
             catch
                 disp(['Could not load ', int_name])
                 continue
@@ -69,14 +69,7 @@ function [LFPdata] = get_LFP_timeAround(Datafolders,int_name,vt_name,task_type,m
             if isempty(Int) == 1
                 disp('Int file empty - skipping session')
                 continue
-            end              
-            
-            % load video tracking data for position data
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
-            
-            % correct tracking errors     
-            [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
+            end 
 
             % only include correct trials
             IntCorrect   = find(Int(:,4)==0);
@@ -117,11 +110,14 @@ function [LFPdata] = get_LFP_timeAround(Datafolders,int_name,vt_name,task_type,m
                 LFPtimes = interp_TS_to_CSC_length_non_linspaced(data3.Timestamps, data3.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
             end                
                 
-            % convert lfp data
-            try data1LFP = data1.Samples(:)'; catch; end
-            try data2LFP = data2.Samples(:)'; catch; end
-            try data3LFP = data3.Samples(:)'; catch; end
+            % convert lfp data and initialize a variable
+            try data1LFP = []; data1LFP = data1.Samples(:)'; data1LFP_binned = []; catch; end
+            try data2LFP = []; data2LFP = data2.Samples(:)'; data2LFP_binned = []; catch; end
+            try data3LFP = []; data3LFP = data3.Samples(:)'; data3LFP_binned = []; catch; end
               
+            % initialize position data
+            posX = []; posY = []; TS = [];
+            
             % index of trials
             trials = 1:size(Int,1);   
             

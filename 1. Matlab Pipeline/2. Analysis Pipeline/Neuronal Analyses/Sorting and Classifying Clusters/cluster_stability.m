@@ -19,6 +19,13 @@
 %                       time_window = 10; tells the function to examine the
 %                       first and last ten minutes of the recording.
 %
+%         vt_name: the name of video tracking file. Often 'VT1.mat'
+%
+%         missing_data: how to handle missing video tracking data. Options
+%                        are 'interp','ignore','exclude'. Its best to just
+%                        ignore for this function because we only care
+%                        about first and last timestamps
+%
 % OUTPUTS: neuron is a N(cluster) x 3 struct array containing cluster
 %           name, mean pre peak in volts, and mean post peak in volts.
 %          pre_peak_data and post_peak_data are variables extracted 
@@ -27,7 +34,7 @@
 %
 % written by John Stout
 
-function [neuron, pre_peak_data, post_peak_data] = cluster_stability(Datafolders,time_window)
+function [neuron, pre_peak_data, post_peak_data] = cluster_stability(Datafolders,time_window,vt_name,missing_data)
 %% Initialize
 
 % I like to display stuff :)
@@ -58,7 +65,7 @@ for nn = 3:length(folder_names)
     % load clusters
     Clusters = dir('TT*.ntt');
     % load video tracking
-    load(strcat(datafolder,'\VT1.mat'));
+    [~,~,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);        
     
     %% Extract information from TT*.ntt files and calculate spike duration
     % fix datafolder for loading of .ntt files

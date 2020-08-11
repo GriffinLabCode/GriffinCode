@@ -6,6 +6,8 @@
 % Datafolders: Master directory
 % int_name: the name of the int_file you want to use (ie 'Int_file.mat')
 % vt_name: the name of the video tracking file (ie 'VT1.mat')
+% missing_data: what to do about missing vt data?
+%               'interp','ignore','exclude'. I suggest 'interp' for this.
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
@@ -18,7 +20,7 @@
 % 
 % written by John Stout. Last update 3/23/20
 
-function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_type,CSC1,CSC2,CSC3)
+function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,missing_data,CSC1,CSC2,CSC3)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -48,16 +50,14 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
 
             % load animal parameters 
             try
-                load(int_name);
+                load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);           
             catch
                 disp(['Could not load ', int_name])
                 continue
             end
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
             
-            % correct tracking errors     
-            [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
+            % get vt data
+            [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);             
 
             % only include correct trials
             IntCorrect   = find(Int(:,4)==0);
@@ -67,9 +67,9 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
             
             % load data
             try
-                try data1 = load(CSC1); catch; end            
-                try data2 = load(CSC2); catch; end
-                try data3 = load(CSC3); catch; end    
+                try data1 = []; data1 = load(CSC1); catch; end            
+                try data2 = []; data2 = load(CSC2); catch; end
+                try data3 = []; data3 = load(CSC3); catch; end    
             catch
                 disp('Could not load any CSC data')
                 continue
@@ -88,10 +88,13 @@ function [LFPdata] = get_LFP_StemTimeEpochs(Datafolders,int_name,vt_name,task_ty
             LFPtimes = interp_TS_to_CSC_length_non_linspaced(data1.Timestamps, data1.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
            
             % convert lfp data
-            try data1LFP = data1.Samples(:)'; catch; end
-            try data2LFP = data2.Samples(:)'; catch; end
-            try data3LFP = data3.Samples(:)'; catch; end
-              
+            try data1LFP = []; data1LFP = data1.Samples(:)'; data1LFP_binned = []; catch; end
+            try data2LFP = []; data2LFP = data2.Samples(:)'; data2LFP_binned = []; catch; end
+            try data3LFP = []; data3LFP = data3.Samples(:)'; data3LFP_binned = []; catch; end
+            
+            % initialize position data
+            posX = []; posY = []; TS = [];
+            
             % index of trials
             trials = 1:size(Int,1);   
             

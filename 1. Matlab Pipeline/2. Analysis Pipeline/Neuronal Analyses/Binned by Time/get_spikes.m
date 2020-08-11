@@ -1,19 +1,17 @@
-%% svmFormatting_trajectoryCoding
-% this function formats data for classification of task phase during stem
-% traversals. It is for DNMP task.
-%
+%% get_spikes
 %
 % ~~~ INPUTS ~~~
 % Datafolders: Master directory
 % int_name: the name of the int_file you want to use (ie 'Int_file.mat')
 % vt_name: the name of the video tracking file (ie 'VT1.mat')
+% missing_data: 'interp','ignore', or 'exclude'
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
 % 
 % written by John Stout. Last update 3/23/20
 
-function [SpkTSdata] = get_spikes(Datafolders,int_name,vt_name,task_type)
+function [SpkTSdata] = get_spikes(Datafolders,int_name,vt_name,missing_data)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -51,14 +49,12 @@ function [SpkTSdata] = get_spikes(Datafolders,int_name,vt_name,task_type)
             end            
 
             % load animal parameters 
-            load(int_name);
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
+            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
             
-            % correct tracking errors     
-            [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
+            % get vt_data 
+            [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);                   
 
-            % only include correct trials
+            % correct/incorrect trials index
             IntCorrect   = find(Int(:,4)==0);
             IntIncorrect = find(Int(:,4)==1);
             
@@ -67,6 +63,9 @@ function [SpkTSdata] = get_spikes(Datafolders,int_name,vt_name,task_type)
             % load TTs
             cd(datafolder);
             clusters = dir('TT*.txt');
+
+            % initialize variables
+            spikeTS = []; posX    = []; posY    = []; TS      = [];        
 
             % index of trials
             trials = 1:size(Int,1);   
@@ -89,6 +88,7 @@ function [SpkTSdata] = get_spikes(Datafolders,int_name,vt_name,task_type)
                     posX{triali} = ExtractedX(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
                     posY{triali} = ExtractedY(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
                     TS{triali}   = TimeStamps_VT(TimeStamps_VT>time(1,1) & TimeStamps_VT<time(1,2));
+                    
                 end
                 
             end

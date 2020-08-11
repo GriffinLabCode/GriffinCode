@@ -14,12 +14,10 @@
 %
 % written by John Stout. Last update 2/15/20
 
-function [FRdata] = svmFormatting_trajectoryCoding_MazePlace(Datafolders,int_name,vt_name,task_type,stem_dir,numbins)
+function [FRdata] = svmFormatting_trajectoryCoding_MazePlace(Datafolders,int_name,vt_name,missing_data,task_type)
 
 
     % calculate firing rate for all sessions
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions');
     cd(Datafolders);
     folder_names = dir;
     
@@ -51,79 +49,73 @@ function [FRdata] = svmFormatting_trajectoryCoding_MazePlace(Datafolders,int_nam
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name);
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
-            
-            % correct tracking errors     
-            [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
+            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
+    
+            % get vt_data 
+            [~,~,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);                      
 
             % load TTs
             clusters = dir('TT*.txt');
 
             % only include correct trials
-            Int = Int(find(Int(:,4)==0),:);
+            if correct == 1
+                Int = Int((Int(:,4)==0),:);
+            end
 
             % if DNMP was selected, separate sample and choice trials
-            if task_type == 'DNMP'
+            if contains(task_type,'DNMP')
                 if trial_type == 'S'
                     trials = (1:2:size(Int,1));
                 elseif trial_type == 'C'
                     trials = (2:2:size(Int,1)); 
                 end
-                task_params = 2;
-            elseif task_type == 'CA/DA/CD'
-                task_params = 1;
+            elseif contains(task_type,'DA') || contains(task_type,'CA') || contains(task_type,'CD')
+                trials = 1:size(Int,1);
             end
 
-            %% Create firing rate arrays
-                if task_params == 2 
-                    trials = trials;
-                elseif task_params == 1
-                    trials = 1:size(Int,1);
-                end
-            
-                for ci=1:length(clusters)
-                    cd(datafolder);
-                    spikeTimes = textread(clusters(ci).name);
-                    cluster    = clusters(ci).name(1:end-4);
+            %% Create firing rate arrays           
+            for ci=1:length(clusters)
+                cd(datafolder);
+                spikeTimes = textread(clusters(ci).name);
+                cluster    = clusters(ci).name(1:end-4);
 
-                    for triali = 1:length(trials)    
+                for triali = 1:length(trials)    
 
-                        % get an index of timestamps and timestamps
-                        times_around = TimeStamps(find(TimeStamps > Int(trials(triali),7) & ...
-                            TimeStamps < Int(trials(triali),8))); 
+                    % get an index of timestamps and timestamps
+                    times_around = TimeStamps((TimeStamps > Int(trials(triali),7) & ...
+                        TimeStamps < Int(trials(triali),8))); 
 
-                        try
-                            % index of the spikes
-                            numspikes_ind = find(spikeTimes>times_around(1) & ...
-                                spikeTimes<times_around(end));
-                            
-                            % total spike count per bin
-                            numspikes = length(numspikes_ind);
-                            
-                            % time diff
-                            time_temp = Int(trials(triali),8) - Int(trials(triali),7); 
-                            time_diff = time_temp/1e6;
-                            % storage - FR bins shell1 = trial type
-                            % shell 2 = session, shell3 =
-                            % cluster, within the cluster shell there rows are
-                            % trials columns are bins, each element is the
-                            % corresponding firing rate
-                            FRbins{nn-2}{ci}(triali) = numspikes/time_diff;
-                        catch
-                            FRbins{nn-2}{ci}(triali) = NaN;
-                        end   
-                    end 
-                    
-                    % find left and right trials
-                    Int_trials   = Int(trials,:);
-                    left_trials  = find(Int_trials(:,3)==1);
-                    right_trials = find(Int_trials(:,3)==0); 
+                    try
+                        % index of the spikes
+                        numspikes_ind = find(spikeTimes>times_around(1) & ...
+                            spikeTimes<times_around(end));
 
-                    FRlefts{nn-2}{ci}  = FRbins{nn-2}{ci}(left_trials);
-                    FRrights{nn-2}{ci} = FRbins{nn-2}{ci}(right_trials);
-                end
+                        % total spike count per bin
+                        numspikes = length(numspikes_ind);
+
+                        % time diff
+                        time_temp = Int(trials(triali),8) - Int(trials(triali),7); 
+                        time_diff = time_temp/1e6;
+                        % storage - FR bins shell1 = trial type
+                        % shell 2 = session, shell3 =
+                        % cluster, within the cluster shell there rows are
+                        % trials columns are bins, each element is the
+                        % corresponding firing rate
+                        FRbins{nn-2}{ci}(triali) = numspikes/time_diff;
+                    catch
+                        FRbins{nn-2}{ci}(triali) = NaN;
+                    end   
+                end 
+
+                % find left and right trials
+                Int_trials   = Int(trials,:);
+                left_trials  = find(Int_trials(:,3)==1);
+                right_trials = find(Int_trials(:,3)==0); 
+
+                FRlefts{nn-2}{ci}  = FRbins{nn-2}{ci}(left_trials);
+                FRrights{nn-2}{ci} = FRbins{nn-2}{ci}(right_trials);
+            end
+                
              X = ['finished with session ',num2str(nn-2)];
              disp(X)
     end

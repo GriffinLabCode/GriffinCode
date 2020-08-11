@@ -16,7 +16,6 @@
 function [fx2y,fy2x,freqs,srateNew,ssmo,pf] = GrangerCausality_StateSpace(lfp_1,lfp_2,srate)
 
 % addpaths
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\mvgc_v2.0')
 startup_fun;
 
 % remove empty arrays

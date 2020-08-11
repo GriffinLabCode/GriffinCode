@@ -22,7 +22,6 @@ load(dataName)
 %data1 = FRdata.lefts;
 %data2 = FRdata.rights;
 
-addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous\libsvm-3.20\matlab')
 clearvars -except data1 data2 dataName binDraw
 
 % define a dynamic variable

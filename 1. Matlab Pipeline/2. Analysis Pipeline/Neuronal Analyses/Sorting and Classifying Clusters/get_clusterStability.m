@@ -12,8 +12,14 @@ Datafolders1 = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordi
 % define window of time for stability assessment
 time_window = 10; % minutes
 
+% vt_name
+vt_name = 'VT1.mat';
+
+% missing data
+missing_data = 'ignore'; % can ignore for this because we're looking at start and end of session
+
 % run function
-[neuron1, pre_peak_data1, post_peak_data1] = cluster_stability(Datafolders1,time_window);
+[neuron1, pre_peak_data1, post_peak_data1] = cluster_stability(Datafolders,time_window,vt_name,missing_data);
 
 % concatenate neuron variable
 post_peaks = post_peak_data1;

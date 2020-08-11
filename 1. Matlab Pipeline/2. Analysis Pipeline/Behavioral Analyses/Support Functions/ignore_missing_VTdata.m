@@ -3,11 +3,12 @@
 % when tracking rat position, sometimes we lose him/her. This option is to
 % ignore those losses
 
-function [ExtractedX,ExtractedY,TimeStamps] = ignore_missing_VTdata(datafolder)
+function [ExtractedX,ExtractedY,TimeStamps] = ignore_missing_VTdata(datafolder,vt_name)
 
 % load vt data in specific datafolder
 cd(datafolder);
-load('VT1.mat');
+load(vt_name,'-regexp', ['^(?!' [datafolder] ')\w']);
+
 
 % various ways that video tracking data has been defined in the past. From
 % now on, we use ExtractedX, ExtractedY, TimeStamps

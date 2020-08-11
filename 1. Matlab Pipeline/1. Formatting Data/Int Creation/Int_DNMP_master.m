@@ -6,14 +6,15 @@
 % JS modified and consolidated this on 8/7/2020
 
 % datafolder directory
-datafolder = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\Baby Groot 9-12 Sample data'; 
+datafolder = 'C:\Users\jstout\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\Baby Groot 9-12 Sample data'; 
 datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
 
 % get video tracking data
 missing_data = 'interp'; % this could be 'exclude' or 'ignore'
-[ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data);
+vt_name      = 'VT1.mat';
+[ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
 % define some old school variables
 pos_x = ExtractedX; pos_y = ExtractedY; pos_t = TimeStamps;

@@ -1,9 +1,13 @@
 %% ignore_missing_data
 %
+% INPUTS:
+% datafolder: directory of interest
+% vt_name: video track name 'VT1.mat' for example
+%
 % when tracking rat position, sometimes we lose him/her. This option is to
 % ignore those losses
 
-function [ExtractedX,ExtractedY,TimeStamps] = exclude_missing_VTdata(datafolder)
+function [ExtractedX,ExtractedY,TimeStamps] = exclude_missing_VTdata(datafolder,vt_name)
 
 % load video tracking data
 cd(datafolder);
@@ -11,7 +15,7 @@ cd(datafolder);
 % account for variability in how data used to be stored. Note that using
 % updated functions will not have this problem. If you run into any issues
 % with naming, add another elseif line
-[VT_data.ExtractedX,VT_data.ExtractedY,VT_data.TimeStamps] = ignore_missing_VTdata(datafolder);
+[VT_data.ExtractedX,VT_data.ExtractedY,VT_data.TimeStamps] = ignore_missing_VTdata(datafolder,vt_name);
 
 % find cases where video tracking is zero
 zeroX = find(VT_data.ExtractedX == 0);

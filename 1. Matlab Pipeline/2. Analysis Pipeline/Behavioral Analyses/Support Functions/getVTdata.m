@@ -11,22 +11,23 @@
 %                   'interp'
 %                   'exclude'
 %                   'ignore'
+% vt_name: name of VT data 'VT1.mat'
 %
 % -- OUTPUTS -- %
 % ExtractedX: X position in pixels
 % ExtractedY: Y position in pixels
 % TimeStamps: Timestamps of the video tracking data
 
-function [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data)
+function [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name)
 
 ExtractedX = []; ExtractedY = []; TimeStamps = [];
 if strfind(missing_data,'interp') == 1
     % interpolate missing vt data
-    [ExtractedX,ExtractedY,TimeStamps] = correct_tracking_errors(datafolder);
+    [ExtractedX,ExtractedY,TimeStamps] = correct_tracking_errors(datafolder,vt_name);
 elseif strfind(missing_data,'exclude') == 1
     % exclude missing vt data
-    [ExtractedX,ExtractedY,TimeStamps] = exclude_missing_VTdata(datafolder);        
+    [ExtractedX,ExtractedY,TimeStamps] = exclude_missing_VTdata(datafolder,vt_name);        
 elseif strfind(missing_data,'ignore') == 1
     % ignore missing vt data
-    [ExtractedX,ExtractedY,TimeStamps] = ignore_missing_VTdata(datafolder);
+    [ExtractedX,ExtractedY,TimeStamps] = ignore_missing_VTdata(datafolder,vt_name);
 end

@@ -46,7 +46,7 @@ function [LFPdata] = get_LFP_mazeLocation(Datafolders,int_name,locID,CSC1,CSC2,C
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name);
+            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);           
             
             % if the int file is empty, skip the session
             if isempty('Int') == 1
@@ -59,32 +59,6 @@ function [LFPdata] = get_LFP_mazeLocation(Datafolders,int_name,locID,CSC1,CSC2,C
 
             %% get lfp data
             
-            % load data
-            if isempty(CSC1)==0
-                try
-                    data1 = load(CSC1);
-                catch
-                    CSC1 = [];
-                    disp('Could not load ',CSC1)
-                end
-            end
-            if isempty(CSC2)==0
-                try
-                    data2 = load(CSC2);
-                catch
-                    CSC2 = [];
-                    disp('Could not load ',CSC2)
-                end                    
-            end
-            if isempty(CSC3)==0
-                try
-                    data3 = load(CSC3); 
-                catch
-                    CSC3 = [];
-                    disp('Could not load ',CSC3)
-                end                
-            end
-            
             % set parameters - make default parameters with fun
             params.tapers    = [3 5];
             params.trialave  = 0;
@@ -93,20 +67,35 @@ function [LFPdata] = get_LFP_mazeLocation(Datafolders,int_name,locID,CSC1,CSC2,C
             params.fpass     = [0 100]; % [1 100]
             params.movingwin = [0.5 0.01]; %(in the form [window winstep] 500ms window with 10ms sliding window Price and eichenbaum 2016 bidirectional paper
             params.Fs        = data1.SampleFrequencies(1);
-
-            % convert timestamps
-            LFPtimes = interp_TS_to_CSC_length_non_linspaced(data1.Timestamps, data1.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
-           
-            % convert lfp data
+            
+            % do csc specific actions
             if isempty(CSC1)==0
+                % load
+                data1 = load(CSC1);
+                % convert
                 data1LFP = data1.Samples(:)';
+                % initialize
+                data1LFP_trials = [];                
             end
             if isempty(CSC2)==0
+                % load
+                data2 = load(CSC2);
+                % convert
                 data2LFP = data2.Samples(:)';
+                % initialize
+                data2LFP_trials = [];                   
             end
             if isempty(CSC3)==0
+                % load
+                data3 = load(CSC3); 
+                % convert
                 data3LFP = data3.Samples(:)';
-            end
+                % initialize
+                data3LFP_trials = [];                   
+            end          
+            
+            % convert timestamps
+            LFPtimes = interp_TS_to_CSC_length_non_linspaced(data1.Timestamps, data1.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
               
             % index of trials
             trials = 1:size(Int,1);   

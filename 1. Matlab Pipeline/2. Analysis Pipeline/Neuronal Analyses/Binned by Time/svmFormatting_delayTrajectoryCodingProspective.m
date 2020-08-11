@@ -6,22 +6,18 @@
 % Datafolders: Master directory
 % int_name: the name of the int_file you want to use (ie 'Int_file.mat')
 % vt_name: the name of the video tracking file (ie 'VT1.mat')
+% missing_data: missing vt data, 'interp','ignore','exclude'
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
-%
-%
 % correct_only: 1 or 0, 1 if you want correct only
 %
 % ~~~ OUTPUTS ~~~
 % FRdata: a struct array containing trajectory data
 %
-%
-% NOT FINISHED
-%
-% written by John Stout. Last update 2/15/20
+% written by John Stout. Last update 8/11/20
 
-function [FRdata] = svmFormatting_delayTrajectoryCodingProspective(Datafolders,int_name,vt_name,task_type,correct_only)
+function [FRdata] = svmFormatting_delayTrajectoryCodingProspective(Datafolders,int_name,vt_name,missing_data,task_type,correct_only)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -38,39 +34,38 @@ function [FRdata] = svmFormatting_delayTrajectoryCodingProspective(Datafolders,i
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name);
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
+            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
+            
+            % get vt_data 
+            [~,~,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);      
 
             % load TTs
             clusters = dir('TT*.txt');
 
             % include only correct?
             if correct_only == 1
-                Int(find(Int(:,4)==1),:)=[];
+                Int((Int(:,4)==1),:)=[];
             end
             
             % if DNMP was selected, separate sample and choice trials
-            if task_type == 'DNMP'
+            if contains(task_type,'DNMP')
                 sample_trials = (1:2:size(Int,1));
                 choice_trials = (2:2:size(Int,1)); 
-                task_params   = 2;
-            elseif task_type == 'CA/DA/CD'
-                task_params = 1;
+                trials = choice_trials; % set to choice_trials if prospective
+            elseif contains(task_type,'DA') || contains(task_type,'CA') || contains(task_type,'CD')
+                trials = 2:size(Int,1);
             end
 
             %% Create firing rate arrays
-            if task_params == 2
-                trials = sample_trials; % set to choice_trials if prospective
-            elseif task_params == 1
-                trials = 2:size(Int,1);
-            end
 
             for ci=1:length(clusters)
                 cd(datafolder);
                 spikeTimes = textread(clusters(ci).name);
                 cluster    = clusters(ci).name(1:end-4);
 
+                % initialize
+                ts_bin = [];
+                
                 for triali = 2:length(trials)    
 
                     % index the timestamps and make bins that contain
@@ -83,7 +78,7 @@ function [FRdata] = svmFormatting_delayTrajectoryCodingProspective(Datafolders,i
                     % element is -1 to 0.
                     vari = -19:2;
                     for i = 1:length(vari) % set it to -19:0 for delay, but -19:2 is delay and first two sec of stem
-                        ts_bin{i} = TimeStamps(find(TimeStamps > Int(trials(triali),1)+((vari(i)-1)*1e6) & ...
+                        ts_bin{i} = TimeStamps((TimeStamps > Int(trials(triali),1)+((vari(i)-1)*1e6) & ...
                             TimeStamps < Int(trials(triali),1)+(vari(i)*1e6)));
                     end
 

@@ -5,7 +5,9 @@
 % ~~~ INPUTS ~~~
 % Datafolders: Master directory
 % int_name: the name of the int_file you want to use (ie 'Int_file.mat')
+% correct: correct trials only if 1, all if 0
 % vt_name: the name of the video tracking file (ie 'VT1.mat')
+% missing_data: 'ignore','interp','exclude' for handling missing vt data
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
@@ -15,7 +17,7 @@
 %
 % written by John Stout. Last update 2/15/20
 
-function [FRdata] = svmFormatting_startbox(Datafolders,int_name,vt_name,task_type)
+function [FRdata] = svmFormatting_startbox(Datafolders,int_name,correct,vt_name,missing_data,task_type)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -53,38 +55,40 @@ function [FRdata] = svmFormatting_startbox(Datafolders,int_name,vt_name,task_typ
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name);
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
+            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
+            
+            % get vt_data 
+            [~,~,TimeStamps] = getVTdata(datafolder,missing_data,vt_name); 
 
             % load TTs
             clusters = dir('TT*.txt');
 
             % only include correct trials
-            Int = Int(find(Int(:,4)==0),:);
-
+            if correct == 1
+                Int = Int(find(Int(:,4)==0),:);
+            end
+           
             % if DNMP was selected, separate sample and choice trials
             % if DNMP was selected, separate sample and choice trials
-            if strfind(task_type,'DNMP') == 1
+            if contains(task_type,'DNMP')
                 if trial_type == 'S'
                     trials = (1:2:size(Int,1));
                 elseif trial_type == 'C'
                     trials = (2:2:size(Int,1)); 
                 end
-                task_params = 2;
-            % CD may need to be treated more similarly to dnmp
-            elseif strfind(task_type,'DA') == 1 || strfind(task_type,'CA') == 1 || strfind(task_type,'CD') == 1
-                task_params = 1;
-                trials = 1:size(Int,1);                
-            end
+            elseif contains(task_type,'DA') || contains(task_type,'CA') || contains(task_type,'CD')
+                trials = 2:size(Int,1);
+            end                 
 
             %% Create firing rate arrays
             for ci=1:length(clusters)
                 cd(datafolder);
                 spikeTimes = textread(clusters(ci).name);
                 cluster    = clusters(ci).name(1:end-4);
-                neuron_temp(1,ci).name = clusters(ci).name(1:end-4);                    
 
+                % initialize
+                ts_bin = [];
+                
                 for triali = 1:length(trials)    
 
                     % index the timestamps and make bins that contain
@@ -94,7 +98,7 @@ function [FRdata] = svmFormatting_startbox(Datafolders,int_name,vt_name,task_typ
                     
                     if fromSb == 1
                         for i = 0:9
-                            ts_bin{i+1} = TimeStamps(find(TimeStamps > Int(trials(triali),8)+(i*1e6) & ...
+                            ts_bin{i+1} = TimeStamps((TimeStamps > Int(trials(triali),8)+(i*1e6) & ...
                                 TimeStamps < Int(trials(triali),8)+((i+1)*1e6)));
                         end
                     elseif fromStem == 1
@@ -110,7 +114,7 @@ function [FRdata] = svmFormatting_startbox(Datafolders,int_name,vt_name,task_typ
                         % and looking at sample trials (i.e. -20s from the
                         % start of the first trial is not task data) or if
                         % you selected a task like DA/CA
-                        if trial_type == 'S' || task_params == 1
+                        if trial_type == 'S'
                             if triali == 1
                                 continue % skip the first trial
                             end
@@ -155,19 +159,4 @@ function [FRdata] = svmFormatting_startbox(Datafolders,int_name,vt_name,task_typ
     FRdata.lefts  = horzcat(FRlefts{:});
     FRdata.rights = horzcat(FRrights{:}); 
     
-    % old formatted - not needed
-    %{
-    for ii = 1:length(FRdata.lefts{1})
-        for iii = 1:length(FRdata.lefts)
-            FRdata.leftsFormat{ii}(:,iii)  = FRdata.lefts{iii}(:,ii);
-            FRdata.rightsFormat{ii}(:,iii) = FRdata.rights{iii}(:,ii);            
-        end
-    end 
-    
-    % generalized formatting for classifier
-    for ii = 1:length(FRdata.leftsFormat) % loop across bins
-        % concatenate horizontally such that left is top, right is bottom
-        FRdata.svmFormat{ii} = vertcat(FRdata.leftsFormat{ii}, FRdata.rightsFormat{ii});
-    end
-    %}
 end

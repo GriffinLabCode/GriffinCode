@@ -8,6 +8,8 @@
 % Datafolders: Master directory
 % int_name: the name of the int_file you want to use (ie 'Int_file.mat')
 % vt_name: the name of the video tracking file (ie 'VT1.mat')
+% missing_data: what to do about missing vt_data?
+%               'interp','ignore','exclude' - I suggest interp for this.
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
@@ -17,7 +19,7 @@
 % 
 % written by John Stout. Last update 3/23/20
 
-function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,task_type,stem_dir,numbins,CSC1,CSC2,CSC3)
+function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,missing_data,stem_dir,stemMin,stemMax,numbins,CSC1,CSC2,CSC3)
 
     % calculate firing rate for all sessions
     cd(Datafolders);
@@ -46,35 +48,22 @@ function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,task_type,s
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name);
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
+            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
             
-            % correct tracking errors     
-            [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
+            % get vt_data 
+            [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);             
 
             % only include correct trials
             IntCorrect   = find(Int(:,4)==0);
             IntIncorrect = find(Int(:,4)==1);
             
             %% create bins
-            ymin = 135; % do not underestimate - you'll end up in start-box
-            ymax = 400; % over estimate - this doesn't hurt anything
-            bins = round(linspace(ymin,ymax,numbins));
+            %stemMin = 135; % do not underestimate - you'll end up in start-box
+            %stemMax = 400; % over estimate - this doesn't hurt anything
+            bins = round(linspace(stemMin,stemMax,numbins));
 
             %% get lfp data
-            
-            % load data
-            if isempty(CSC1)==0
-                data1 = load(CSC1);
-            end
-            if isempty(CSC2)==0
-                data2 = load(CSC2);
-            end
-            if isempty(CSC3)==0
-                data3 = load(CSC3); 
-            end
-            
+
             % set parameters - make default parameters with fun
             params.tapers    = [3 5];
             params.trialave  = 0;
@@ -83,32 +72,49 @@ function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,task_type,s
             params.fpass     = [0 100]; % [1 100]
             params.movingwin = [0.5 0.01]; %(in the form [window winstep] 500ms window with 10ms sliding window Price and eichenbaum 2016 bidirectional paper
             params.Fs        = data1.SampleFrequencies(1);
-
+            
+            % do csc specific actions
+            if isempty(CSC1)==0
+                % load
+                data1 = load(CSC1);
+                % convert
+                data1LFP = data1.Samples(:)';
+                % initialize
+                data1LFP_binned = [];                
+            end
+            if isempty(CSC2)==0
+                % load
+                data2 = load(CSC2);
+                % convert
+                data2LFP = data2.Samples(:)';
+                % initialize
+                data2LFP_binned = [];                   
+            end
+            if isempty(CSC3)==0
+                % load
+                data3 = load(CSC3); 
+                % convert
+                data3LFP = data3.Samples(:)';
+                % initialize
+                data3LFP_binned = [];                   
+            end          
+            
             % convert timestamps
             LFPtimes = interp_TS_to_CSC_length_non_linspaced(data1.Timestamps, data1.Samples); % figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
            
-            % convert lfp data
-            if isempty(CSC1)==0
-                data1LFP = data1.Samples(:)';
-            end
-            if isempty(CSC2)==0
-                data2LFP = data2.Samples(:)';
-            end
-            if isempty(CSC3)==0
-                data3LFP = data3.Samples(:)';
-            end
-              
             % index of trials
             trials = 1:size(Int,1);   
             
             for triali = 1:size(Int,1)    
 
                 % get an index of timestamps and timestamps
+                ts_ind = []; ts_temp = [];
                 ts_ind = find(TimeStamps_VT > Int(trials(triali),1) & ...
                     TimeStamps_VT < Int(trials(triali),6)); 
                 ts_temp = TimeStamps_VT(ts_ind); 
 
                 % use X or Y data depending on the maze orientation
+                loc_temp = [];
                 if stem_dir == 'Y'
                     loc_temp = ExtractedY(ts_ind);
                 elseif stem_dir == 'X'
@@ -119,10 +125,12 @@ function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,task_type,s
                 end
 
                 % find locations that closely match the bins you defined
+                k = [];
                 k = dsearchn(loc_temp',bins'); 
 
                 % index the timestamps using k to get timestamps around the
                 % bins selected
+                times_aroundVT = [];
                 times_aroundVT = ts_temp(k); 
                 
                 % now get times_aroundLFP
@@ -132,15 +140,15 @@ function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,task_type,s
                 for j = 1:length(bins)-1
                     % index of the spikes
                     if isempty(CSC1)==0
-                        data1LFP_binned{triali}{j} = data1LFP(find(LFPtimes>times_aroundVT(j) & ...
+                        data1LFP_binned{triali}{j} = data1LFP((LFPtimes>times_aroundVT(j) & ...
                             LFPtimes<times_aroundVT(j+1)));
                     end
                     if isempty(CSC2)==0
-                        data2LFP_binned{triali}{j} = data2LFP(find(LFPtimes>times_aroundVT(j) & ...
+                        data2LFP_binned{triali}{j} = data2LFP((LFPtimes>times_aroundVT(j) & ...
                             LFPtimes<times_aroundVT(j+1)));
                     end
                     if isempty(CSC3)==0
-                        data3LFP_binned{triali}{j} = data3LFP(find(LFPtimes>times_aroundVT(j) & ...
+                        data3LFP_binned{triali}{j} = data3LFP((LFPtimes>times_aroundVT(j) & ...
                             LFPtimes<times_aroundVT(j+1))); 
                     end
                 end                   

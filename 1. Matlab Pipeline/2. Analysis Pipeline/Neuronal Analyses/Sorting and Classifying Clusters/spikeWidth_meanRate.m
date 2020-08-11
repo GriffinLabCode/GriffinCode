@@ -2,9 +2,15 @@
 % this script gets spike width and averaged firing rate to plot against
 % another
 %
+% INPUTS
+% Datafolders: master folder containing all datafolders
+% vt_name: video track file name
+% missing_data: how to handle missing vt data. Can be 'ignore','interp', or
+%               'exclude'
+%
 % written by John Stout
 
-function [FRdata] = spikeWidth_meanRate(Datafolders,vt_name)
+function [FRdata] = spikeWidth_meanRate(Datafolders,vt_name,missing_data)
 
 % define folder_names
 cd(Datafolders);
@@ -35,16 +41,9 @@ for nn = looper
     datafolder = pwd;
     cd(datafolder);    
 
-    % load animal parameters 
-    vtData     = load(vt_name);
-    ExtractedX = vtData.ExtractedX;
-    ExtractedY = vtData.ExtractedY;
-    try
-        TimeStampsVT = vtData.TimeStamps_VT; % rename
-    catch % sometimes the ..._VT variable is not defined
-        TimeStampsVT = vtData.TimeStamps;
-    end
-
+    % get vt_data 
+    [~,~,TimeStampsVT] = getVTdata(datafolder,missing_data,vt_name);      
+            
     % save session for later
     session = datafolder;
     

@@ -8,6 +8,8 @@
 % Datafolders: Master directory
 % int_name: the name of the int_file you want to use (ie 'Int_file.mat')
 % vt_name: the name of the video tracking file (ie 'VT1.mat')
+% missing_data: can be 'interp', 'ignore', 'exclude'. This is for vt
+%                   missing data
 % task_type: Currently supports 'DNMP' or 'CA/DA/CD' 
 % bin_num: number of bins
 % stem_dir: the direction of stem (can be 'X' or 'Y' as in the x and y plane)
@@ -15,11 +17,9 @@
 %
 % written by John Stout. Last update 2/21/20
 
-function [FRdata] = svmFormatting_taskPhaseCoding_binnedStem(Datafolders,int_name,vt_name,task_type,stem_dir,numbins,correct)
+function [FRdata] = svmFormatting_taskPhaseCoding_binnedStem(Datafolders,int_name,vt_name,missing_data,stem_dir,stemMin,stemMax,numbins,correct)
 
     % calculate firing rate for all sessions
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\John code and edits\Firing Rate');
-    addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions');
     cd(Datafolders);
     folder_names = dir;
     
@@ -46,25 +46,23 @@ function [FRdata] = svmFormatting_taskPhaseCoding_binnedStem(Datafolders,int_nam
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name);
-            load(vt_name,'ExtractedX','ExtractedY','TimeStamps_VT');
-            TimeStamps = TimeStamps_VT; % rename
-            
-            % correct tracking errors     
-            [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);             
+            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
+    
+            % get vt_data 
+            [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);             
 
             % load TTs
             clusters = dir('TT*.txt');
 
             % only include correct trials
             if correct == 1
-                Int = Int(find(Int(:,4)==0),:);
+                Int = Int((Int(:,4)==0),:);
             end
             
             %% create bins
-            ymin = 135; % do not underestimate - you'll end up in start-box
-            ymax = 400; % over estimate - this doesn't hurt anything
-            bins = round(linspace(ymin,ymax,numbins));
+            %stemMin = 135; % do not underestimate - you'll end up in start-box
+            %stemMax = 400; % over estimate - this doesn't hurt anything
+            bins = round(linspace(stemMin,stemMax,numbins));
 
             %% Create firing rate arrays
             trials = 1:size(Int,1);
