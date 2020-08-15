@@ -17,6 +17,8 @@
 % ExtractedX: X position in pixels
 % ExtractedY: Y position in pixels
 % TimeStamps: Timestamps of the video tracking data
+%
+% written by John Stout
 
 function [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name)
 

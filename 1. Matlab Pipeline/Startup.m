@@ -7,7 +7,11 @@
 clear; clc;
 
 % This is the directory where the "Startup" function is located
-main_directory = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline';
+try
+    load('main_directory')
+catch   
+    main_directory = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline';
+end
 
 % interface with user to redefine main_directory
 disp(main_directory)
@@ -132,6 +136,7 @@ end
 % display
 disp('Paths necessary for Matlab Pipeline have been added')
 cd(main_directory);
+save('main_directory.mat','main_directory')
 
 % clear workspace
 clear;
