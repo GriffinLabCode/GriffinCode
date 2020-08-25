@@ -1,4 +1,4 @@
-function [idealTraj] = idealized_trajectory_2(pos)
+function [idealTraj] = idealized_trajectory_2(pos,meas_distance)
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                                                     %%%
 %%%                    Making a Coord File                              %%%
@@ -22,9 +22,11 @@ function [idealTraj] = idealized_trajectory_2(pos)
 % stem trajectory one time so that the bins are identical
 
 [stemX,stemY] = MakeStemCoord(pos(1,:),pos(2,:),'titl','Draw stem trajectory, press enter when done','XDir','reverse');
-idealL = MakeCoord2(pos(1,:),pos(2,:),stemX,stemY,'titl','Draw left trajectory, after T-junction, press enter when done','XDir','reverse');
-idealR = MakeCoord2(pos(1,:),pos(2,:),stemX,stemY,'titl','Draw right trajectory, after T-junction, press enter when done','XDir','reverse');
+idealL = MakeCoord2(pos(1,:),pos(2,:),stemX,stemY,meas_distance,'titl','Draw left trajectory, after T-junction, press enter when done','XDir','reverse');
+idealR = MakeCoord2(pos(1,:),pos(2,:),stemX,stemY,meas_distance,'titl','Draw right trajectory, after T-junction, press enter when done','XDir','reverse');
 
+% measurement distance
+%{
 next = 0;
 while next == 0
     if size(idealL,2) > size(idealR,2)
@@ -41,7 +43,7 @@ while next == 0
         next = 1;
     end
 end
-
+%}
 %{
 idealL_cm = idealL; % copy coordL under a new variable name, and apply some changes:
 idealL_cm(1,:) = idealL_cm(1,:)./convFact(1); % apply x conversion

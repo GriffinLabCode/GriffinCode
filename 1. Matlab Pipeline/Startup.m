@@ -24,6 +24,10 @@ if contains(resp,'N') || contains(resp,'n')
 else
 end
 
+% addpath to main directory
+addpath(main_directory);
+disp('Added path to main directory')
+
 % these will have to change if you change the names of the formatting and
 % analysis pipeline directory names
 analysis_directory = '\2. Analysis Pipeline';
