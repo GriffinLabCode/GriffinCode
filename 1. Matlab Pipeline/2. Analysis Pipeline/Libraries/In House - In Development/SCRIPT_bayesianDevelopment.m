@@ -12,8 +12,10 @@ measurements.goalZone = 37;
 measurements.retArm   = 130;
 
 % get linear skeleton
+Startup_linearSkeleton % add paths
 [data] = get_linearSkeleton(datafolder,int_name,vt_name,missing_data,measurements);
 idealTraj = data.idealTraj;
+rmPaths_linearSkeleton % remove paths
 
 % get linear position
 [linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data);
@@ -25,7 +27,17 @@ linPosBins = linearPosition.left;
 
 % get int and vt data
 load(int_name)
-[ExtractedX, ExtractedY, TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
+
+% plot to show what a 'linear skeleton' is
+figure('color','w');
+plot(data.pos(1,:),data.pos(2,:),'Color',[.8 .8 .8]);
+hold on;
+p1 = plot(idealTraj.idealL(1,:),idealTraj.idealL(2,:),'m','LineWidth',0.2);
+p1.Marker = 'o';
+p2.LineStyle = 'none';
+p2 = plot(idealTraj.idealR(1,:),idealTraj.idealR(2,:),'b','LineWidth',0.2);
+p2.Marker = 'o';
+p2.LineStyle = 'none';
 
 % separate left/right trials
 Int_left  = Int(Int(:,3)==1,:);
@@ -40,10 +52,18 @@ end
 
 %% get spike data
 cd(datafolder);
-clusters   = dir('TT*.txt');
-ci=1;
+
+% load in our clusters
+clusters = dir('TT*.txt');
+
+% a way to define which cluster to look at
+ci = 1;
+
+% spike time stamps
 spikeTimes = textread(clusters(ci).name);
-cluster    = clusters(ci).name(1:end-4);
+
+% isolate the name of the cluster - unnecessary line
+cluster = clusters(ci).name(1:end-4);
 
 % initialize some variables
 binSpks = []; binTime = []; numSpks =[]; sumTime = []; FR = []; FRmat = [];
@@ -82,11 +102,18 @@ for triali = 1:length(linPosBins)
     numSpks{triali} = cellfun(@sum,binSpks{triali});
     sumTime{triali} = cellfun(@sum,binTime{triali});
 
-    % firing rate (spks/sec)
+    % firing rate (spks/sec) - this is instantaneous firing rate
     FR{triali} = numSpks{triali}./sumTime{triali};
     
+    % remove nans - why do we get them?
+    %FR{triali} 
 end
 
+numLocations = numel(spikes);
+prob_spks_given_location = numSpks{1}./numLocations;
+
+% important for later
+%{
 % concatenate and smooth data
 FRmat = vertcat(FR{:});
 FRmat(find(isnan(FRmat)==1))=0;
@@ -116,3 +143,4 @@ FRdata.normFR{nn-2}{ci}       = normFR;
 FRdata.smoothFR{nn-2}{ci}     = smoothFR;
 FRdata.numSpikes{nn-2}{ci}    = numSpks;
 FRdata.FR{nn-2}{ci}           = FRmat;
+%}

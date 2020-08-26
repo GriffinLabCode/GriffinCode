@@ -35,6 +35,15 @@ function [data] = get_linearSkeleton(datafolder,int_name,vt_name,missing_data,me
 % get vt data
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
+% -- this needs to be flexible, change me! -- %
+%{
+% define the convFact variable
+data.measurements.convFact(1:2) = [2.09 2.04]; % left room is easy. its almost a perfect square. first col is x, second y
+
+% converted
+ExtractedX = ExtractedX./data.measurements.convFact(1);
+ExtractedY = ExtractedY./data.measurements.convFact(2);
+%}
 % conversion shouldn't be necessary if you provide the actual maze
 % dimensions. This is bc linearizing is binning and we can restrict the
 % number of bins.

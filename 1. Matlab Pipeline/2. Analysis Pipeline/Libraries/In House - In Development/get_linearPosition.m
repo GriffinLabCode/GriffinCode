@@ -17,6 +17,16 @@ function [linearPosition,position] = get_linearPosition(datafolder,idealTraj,int
 % get vt data
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
+% -- this needs to be flexible, change me! -- %
+%{
+% define the convFact variable
+data.measurements.convFact(1:2) = [2.09 2.04]; % left room is easy. its almost a perfect square. first col is x, second y
+
+% converted
+ExtractedX = ExtractedX./data.measurements.convFact(1);
+ExtractedY = ExtractedY./data.measurements.convFact(2);
+%}
+
 % load int file
 load(int_name)
 

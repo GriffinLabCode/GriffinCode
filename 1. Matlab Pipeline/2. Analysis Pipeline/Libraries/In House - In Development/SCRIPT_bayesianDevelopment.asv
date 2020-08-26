@@ -18,7 +18,37 @@ idealTraj = data.idealTraj;
 % get linear position
 [linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data);
 
-%% instantaneous firing rate and linearized position spikes
+%% load in int and position data
+
+% focus on one trajectory for now
+linPosBins = linearPosition.left;
+
+% get int and vt data
+load(int_name)
+
+% plot to show what a 'linear skeleton' is
+figure('color','w');
+plot(data.pos(1,:),data.pos(2,:),'Color',[.8 .8 .8]);
+hold on;
+p1 = plot(idealTraj.idealL(1,:),idealTraj.idealL(2,:),'m','LineWidth',0.2);
+p1.Marker = 'o';
+p2.LineStyle = 
+p2 = plot(idealTraj.idealR(1,:),idealTraj.idealR(2,:),'b','LineWidth',0.2);
+p2.Marker = 'o';
+p2.LineStyle = 'none'
+
+% separate left/right trials
+Int_left  = Int(Int(:,3)==1,:);
+Int_right = Int(Int(:,3)==0,:);
+
+% get data
+for triali = 1:length(linPosBins)
+    X{triali}  = ExtractedX(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
+    Y{triali}  = ExtractedY(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
+    TS{triali} = TimeStamps(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
+end
+
+%% get spike data
 cd(datafolder);
 clusters   = dir('TT*.txt');
 ci=1;
@@ -28,20 +58,6 @@ cluster    = clusters(ci).name(1:end-4);
 % initialize some variables
 binSpks = []; binTime = []; numSpks =[]; sumTime = []; FR = []; FRmat = [];
 normFR = []; smoothFR = [];
-
-% focus on one trajectory for now
-linPosBins = linearPosition.left;
-
-% get left trials
-load(int_name)
-
-% separate left/right trials
-Int_left  = Int(Int(:,3)==1,:);
-Int_right = Int(Int(:,3)==0,:);
-
-% get data
-for triali = 1:length(linPosBins)
-    X{triali} = ExtractedX(TimeStamps > Int_left(triali,1) & 
 
 % calculate instantaneous firing rate
 for triali = 1:length(linPosBins)
@@ -72,16 +88,13 @@ for triali = 1:length(linPosBins)
         binTime{triali}{i} = timeForm(linPosBins{triali} == i);
     end
 
-    % does removing empty arrays make the binning even?
-    %binSpks{triali} =  binSpks{triali}(~cellfun('isempty',binSpks{triali}));
-    %binTime{triali} =  binTime{triali}(~cellfun('isempty',binTime{triali}));
-
     % calculate firing rate per bin
     numSpks{triali} = cellfun(@sum,binSpks{triali});
     sumTime{triali} = cellfun(@sum,binTime{triali});
 
     % firing rate (spks/sec)
     FR{triali} = numSpks{triali}./sumTime{triali};
+    
 end
 
 % concatenate and smooth data
