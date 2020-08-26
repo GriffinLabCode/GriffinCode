@@ -1,9 +1,11 @@
-%% IdPhi
+%% IdPhi adaptive window
+%
+% Based on this code, it is so much simpler to take the derivative of x and
+% y using diff. No real difference
 %
 % -- INPUTS -- %
 % x_pos: x position data as a vector
 % y_pos: y position data as a vector
-% smooth: set to 1 if you to smooth x and y data
 %
 % -- OUTPUTS -- %
 % intPhi: integrated absolute phi, the metric used to assess VTE behaviors.
@@ -19,18 +21,19 @@
 % python code received from Jesse Miles (Mizumori lab on 8-12-2020). The
 % code was adapted and made into matlab code by John Stout on 8-14-2020.
 
-function [IdPhi] = get_IdPhi(x_pos,y_pos,smooth_data)
+function [IdPhi] = get_IdPhi_adaptiveWindow(x_pos,y_pos,ts_diff)
 
-% try smoothing - 'lowess' is nice and smooth - moving is smoothest and
-% seems to capture the trends in the data
-if smooth_data == 1
-    x_pos = smooth(x_pos,'moving');
-    y_pos = smooth(y_pos,'moving');
-end
+% these parameters were defined based off the function foaw_diff
+d = 0.05;
+m = 20; % this set to 20 provided the same output as diff function
 
-% get the derivative of x and y
-dx = diff(x_pos);
-dy = diff(y_pos);
+% get velocity - JS
+vel_x = foaw_diff(x_pos, ts_diff, m, d);
+vel_y = foaw_diff(y_pos, ts_diff, m, d);
+
+% get the derivatives - JS
+dx = vel_x*Ts;
+dy = vel_y*Ts;
 
 % get arctangent of the derivatives (Phi)
 phi = atan2(dx,dy);
@@ -39,7 +42,9 @@ phi = atan2(dx,dy);
 phi_unwrap = unwrap(phi);
 
 % derivative of phi
-dPhi = diff(phi_unwrap);
+%dPhi = diff(phi_unwrap);
+vel_phi = foaw_diff(phi_unwrap, ts_diff, m, d);
+dPhi    = vel_phi*ts_diff;
 
 % absolute value
 absPhi = abs(dPhi);

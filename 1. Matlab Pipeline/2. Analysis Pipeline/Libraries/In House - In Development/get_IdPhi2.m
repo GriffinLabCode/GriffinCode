@@ -3,7 +3,6 @@
 % -- INPUTS -- %
 % x_pos: x position data as a vector
 % y_pos: y position data as a vector
-% smooth: set to 1 if you to smooth x and y data
 %
 % -- OUTPUTS -- %
 % intPhi: integrated absolute phi, the metric used to assess VTE behaviors.
@@ -19,21 +18,14 @@
 % python code received from Jesse Miles (Mizumori lab on 8-12-2020). The
 % code was adapted and made into matlab code by John Stout on 8-14-2020.
 
-function [IdPhi] = get_IdPhi(x_pos,y_pos,smooth_data)
-
-% try smoothing - 'lowess' is nice and smooth - moving is smoothest and
-% seems to capture the trends in the data
-if smooth_data == 1
-    x_pos = smooth(x_pos,'moving');
-    y_pos = smooth(y_pos,'moving');
-end
+%function [IdPhi] = get_IdPhi2(x_pos,y_pos)
 
 % get the derivative of x and y
-dx = diff(x_pos);
-dy = diff(y_pos);
+deriv_x = diff(x_pos);
+deriv_y = diff(y_pos);
 
 % get arctangent of the derivatives (Phi)
-phi = atan2(dx,dy);
+phi = atan2(deriv_x,deriv_y);
 
 % unwrap orientation to prevent circular transitions
 phi_unwrap = unwrap(phi);
@@ -46,9 +38,9 @@ absPhi = abs(dPhi);
 
 % integrated absolute phi - not sure what they actually meant by
 % integrated, but Jesse added it.
-%IdPhi = sum(absPhi);
-IdPhi = trapz(absPhi);
+IdPhi = sum(absPhi);
 
-end
+IdPhi = trapz(absPhi)
 
+IdPhi = integral(get_absPhi,min(x_pos),max(x_pos));
 
