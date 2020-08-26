@@ -13,45 +13,54 @@ datafolder = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recording
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,'exclude','VT1.mat');
 
 % define the convFact variable
-convFact(1:2) = [2.09 2.04]; % left room is easy. its almost a perfect square. first col is x, second y
+data.measurements.convFact(1:2) = [2.09 2.04]; % left room is easy. its almost a perfect square. first col is x, second y
 
-ExtractedX = ExtractedX./convFact(1);
-ExtractedY = ExtractedY./convFact(2);
+% convert x and y data
+ExtractedX = ExtractedX./data.measurements.convFact(1);
+ExtractedY = ExtractedY./data.measurements.convFact(2);
 
-%idealTraj = idealized_trajectory_2(pos);
-
-% another method - use averages from a 'perfect session' to make
-% coordinates. Additionally, if any are larger, use the smaller traj. and
-% interp
+% load int file
 int_name = 'Int_file';
 load(int_name)
 
-% separate trajectories
+% what is the measured distance from stem entry to startbox entry?
+data.measurements.stem     = 137;
+data.measurements.goalArm  = 50;
+data.measurements.goalZone = 37;
+data.measurements.retArm   = 130;
+data.measurements.total_distance = data.measurements.stem+data.measurements.goalArm...
+    +data.measurements.goalZone+data.measurements.retArm;
+
+% position data
+data.pos(1,:) = ExtractedX;
+data.pos(2,:) = ExtractedY;
+
+% get linear skeleton
+data.idealTraj = idealized_trajectory_2(data.pos,meas_distance);
+
+% -- separate left and right trajectories -- %
+
+% separate left/right trials
 Int_left  = Int(Int(:,3)==1,:);
 Int_right = Int(Int(:,3)==0,:);
 
-% what is the measured distance from stem entry to startbox entry?
-meas_stem     = 137;
-meas_goalArm  = 50;
-meas_goalZon  = 37;
-meas_retArm   = 130;
-meas_distance = meas_stem+meas_goalArm+meas_goalZon+meas_retArm;
-
-% position data
-pos(1,:) = ExtractedX;
-pos(2,:) = ExtractedY;
-
-% get linear skeleton
-[idealTraj] = idealized_trajectory_2(pos,meas_distance);
+% get position data
+for triali = 1:size(Int_left,1)
+    X.left{i} = ExtractedX(TimeStamps >= Int_left(1,i) & TimeStamps <= Int_left(1,8));
+    Y.left{i} = ExtractedY(TimeStamps >= Int_left(1,i) & TimeStamps <= Int_left(1,8));
+end
 
 % -- linearize position -- %
 for i = 1:numTrials
-
+    
     % get coordinate points between ideal trajectory and real data
-    linPosBins{i} = griddata(traj_skeleton(1,:),traj_skeleton(2,:),1:length(traj_skeleton(1,:)),X{i},Y{i},'nearest');
+    linearPosition.left{i} = griddata(idealTraj.idealL(1,:),idealTraj.idealL(2,:),1:length(idealTraj.idealL(1,:)),X{i},Y{i},'nearest');
 
+    % right
+    linearPosition.right{i} = 
+    
     % get distance
-    d{i} = sqrt((traj_skeleton(1,ceil(linPosBins{i}))-X{i}).^2 + (traj_skeleton(2,ceil(linPosBins{i}))-Y{i}).^2);
+    %d{i} = sqrt((traj_skeleton(1,ceil(linPosBins{i}))-X{i}).^2 + (traj_skeleton(2,ceil(linPosBins{i}))-Y{i}).^2);
 
 end
 
