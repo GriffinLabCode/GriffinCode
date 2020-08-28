@@ -59,13 +59,11 @@ ExtractedY = ExtractedY./data.measurements.convFact(2);
 % load int file
 load(int_name)
 
-% what is the measured distance from stem entry to startbox entry?
-data.measurements.stem     = measurements.stem;
-data.measurements.goalArm  = measurements.goalArm;
-data.measurements.goalZone = measurements.goalZone;
-data.measurements.retArm   = measurements.retArm;
-data.measurements.total_distance = data.measurements.stem+data.measurements.goalArm...
-    +data.measurements.goalZone+data.measurements.retArm;
+% what is the measured distance from stem entry to startbox entry? Note
+% that this is easier than converting to cm, and provides clear size
+% boundaries for the data
+data.measurements = measurements;
+data.measurements.total_distance = sum(cell2mat(struct2cell(measurements)));
 
 % position data
 data.pos(1,:) = ExtractedX;

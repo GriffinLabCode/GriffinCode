@@ -8,8 +8,8 @@ vt_name      = 'VT1.mat';
 missing_data = 'exclude';
 measurements.stem     = 137; % in cm
 measurements.goalArm  = 50;
-measurements.goalZone = 37;
-measurements.retArm   = 130;
+%measurements.goalZone = 37;
+%measurements.retArm   = 130;
 
 % get linear skeleton
 Startup_linearSkeleton % add paths
@@ -18,12 +18,16 @@ idealTraj = data.idealTraj;
 rmPaths_linearSkeleton % remove paths
 
 % get linear position
-[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data);
+mazePos = [1 2];
+[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
 
 %% load in int and position data
 
+% load position data
+[ExtractedX, ExtractedY, TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
+
 % focus on one trajectory for now
-linPosBins = linearPosition.left;
+linearPosition_left = linearPosition.left;
 
 % get int and vt data
 load(int_name)
@@ -34,7 +38,7 @@ plot(data.pos(1,:),data.pos(2,:),'Color',[.8 .8 .8]);
 hold on;
 p1 = plot(idealTraj.idealL(1,:),idealTraj.idealL(2,:),'m','LineWidth',0.2);
 p1.Marker = 'o';
-p2.LineStyle = 'none';
+p1.LineStyle = 'none';
 p2 = plot(idealTraj.idealR(1,:),idealTraj.idealR(2,:),'b','LineWidth',0.2);
 p2.Marker = 'o';
 p2.LineStyle = 'none';
@@ -44,11 +48,40 @@ Int_left  = Int(Int(:,3)==1,:);
 Int_right = Int(Int(:,3)==0,:);
 
 % get data
-for triali = 1:length(linPosBins)
-    X{triali}  = ExtractedX(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
-    Y{triali}  = ExtractedY(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
-    TS{triali} = TimeStamps(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
+for triali = 1:length(linearPosition_left)
+    X{triali}  = ExtractedX(TimeStamps >= Int_left(triali,mazePos(1)) & TimeStamps <= Int_left(triali,mazePos(2)));
+    Y{triali}  = ExtractedY(TimeStamps >= Int_left(triali,mazePos(1)) & TimeStamps <= Int_left(triali,mazePos(2)));
+    TS{triali} = TimeStamps(TimeStamps >= Int_left(triali,mazePos(1)) & TimeStamps <= Int_left(triali,mazePos(2)));
 end
+
+%% plot linear position by time and get velocity via differentiation
+trial = 18;
+figure('color','w'); hold on;
+axisColors = [{'b'},{'r'}];
+yyaxis left
+    timeDiff  = (TS{trial}(end)-TS{trial}(1))/1e6; % in sec
+    timingVar = linspace(0,timeDiff,length(TS{trial}));
+    p1 = plot(timingVar,linearPosition_left{trial},axisColors{1},'LineWidth',2,'HandleVisibility','off');
+    ylabel('Linear Position (cm)')
+    xlabel('Time (sec) from stem entry to goal entry ');
+    box off
+% estimate instantaneous velocity
+yyaxis right; hold on;
+    %vel = diff(linearPosition_left{1})./(diff(TS{1}./1e6));
+    %vel = gradient(linearPosition_left{1})./(gradient(TS{1}./1e6));
+    [vel,accel] = linearPositionKinematics(linearPosition_left{trial},timingVar);   
+    [smoothVel,windowVel] = smoothdata(vel,'gaussian',20);
+    [smoothAcc,windowAcc] = smoothdata(accel,'gaussian',20);    
+    %plot(timingVar(2:end),smoothVel,axisColors{2},'LineWidth',2)
+    p2 = plot(timingVar,smoothVel,axisColors{2},'LineWidth',2,'HandleVisibility','off');   
+    p3 = plot(timingVar,smoothAcc,'k','LineWidth',2);
+    ylabel('Velocity (cm/sec)') 
+ax = gca;
+ax.YAxis(1).Color = axisColors{1};
+ax.YAxis(2).Color = axisColors{2};
+legend('Acceleration (cm/sec^2)')
+legend box off
+title(['Trial number ',num2str(trial)])
 
 %% get spike data
 cd(datafolder);
@@ -70,7 +103,7 @@ binSpks = []; binTime = []; numSpks =[]; sumTime = []; FR = []; FRmat = [];
 normFR = []; smoothFR = [];
 
 % calculate instantaneous firing rate
-for triali = 1:length(linPosBins)
+for triali = 1:length(linearPosition_left)
 
     spks = [];
     spks = spikeTimes(spikeTimes >= TS{triali}(1) & spikeTimes <= TS{triali}(end));
@@ -93,9 +126,9 @@ for triali = 1:length(linPosBins)
 
     % 30 samples per sec means i can divide each indiivudal point by 30.
     %clear binSpks binTime
-    for i = 1:max(linPosBins{triali}) % loop across the number of bins
-        binSpks{triali}{i} = spkForm(linPosBins{triali} == i);
-        binTime{triali}{i} = timeForm(linPosBins{triali} == i);
+    for i = 1:max(linearPosition_left{triali}) % loop across the number of bins
+        binSpks{triali}{i} = spkForm(linearPosition_left{triali} == i);
+        binTime{triali}{i} = timeForm(linearPosition_left{triali} == i);
     end
 
     % calculate firing rate per bin

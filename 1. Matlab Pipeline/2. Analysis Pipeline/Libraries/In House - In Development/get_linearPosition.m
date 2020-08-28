@@ -12,12 +12,13 @@
 %
 % written by John Stout with major insight from van der meer code
 
-function [linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data)
+function [linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos)
 
 % get vt data
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
 % -- this needs to be flexible, change me! -- %
+
 %{
 % define the convFact variable
 data.measurements.convFact(1:2) = [2.09 2.04]; % left room is easy. its almost a perfect square. first col is x, second y
@@ -36,14 +37,14 @@ Int_right = Int(Int(:,3)==0,:);
 
 % get left trajectory position
 for triali = 1:size(Int_left,1)
-    position.X_left{triali} = ExtractedX(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
-    position.Y_left{triali} = ExtractedY(TimeStamps >= Int_left(triali,1) & TimeStamps <= Int_left(triali,8));
+    position.X_left{triali} = ExtractedX(TimeStamps >= Int_left(triali,mazePos(1)) & TimeStamps <= Int_left(triali,mazePos(2)));
+    position.Y_left{triali} = ExtractedY(TimeStamps >= Int_left(triali,mazePos(1)) & TimeStamps <= Int_left(triali,mazePos(2)));
 end
 
 % get right trajectory position
 for triali = 1:size(Int_right,1)
-    position.X_right{triali} = ExtractedX(TimeStamps >= Int_right(triali,1) & TimeStamps <= Int_right(triali,8));
-    position.Y_right{triali} = ExtractedY(TimeStamps >= Int_right(triali,1) & TimeStamps <= Int_right(triali,8));
+    position.X_right{triali} = ExtractedX(TimeStamps >= Int_right(triali,mazePos(1)) & TimeStamps <= Int_right(triali,mazePos(2)));
+    position.Y_right{triali} = ExtractedY(TimeStamps >= Int_right(triali,mazePos(1)) & TimeStamps <= Int_right(triali,mazePos(2)));
 end
 
 %% linearize position
