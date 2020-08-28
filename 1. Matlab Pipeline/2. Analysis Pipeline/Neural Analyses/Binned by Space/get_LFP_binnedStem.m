@@ -48,8 +48,11 @@ function [LFPdata] = get_LFP_binnedStem(Datafolders,int_name,vt_name,missing_dat
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
-            
+            % only load undefined variables
+            varlist = who; %Find the variables that already exist
+            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
+
             % get vt_data 
             [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);             
 

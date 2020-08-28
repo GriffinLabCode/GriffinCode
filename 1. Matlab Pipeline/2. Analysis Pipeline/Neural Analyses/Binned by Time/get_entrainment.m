@@ -30,6 +30,10 @@ shuffle = 0; % 0 does not shuffle, 1 shuffles phases. Shuffle this for random di
 
 % downsample filtered lfp?
 downSample = 0;
+
+% how to handle missing vt data?
+vt_name = 'VT1.mat';
+missing_data = 'interp';
             
 % cd to datafolders to define folder_names
 cd(Datafolders);
@@ -74,7 +78,10 @@ for nn = looper    % 35 is for simultaneous sessions % length(folder_names) % ma
     
     % Populate Int
     try 
-        load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);           
+        % only load undefined variables
+        varlist = who; %Find the variables that already exist
+        varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+        load(int_name,'-regexp', ['^(?!' varlist ')\w']);
     catch
         continue
     end
@@ -102,13 +109,7 @@ for nn = looper    % 35 is for simultaneous sessions % length(folder_names) % ma
     
     % population VT data
     cd(datafolder);
-    load('VT1.mat');
-    try load('ExtractedYSample.mat')
-        disp('Successfully loaded ExtractedY Sample')
-    catch 
-         disp('ExtractedY from VT1 will be included');
-    end
-    TimeStamps = TimeStamps_VT;    
+    [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);   
     
     % load clusters
     cd(datafolder);
@@ -119,14 +120,17 @@ for nn = looper    % 35 is for simultaneous sessions % length(folder_names) % ma
 
     % load lfp data
     try
-        load(lfpName,'Samples','Timestamps','SampleFrequencies'); 
+        % only load undefined variables
+        varlist = who; %Find the variables that already exist
+        varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+        load(lfpName,'-regexp', ['^(?!' varlist ')\w']);
     catch
         disp(['No file by the name of ',lfpName,' found in session ',num2str(nn-2)])
         continue
     end
     
     % define some variables
-    srate          = SampleFrequencies(1);
+    srate = SampleFrequencies(1);
 
     % format lfp timestamps
     [Timestamps_new, phase_EEG] = interp_TS_to_CSC_length_non_linspaced(Timestamps,Samples);

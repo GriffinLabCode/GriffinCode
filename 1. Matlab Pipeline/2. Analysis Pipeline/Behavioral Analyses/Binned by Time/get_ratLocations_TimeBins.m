@@ -62,8 +62,13 @@ for nn = looper
     sessions{nn-2} = C;
     
     % int_name will be the int file name
-    load(strcat(datafolder,'\',int_name));
-        
+    cd(datafolder);
+    
+    % only load undefined variables
+    varlist = who; %Find the variables that already exist
+    varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+    load(int_name,'-regexp', ['^(?!' varlist ')\w']);
+
     cd(Datafolders);
     folder_names = dir;
     cd(datafolder);

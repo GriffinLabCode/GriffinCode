@@ -46,7 +46,10 @@ function [LFPdata] = get_LFP_mazeLocation(Datafolders,int_name,locID,CSC1,CSC2,C
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);           
+            % only load undefined variables
+            varlist = who; %Find the variables that already exist
+            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
             
             % if the int file is empty, skip the session
             if isempty('Int') == 1

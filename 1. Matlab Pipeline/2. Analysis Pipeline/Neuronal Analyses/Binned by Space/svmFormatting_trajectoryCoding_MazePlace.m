@@ -2,7 +2,6 @@
 % this function formats data for classification of trajectory using stem
 % bins
 %
-% NOT FINISHED
 %
 % ~~~ INPUTS ~~~
 % Datafolders: Master directory
@@ -49,8 +48,11 @@ function [FRdata] = svmFormatting_trajectoryCoding_MazePlace(Datafolders,int_nam
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
-    
+            % only load undefined variables
+            varlist = who; %Find the variables that already exist
+            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
+
             % get vt_data 
             [~,~,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);                      
 

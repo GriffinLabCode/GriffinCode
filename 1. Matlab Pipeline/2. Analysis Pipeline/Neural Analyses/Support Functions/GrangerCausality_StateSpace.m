@@ -16,7 +16,7 @@
 function [fx2y,fy2x,freqs,srateNew,ssmo,pf] = GrangerCausality_StateSpace(lfp_1,lfp_2,srate)
 
 % addpaths
-startup_fun;
+startup_GC_fun;
 
 % remove empty arrays
 lfp_1 = lfp_1(~cellfun('isempty',lfp_1));

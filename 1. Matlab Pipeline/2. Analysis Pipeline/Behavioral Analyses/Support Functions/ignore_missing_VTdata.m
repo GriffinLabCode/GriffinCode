@@ -7,8 +7,11 @@ function [ExtractedX,ExtractedY,TimeStamps] = ignore_missing_VTdata(datafolder,v
 
 % load vt data in specific datafolder
 cd(datafolder);
-load(vt_name,'-regexp', ['^(?!' [datafolder] ')\w']);
 
+% only load undefined variables
+varlist = who; %Find the variables that already exist
+varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+load(vt_name,'-regexp', ['^(?!' varlist ')\w']);
 
 % various ways that video tracking data has been defined in the past. From
 % now on, we use ExtractedX, ExtractedY, TimeStamps

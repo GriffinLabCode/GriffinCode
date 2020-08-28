@@ -21,8 +21,7 @@
 
 function [IdPhi] = get_IdPhi(x_pos,y_pos,smooth_data)
 
-% try smoothing - 'lowess' is nice and smooth - moving is smoothest and
-% seems to capture the trends in the data
+% try smoothing - moving seems to be smoothest
 if smooth_data == 1
     x_pos = smooth(x_pos,'moving');
     y_pos = smooth(y_pos,'moving');
@@ -45,9 +44,10 @@ dPhi = diff(phi_unwrap);
 absPhi = abs(dPhi);
 
 % integrated absolute phi - not sure what they actually meant by
-% integrated, but Jesse added it.
-%IdPhi = sum(absPhi);
-IdPhi = trapz(absPhi);
+% integrated, but Jesse summed it. Summation seems to be no different than 
+% trapz integration.
+IdPhi = sum(absPhi);
+%IdPhi = trapz(absPhi); 
 
 end
 

@@ -75,8 +75,12 @@ for nn = looper
     
     % int_name will be the int file name
     cd(datafolder)
-    load(int_name,'-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
     
+    % only load undefined variables
+    varlist = who; %Find the variables that already exist
+    varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+    load(int_name,'-regexp', ['^(?!' varlist ')\w']);
+
     % get correct trials
     if correct == 1
         Int((Int(:,4)==1),:)=[];

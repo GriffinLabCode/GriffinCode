@@ -42,8 +42,11 @@ function [BehData] = get_stemBinnedSpeedAndTimespent(Datafolders,int_name,missin
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name,'Int');
-            
+            % only load undefined variables
+            varlist = who; %Find the variables that already exist
+            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
+
             % get vt data
             [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data);
 

@@ -2,8 +2,6 @@
 % this function formats data for classification of task phase during stem
 % traversals. It is for DNMP task.
 %
-% NOT FINISHED
-%
 % ~~~ INPUTS ~~~
 % Datafolders: Master directory
 % int_name: the name of the int_file you want to use (ie 'Int_file.mat')
@@ -46,7 +44,10 @@ function [FRdata] = svmFormatting_taskPhaseCoding_binnedStem(Datafolders,int_nam
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
+            % only load undefined variables
+            varlist = who; %Find the variables that already exist
+            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
     
             % get vt_data 
             [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);             

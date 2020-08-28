@@ -5,6 +5,9 @@
 % INPUTS:
 % datafolder
 % Int
+% vt_name = vt file name
+% missing_data = how to handle missing vt data: 'exclude', 'interp',
+% 'ignore'
 %
 % OUTPUTS:
 % pos_X: cell array containing trial dependent locations
@@ -12,25 +15,15 @@
 %
 % written by John Stout
 
-function [pos_X,pos_Y,ExtractedX,ExtractedY] = rat_location_time2pos(datafolder,Int)
+function [pos_X,pos_Y,ExtractedX,ExtractedY] = rat_location_time2pos(datafolder,Int,vt_name,missing_data)
 
         %% load VT data
         % if you cd to datafolder, you don't have to worry about issues
         % loading the converted .mat folders if they were converted using a
         % different directory.
         cd(datafolder);
-        load('VT1.mat');
-        load('Events.mat');
-
-        %% interpolate missing data
-        addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\chronux\spectral_analysis\continuous');
-        addpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Basic Functions')
-
-        [ExtractedX,ExtractedY] = correct_tracking_errors(datafolder);
-        
-        % convert to cm
-        ExtractedX = round(ExtractedX);
-        ExtractedY = round(ExtractedY);
+        [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
+        %load('Events.mat');
         
         %%  Extract location data
     for lagi = 1:5        

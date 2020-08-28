@@ -59,7 +59,10 @@ function [LFPdata] = get_LFP_timeAround(Datafolders,int_name,mazeIdx,time_around
 
             % load animal parameters 
             try
-                load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);           
+                % only load undefined variables
+                varlist = who; %Find the variables that already exist
+                varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+                load(int_name,'-regexp', ['^(?!' varlist ')\w']);
             catch
                 disp(['Could not load ', int_name])
                 continue

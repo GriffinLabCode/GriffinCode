@@ -47,7 +47,10 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
+            % only load undefined variables
+            varlist = who; %Find the variables that already exist
+            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
     
             % get vt_data 
             [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);                      

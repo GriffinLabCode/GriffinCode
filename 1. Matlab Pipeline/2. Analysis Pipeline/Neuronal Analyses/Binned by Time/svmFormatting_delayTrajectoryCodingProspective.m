@@ -34,8 +34,10 @@ function [FRdata] = svmFormatting_delayTrajectoryCodingProspective(Datafolders,i
             cd(datafolder);    
 
             % load animal parameters 
-            load(int_name','-regexp', ['^(?!' [datafolder, Datafolders] ')\w']);
-            
+            varlist = who; %Find the variables that already exist
+            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
+            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
+                
             % get vt_data 
             [~,~,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);      
 
