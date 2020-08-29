@@ -32,12 +32,12 @@ absPhi = abs(dPhi);
 % multiply time
 Phi_final = absPhi.*dt;
 
-% integrated absolute phi - not sure what they actually meant by
-% integrated, but Jesse summed it. Summation seems to be no different than 
-% trapz integration.
-%IdPhi = sum(absPhi);
-%IdPhi = trapz(absPhi); 
-IdPhi = sum(Phi_final);
+% Chad Guisti said sum is rectangular estimate of the integral, 
+% while trapz is trapezoidal. Both are effective, trapz may be more 
+% accurate, but in the presence of noise, it is hard to say which is 
+% truley the best.
+IdPhi = trapz(Phi_final); 
+%IdPhi = sum(Phi_final);
 
 end
 
