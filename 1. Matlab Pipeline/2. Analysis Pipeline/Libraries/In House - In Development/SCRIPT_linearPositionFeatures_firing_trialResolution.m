@@ -8,7 +8,7 @@ vt_name      = 'VT1.mat';
 missing_data = 'exclude';
 measurements.stem     = 137; % in cm
 measurements.goalArm  = 50;
-%measurements.goalZone = 37;
+measurements.goalZone = 37;
 %measurements.retArm   = 130;
 
 % get linear skeleton
@@ -18,7 +18,7 @@ idealTraj = data.idealTraj;
 rmPaths_linearSkeleton % remove paths
 
 % get linear position
-mazePos = [1 2];
+mazePos = [1 7]; % was [1 2]
 [linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
 
 %% load in int and position data
