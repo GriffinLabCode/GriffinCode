@@ -27,7 +27,7 @@ dPhi = gradient(phi_unwrap);
 dPhiXdt = dPhi./dt;
 
 % absolute value
-absPhi = abs(dPhi);
+absPhi = abs(dPhiXdt);
 
 % multiply time
 Phi_final = absPhi.*dt;
