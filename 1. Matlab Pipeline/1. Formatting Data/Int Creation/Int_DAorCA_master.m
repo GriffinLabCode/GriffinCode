@@ -6,14 +6,15 @@
 % this script was not written by me
 
 % datafolder directory
-datafolder = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\Baby Groot 9-12 Sample data'; 
+datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Saline\Saline'; 
 datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
 
 % get video tracking data
-missing_data = 'interp'; % this could be 'exclude' or 'ignore'
-[ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data);
+missing_data = 'exclude'; % this could be 'exclude' or 'ignore'
+vt_name = 'VT1.mat';
+[ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
 % define some old school variables
 pos_x = ExtractedX; pos_y = ExtractedY; pos_t = TimeStamps;
@@ -55,4 +56,4 @@ disp(X);
 
 % save data
 cd(datafolder); clear datafolder
-save('Int_DA.mat','Int');
+save('Int_VTE.mat','Int');

@@ -11,7 +11,7 @@
 clear; clc; %close all;
 
 % datafolder directory
-datafolder = 'X:\01.Experiments\RERh Inactivation Recording\14-22\Baseline\Baseline 1'; 
+datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Ratticus\Muscimol\Baseline'; 
 cd(datafolder);
 
 % Interpolate missing data? Alternatives is to exclude missing data, or ignore missing data.
@@ -32,22 +32,34 @@ vt_name = 'VT1.mat';
     % because 505 + 85 = 580, and 310 + 75 = 385;
 
 %% Create boxes around locations of interest for int creation
+try
+    
+    load('Int_information.mat')
+    
+    % fields
+    rRW_fld = rRW_fld;
+    lRW_fld = lRW_fld;
+    STM_fld = STM_fld;
+    PED_fld = PED_fld;
+    CP_fld  = CP_fld;
+    
+catch
+    
+    % right reward zone (sideways room, R)
+    rRW_fld = [480 -10 140 65];
 
-% right reward zone (sideways room, R)
-rRW_fld = [500 -20 140 90];
+    % left reward zone (sideways room, R)
+    lRW_fld = [510 405 110 90];
 
-% left reward zone (sideways room, R)
-lRW_fld = [520 410 110 90];
+    % central stem (sideways room, R)
+    STM_fld = [190 180 385 150]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
 
-% central stem (sideways room, R)
-STM_fld = [195 180 380 150]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
+    % delay pedestal (sideways room, R)
+    PED_fld = [15 140 175 220];
 
-% delay pedestal (sideways room, R)
-PED_fld = [15 140 180 220];
-
-% choice point/T-junction (sideways room, R)
-CP_fld = [575 185 125 115];
-
+    % choice point/T-junction (sideways room, R)
+    CP_fld = [575 170 125 115];
+end
 
 figure('color','w');
 plot(ExtractedX, ExtractedY);
