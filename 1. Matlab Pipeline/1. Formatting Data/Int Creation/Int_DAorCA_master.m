@@ -4,9 +4,11 @@
 % your session of interest
 %
 % this script was not written by me
+clear; clc
 
-% datafolder directory
-datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Saline\Saline'; 
+% datafolder directory - stopped on baseline 1 need to do baseline 2 -
+% 9-2-2020 at 2:19
+datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Ratdle\Baseline\Baseline 1'; 
 datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
@@ -54,6 +56,27 @@ X = [];
 X = [C{end},' behavioral accuracy = ',num2str(percentCorrect),'%'];
 disp(X);
 
+% check Int for timing-position accuracy
+question = 'Would you like to confirm your int file is correct? [Y/N] ';
+answer   = input(question,'s');
+
+if contains(answer,'Y') | contains(answer,'y')
+    checkInt;
+else
+    disp('It is recommended that you check your int file');
+end
+
 % save data
-cd(datafolder); clear datafolder
-save('Int_VTE.mat','Int');
+question = 'Are you satisfied with the Int file and ready to save? [Y/N] ';
+answer   = input(question,'s');
+
+if contains(answer,'Y') | contains(answer,'y')
+    cd(datafolder);
+    
+    % have user define a name
+    question    = 'Please enter an Int file name: ';
+    IntFileName = input(question,'s');
+    
+    % save
+    save(IntFileName,'Int');
+end

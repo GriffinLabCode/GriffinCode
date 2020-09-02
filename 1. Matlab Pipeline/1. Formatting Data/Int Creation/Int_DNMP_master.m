@@ -54,6 +54,31 @@ X = [];
 X = [C{end},' behavioral accuracy = ',num2str(percentCorrect),'%'];
 disp(X);
 
+% check Int for timing-position accuracy
+question = 'Would you like to confirm your int file is correct? [Y/N] ';
+answer   = input(question,'s');
+
+if contains(answer,'Y') | contains(answer,'y')
+    checkInt;
+else
+    disp('It is recommended that you check your int file');
+end
+
+% save data
+question = 'Are you satisfied with the Int file and ready to save? [Y/N] ';
+answer   = input(question,'s');
+
+if contains(answer,'Y') | contains(answer,'y')
+    cd(datafolder);
+    
+    % have user define a name
+    question    = 'Please enter an Int file name: ';
+    IntFileName = input(question,'s');
+    
+    % save
+    save(IntFileName,'Int');
+end
+
 % save data
 cd(datafolder)
 save('Int_DNMP.mat','Int');

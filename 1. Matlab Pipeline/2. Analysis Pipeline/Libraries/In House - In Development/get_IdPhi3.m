@@ -39,6 +39,9 @@ Phi_final = absPhi.*dt;
 IdPhi = trapz(Phi_final); 
 %IdPhi = sum(Phi_final);
 
+% to control for any effects of IdPhi being influenced by different sized
+% datasets, we can normalize by the number of observations?
+
 end
 
 
