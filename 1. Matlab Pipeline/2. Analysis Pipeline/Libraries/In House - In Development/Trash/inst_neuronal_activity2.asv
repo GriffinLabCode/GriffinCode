@@ -1,0 +1,76 @@
+%% instantaneous neuronal activity
+% this function gets instantaneous firing rates and spikes across time.
+% This is useful in two common scenarios: 1) you want to examine neuronal
+% activity on a trial-by-trial basis across time. And 2) you want to
+% examine neuronal activity across linearized position bins, organized by
+% time
+%
+% -- INPUTS -- %
+% spks: spike times of a given trial or time of interest
+% times: timestamps of a given trial or time of interest - make sure the
+%           spks and times variables are in the same unit of time (ie
+%           seconds or standard neuralynx time)
+% vt_srate: video tracking sampling rate
+% totalTime: total time of the epoch of interest
+% resolution_time: resolution of time for smoothing (try 1, for 1 second)
+%
+% -- OUTPUTS -- %
+% instFR: instantaneous firing rate
+% instSpk: instantaneous spiking
+% instTime: time interval for sampling rate
+% instSpk_time: time (in seconds) of when the spks occurred
+%
+% written by John Stout
+
+function [smoothFR,instFR,instSpk,instTime,instSpk_time] = inst_neuronal_activity(spks,times,vt_srate,totalTime,resolution_time,linearPosition)
+
+    % find nearest points
+    spkSearch = [];
+    spkSearch = dsearchn(times',spks);
+
+    % shape of timestamp data - this will be instantaneous spike
+    instSpk = [];
+    instSpk = zeros(size(times));
+
+    % replace and create boolean spk data - this is a for loop to account for
+    % instances where a spk occured in the same timewindow multiple times
+    for i = 1:length(spkSearch)
+        instSpk(spkSearch(i)) = instSpk(spkSearch(i))+1;
+    end
+
+    % get index and time
+    instSpk_idx  = find(instSpk ~= 0); % all cases of spks
+    
+    % find how much time in consideration
+    timingVar    = linspace(0,totalTime,numel(times));    
+    instSpk_time = timingVar(instSpk_idx); % use this to plot spks across time
+
+    % make time vector - instantaneous time intervals
+    instTime = [];
+    instTime = repmat(1/vt_srate,size(times)); % seconds sampling rate
+
+    % get instantaneous firing rate - this doesn't really make sense unless you
+    % collapse across specific bins
+    instFR = instSpk./instTime;
+
+    % derive the position rate map
+    numLinearBins = max(linearPosition);
+    for bini = 1:numLinearBins
+
+        groupIdx = []; % initialize
+        groupIdx = linearPosition == bini; % create grouping variable
+
+        % group and average
+        linearFR(bini) = nanmean(instFR(groupIdx));
+    end        
+    
+    % define smooth resolution
+    if resolution_time > 0
+        time_interval   = round(resolution_time/(1/vt_srate));
+        smoothFR        = smoothdata(instFR,'gaussian',time_interval);   
+        smoothLinFR     = 
+    else
+        smoothFR = instFR;
+    end  
+    
+end

@@ -128,18 +128,22 @@ end
 trial_spike = [];
 trial_spike = spike_trials{trial};
 
-% shape of timestamp data - this will be instantaneous spike
-instSpk = [];
-instSpk = NaN(size(TS{trial}));
-
 % find nearest points
 spkSearch = [];
 spkSearch = dsearchn(trial_time',trial_spike);
 
-% replace and create boolean spk data
-instSpk(spkSearch) = 1;
-instSpk(isnan(instSpk)==1)=0;
-instSpk_idx  = find(instSpk == 1);
+% shape of timestamp data - this will be instantaneous spike
+instSpk = [];
+instSpk = zeros(size(TS{trial}));
+
+% replace and create boolean spk data - this is a for loop to account for
+% instances where a spk occured in the same timewindow multiple times
+for i = 1:length(spkSearch)
+    instSpk(spkSearch(i)) = instSpk(spkSearch(i))+1;
+end
+
+% get index and time
+instSpk_idx  = find(instSpk ~= 0); % all cases of spks
 instSpk_time = timingVar(instSpk_idx); % use this to plot spks across time
 
 % make time vector - instantaneous time intervals
@@ -246,4 +250,8 @@ subplot 313
     % add text denoting t-junction
     t1 = text([tjun_time], [ylimits(2)],'T-junction entry');
     t1.Color = [.5 .5 .5]; 
+
+%% bin the spikes 
+
+
     
