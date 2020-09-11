@@ -1,9 +1,9 @@
-function [zPreSWRlfp,preSWRlfp] = preSWRfun(lfp,phase_bandpass,srate,gauss)
+function [zPreSWRlfp,preSWRlfp,lfp_filtered] = preSWRfun(lfp,phase_bandpass,srate,gauss)
 
 % get filtered and transformed data across entire session for purposes of
 % defining an average
-lfp_filteredAll = skaggs_filter_var(lfp,phase_bandpass(1),phase_bandpass(2),srate);
-lfp_hilbertAll  = abs(hilbert(lfp_filteredAll));    
+lfp_filtered = skaggs_filter_var(lfp,phase_bandpass(1),phase_bandpass(2),srate);
+lfp_hilbert  = abs(hilbert(lfp_filtered));    
 
 % smooth with gaussian
 if gauss == 1
@@ -25,14 +25,14 @@ if gauss == 1
     %}
     
     % smooth for all
-    lfp_smoothAll = conv(lfp_hilbertAll,w,'same');
+    lfp_smooth = conv(lfp_hilbert,w,'same');
     
     % define variable to use regardless of inputs
-    preSWRlfp = lfp_smoothAll;
+    preSWRlfp = lfp_smooth;
 
 elseif gauss == 0
     
-   preSWRlfp = lfp_hilbertAll;
+   preSWRlfp = lfp_hilbert;
    
 end
 

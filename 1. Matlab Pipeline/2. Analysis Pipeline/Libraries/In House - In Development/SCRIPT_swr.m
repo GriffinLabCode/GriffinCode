@@ -3,7 +3,7 @@ clear; clc; close all
     
 %% Load and isolate desired session data 
 datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Saline\Saline';
-lfpName    = 'CSC7';
+lfpName    = 'CSC7'; % CSC7 for usher
 int_name   = 'Int_VTE_JS';
 
 %% load i
@@ -54,7 +54,7 @@ InterRippleInterval = 0; % this is the time required between ripples. if ripple 
 mazePos = [2 7];
 
 % transform and smooth
-[zPreSWRlfp,preSWRlfp] = preSWRfun(lfp,phase_bandpass,srate,gauss);
+[zPreSWRlfp,preSWRlfp,lfp_filtered] = preSWRfun(lfp,phase_bandpass,srate,gauss);
 
 % swr fun - you can use SWRtimeIdx, plot lfp across one whole trial, then
 % highlight swr events, similar to how Jadhav does it. This is because
@@ -64,13 +64,44 @@ mazePos = [2 7];
 % included as a ripple. Furthermore, you could plot preSWRlfp.
 [SWRevents,SWRtimes,SWRtimeIdx,SWRdurations,trials2rem] = extract_SWR_5(zPreSWRlfp,mazePos,Int,Timestamps,srate,phase_bandpass,std_above_mean,gauss,InterRippleInterval,plotFig);
 
+% fig
+ex_ripTime = Timestamps(SWRtimeIdx{1}{1}); % first trial, first swr event
+ex_ripLFP  = lfp(SWRtimeIdx{1}{1}); % first trial, first swr event
+ex_ripFil  = preSWRlfp(SWRtimeIdx{1}{1});
+figure('color','w')
+plot(ex_ripLFP,'b'); hold on; yyaxis right; plot(ex_ripFil)
+
 %% get LFP data from reward well - use later
-numTrials = size(Int_new,1); % define number of trials
+numTrials = size(Int,1); % define number of trials
 clear X Y TS LFPtimes LFP
 for triali = 1:numTrials
     LFPtimes{triali} = Timestamps(Timestamps > Int(triali,mazePos(1)) & Timestamps < Int(triali,mazePos(2)));
     LFP{triali}      = lfp(Timestamps > Int(triali,mazePos(1)) & Timestamps < Int(triali,mazePos(2)));
 end
+
+%{
+figure('color','w');
+goalEntryIdx_lfp = dsearchn(Timestamps',Int(1,2));
+goalExitIdx_lfp  = dsearchn(Timestamps',Int(1,7));
+xTimes_ts = Timestamps(goalEntryIdx_lfp:goalExitIdx_lfp);
+xTimes_sec = linspace(0,(xTimes_ts(end)-xTimes_ts(1))/1e6,numel(goalEntryIdx_lfp:goalExitIdx_lfp));
+subplot 211; plot(xTimes_sec,lfp(goalEntryIdx_lfp:goalExitIdx_lfp),'k'); axis tight; box off;
+subplot 212; plot(xTimes_sec,lfp_filtered(goalEntryIdx_lfp:goalExitIdx_lfp),'k'); axis tight; box off;
+%plot(preSWRlfp(goalEntryIdx_lfp:goalExitIdx_lfp),'k'); axis tight; box off;
+for i = 1:length(SWRtimes{1})
+    ripStart(i) = SWRtimes{1}{i}(1);
+    ripEnd(i)   = SWRtimes{1}{i}(end);
+end
+ripStartIdx = dsearchn(xTimes_ts',ripStart');
+ripEndIdx   = dsearchn(xTimes_ts',ripEnd');
+xStart      = xTimes_sec(ripStartIdx); % get seconds
+for i = 1:length(ripStartIdx)
+    l1 = line([xStart(i) xStart(i)],[-2000 2000])
+    l1.Color = 'b';
+    l1.LineWidth = 2;
+end
+% plot a rectangle that encloses each event
+%}
 
 %% only include epochs with speed < 4cm/sec - use linear position for this
 vt_name      = 'VT1.mat';
@@ -134,43 +165,7 @@ end
 % words, doing it this way ensures that we get entire ripple events (from
 % event start to event end), then we can see if the rat was running too fast.
 speedFilt = 5; % 5cm/sec
-
-% plot
-figure('color','w'); hold on;
-subplot 211
-    plot(timingVar{1},linPos{1},'k','LineWidth',2)
-    xlabel('Start of trial to end of goal zone')
-    ylabel('Linear Position (cm)')
-    % find goalzone entry
-    GZentryIdx = find(TS{1} == Int(1,2));
-    timingEntry = timingVar{1}(GZentryIdx);
-    % plot
-    l1 = line([timingEntry timingEntry],[0 150])
-    l1.Color = 'r';
-    l1.LineStyle = '--'
-    l1.LineWidth = 2;
-    title('Red line indicates goal zone entry filter')
-    box off; axis tight;
-subplot 212
-    plot(timingVar{1},speed{1},'k','LineWidth',2)
-    xlabel('Start of trial to end of goal zone')
-    ylabel('Speed (cm/sec)')
-    % find goalzone entry
-    GZentryIdx = find(TS{1} == Int(1,2));
-    timingEntry = timingVar{1}(GZentryIdx);
-    box off; axis tight;
-    % plot
-    l1 = line([timingEntry timingEntry],[0 40])
-    l1.Color = 'r';
-    l1.LineStyle = '--'
-    l1.LineWidth = 2;    
-    xlimits = xlim;
-    l2 = line([xlimits(1) xlimits(2)],[speedFilt speedFilt])
-    l2.Color    = 'b';
-    l2.LineStyle = '--';
-    l2.LineWidth = 2;
-    title('Blue line indicates speed filter')
-
+    
 % now, extract vt timestamps ONLY after goal zone entry. Use this to
 % extract speed
 speedDurRipple = cell([1 numTrials]);
@@ -249,9 +244,68 @@ for triali = 1:numTrials
     end    
 end
 
+%% make a cool fig
+% plot
+figure('color','w'); hold on;
+subplot 411
+    plot(timingVar{1},linPos{1},'k','LineWidth',2)
+    xlabel('Start of trial to end of goal zone')
+    ylabel('Linear Position (cm)')
+    % find goalzone entry
+    GZentryIdx = find(TS{1} == Int(1,2));
+    timingEntry = timingVar{1}(GZentryIdx);
+    % plot
+    l1 = line([timingEntry timingEntry],[0 150])
+    l1.Color = 'r';
+    l1.LineStyle = '--'
+    l1.LineWidth = 2;
+    title('Red line indicates goal zone entry filter')
+    box off; axis tight;
+subplot 412
+    plot(timingVar{1},speed{1},'k','LineWidth',2)
+    xlabel('Start of trial to end of goal zone')
+    ylabel('Speed (cm/sec)')
+    % find goalzone entry
+    GZentryIdx = find(TS{1} == Int(1,2));
+    timingEntry = timingVar{1}(GZentryIdx);
+    box off; axis tight;
+    % plot
+    l1 = line([timingEntry timingEntry],[0 40])
+    l1.Color = 'r';
+    l1.LineStyle = '--'
+    l1.LineWidth = 2;    
+    xlimits = xlim;
+    l2 = line([xlimits(1) xlimits(2)],[speedFilt speedFilt])
+    l2.Color    = 'b';
+    l2.LineStyle = '--';
+    l2.LineWidth = 2;
+    title('Blue line indicates speed filter')
+
+    EntryIdx_lfp = dsearchn(Timestamps',Int(1,1));
+    ExitIdx_lfp  = dsearchn(Timestamps',Int(1,7));
+    xTimes_ts = Timestamps(EntryIdx_lfp:ExitIdx_lfp);
+    xTimes_sec = linspace(0,(xTimes_ts(end)-xTimes_ts(1))/1e6,numel(EntryIdx_lfp:ExitIdx_lfp));
+    subplot 413; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'k'); axis tight; box off;
+    subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'k'); axis tight; box off;
+    %plot(preSWRlfp(goalEntryIdx_lfp:goalExitIdx_lfp),'k'); axis tight; box off;
+    for i = 1:length(SWRtimes{1})
+        ripStart(i) = SWRtimes{1}{i}(1);
+        ripEnd(i)   = SWRtimes{1}{i}(end);
+    end
+    ripStartIdx = dsearchn(xTimes_ts',ripStart');
+    ripEndIdx   = dsearchn(xTimes_ts',ripEnd');
+    xStart      = xTimes_sec(ripStartIdx); % get seconds
+    for i = 1:length(ripStartIdx)
+        l1 = line([xStart(i) xStart(i)],[-2000 2000]);
+        l1.Color = 'b';
+        l1.LineWidth = 2;
+    end 
+    % instead of a line, try a rectangle
+
 %% swr rate
 % swr count
 SWRcount = cellfun(@numel,SWRtimes);
+
 % total time spent in zone of interest
 for triali = 1:numTrials
     timeInZone(triali) = (TimesAfterEntry{triali}(end)-TimesAfterEntry{triali}(1))/1e6;
@@ -263,9 +317,9 @@ SWRrate = SWRcount./timeInZone; % in Hz (swrs/sec)
 %% visualize single trial power - this requires updating
 
 
-            % on 07-08-2020 I found that Re exhibits the same 130-160hz ripple, while
-            % pfc does not. This makes me question if 130-160 is actually a ripple or
-            % an artifact of theta.
+% on 07-08-2020 I found that Re exhibits the same 130-160hz ripple, while
+% pfc does not. This makes me question if 130-160 is actually a ripple or
+% an artifact of theta.
        
 % average across
 % plot heat map https://www.pnas.org/content/pnas/112/46/E6379.full.pdf -

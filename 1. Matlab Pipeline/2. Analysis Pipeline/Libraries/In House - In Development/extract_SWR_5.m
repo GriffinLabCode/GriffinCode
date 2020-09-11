@@ -52,9 +52,6 @@ divisor = srate*(1/1000); % first convert to ms
 
 %% extract sharp wave ripples
 
-% z-score data so that elements reflect sd from the mean
-%zSmoothedAll = zscore(preSWRlfp);
-
 % now get data from a specific maze location using the int file
 numTrials = size(Int,1);
 
