@@ -201,40 +201,43 @@ end
 % et al., 2016). This is mostly for looking at single unit data around the
 % ripple events
 if InterRippleInterval > 0
-    for triali = 1:numTrials
+   for triali = 1:numTrials
         swrCount = length(swr_events{triali});
         next = 0; % defined for while loop
-        while next == 0
-            for i = 1:swrCount-1
+        
+        if isempty(swr_events{triali}) == 0 % only run if there are actual events
+            while next == 0
+                for i = 1:swrCount-1
 
-                % find cases where swrs are < 1 sec apart
-                timeOffset = (swr_timestamp{triali}{i+1}(1)-swr_timestamp{triali}{i}(1))/1e6;
+                    % find cases where swrs are < 1 sec apart
+                    timeOffset = (swr_timestamp{triali}{i+1}(1)-swr_timestamp{triali}{i}(1))/1e6;
 
-                % remove those instances when you find them
-                if timeOffset < InterRippleInterval && timeOffset > 0
+                    % remove those instances when you find them
+                    if timeOffset < InterRippleInterval && timeOffset > 0
 
-                    % remove data
-                    swr_events{triali}(i+1)      = []; % remove data
-                    swr_timestamp{triali}(i+1)   = [];
-                    swr_event_index{triali}(i+1) = []; 
+                        % remove data
+                        swr_events{triali}(i+1)      = []; % remove data
+                        swr_timestamp{triali}(i+1)   = [];
+                        swr_event_index{triali}(i+1) = []; 
 
-                    % redefine swrCount
-                    swrCount = length(swr_events{triali});
+                        % redefine swrCount
+                        swrCount = length(swr_events{triali});
 
-                    % must break out of for loop, then redefine loop
-                    break
+                        % must break out of for loop, then redefine loop
+                        break
 
-                end
+                    end
 
-                % time offset should never be a negative integer. If it is, something
-                % is wrong.
-                if timeOffset < 0
-                    disp('Error with time indexing')
-                    break
-                end 
+                    % time offset should never be a negative integer. If it is, something
+                    % is wrong.
+                    if timeOffset < 0
+                        disp('Error with time indexing')
+                        break
+                    end 
 
-                if i == swrCount-1
-                    next = 1;
+                    if i == swrCount-1
+                        next = 1;
+                    end
                 end
             end
         end
