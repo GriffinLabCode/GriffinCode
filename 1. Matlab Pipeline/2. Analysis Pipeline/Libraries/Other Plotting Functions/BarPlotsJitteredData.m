@@ -113,7 +113,7 @@ if plot_bar == 1
         end
         
         if connect_jitter == 1
-            if exist('colorCode_jitter') % this will find increasers and make them grey, decreasers black
+            if exist('colorCode_jitter') && exist('jitterIdx')==0 % this will find increasers and make them grey, decreasers black
                 for i = 1:size(mat,1)
                     for ii = 1:2:size(mat,2) % skip every other column (col1 vs col2 col3vs col4 col5vscol6 etc...)
                         if mat(i,ii)-mat(i,ii+1) < 0

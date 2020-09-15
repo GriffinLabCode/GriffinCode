@@ -51,7 +51,7 @@ plotFig = 1;
 InterRippleInterval = 0; % this is the time required between ripples. if ripple occurs within this time range (in sec),
 
 % extract swr function - only look at goal zone
-mazePos = [1 7];
+mazePos = [2 7];
 
 % transform and smooth
 [zPreSWRlfp,preSWRlfp,lfp_filtered] = preSWRfun(lfp,phase_bandpass,srate,gauss);
