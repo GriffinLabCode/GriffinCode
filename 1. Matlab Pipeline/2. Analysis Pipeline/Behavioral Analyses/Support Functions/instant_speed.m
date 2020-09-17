@@ -1,4 +1,7 @@
 %% 2D instantanious speed
+% this function should be depricated once other code that incoporates it is
+% updated to use instant_speed2
+%
 % This function calculates 2 dimensional instantaneous velocity,
 % then takes the absolute value resulting in instantaneous speed.
 %
