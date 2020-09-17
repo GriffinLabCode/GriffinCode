@@ -16,7 +16,7 @@ vt_srate = 30;
 display = 0; 
 %}
 
-function [IdPhi] = IdPhi_RedishFun(x,y,window_sec,postSmoothing,vt_srate,display)
+function [IdPhi,dphi] = IdPhi_RedishFun(x,y,window_sec,postSmoothing,vt_srate,display)
 
 % change in x, consider time
 dx    = dxdt_griffinLab(x,window_sec,postSmoothing,vt_srate,display);
@@ -30,7 +30,7 @@ phi   = atan2(dy,dx);
 % unwrap to prevent circular transitions
 uphi  = unwrap(phi);
 
-% change in orientation, consider time
+% change in orientation, consider time - is this angular velocity?
 dphi  = dxdt_griffinLab(uphi,window_sec,postSmoothing,vt_srate,display);
 
 % integrated absolute value of change in orientation when considering time
