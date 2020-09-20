@@ -350,9 +350,12 @@ threshold2 = ts_percentile;
 
 %threshold = 0.5;
 % next, lets plot some examples
-rat_get = 'Rick';    % rat
+rat_get = 'Usher';    % rat
 day_get = 'Baseline'; % day (baseline, saline, muscimol day)
-con_get = 'Baseline1'; % condition (saline, baseline, or muscimol infusion)
+con_get = 'Baseline2'; % condition (saline, baseline, or muscimol infusion)
+
+% get session IdPhi
+session_zIdPhi = zIdPhi.(rat_get).(day_get).(con_get);
 
 % get session position information
 session_x = xPosOG.(rat_get).(day_get).(con_get);
@@ -387,9 +390,15 @@ for i = 1:length(zIdPhi_bins)-1
             surface([loc_x{idx2plot(ii)};loc_x{idx2plot(ii)}],[loc_y{idx2plot(ii)};loc_y{idx2plot(ii)}],[z;z],[head_velocity;head_velocity],...
                         'facecol','no',...
                         'edgecol','interp',...
-                        'linew',2);               
-            title(['Bins: ',num2str(zIdPhi_bins(i)),':',num2str(zIdPhi_bins(i+1)),' | ','zIdPhi = ',num2str(session_zIdPhi(idx2plot(ii)))])
-            
+                        'linew',2); 
+            if session_zIdPhi(idx2plot(ii)) > threshold
+                text_thresh_indicator = 'VTE';
+            else
+                text_thresh_indicator = 'Non VTE';
+            end
+            title(['Bins: ',num2str(zIdPhi_bins(i)),':',num2str(zIdPhi_bins(i+1)),' | ','zIdPhi = ',num2str(session_zIdPhi(idx2plot(ii))),...
+                newline ' Classified as a ',text_thresh_indicator])
+             
             % orient axis
             xlim([400 700]);
             ylim([120 330]);
@@ -449,7 +458,8 @@ end
 % because there are so few trials and so few rats, therefore lets look
 % across sessions
 figure()
-colorLine.color1 = 'r'; colorLine.color2 = 'k';
+%colorLine = []; colorLine.decrease = 'm'; colorLine.increase = 'b'; colorLine.noChange = [.8 .8 .8]
+colorLine = 1; % default colors
 jitterIdx = 1:6;
 colorIdx{1} = 'r'; colorIdx{2} = 'b'; colorIdx{3} = 'm'; colorIdx{4} = 'y'; colorIdx{5} = 'k'; colorIdx{6} = 'g';
 BarPlotsJitteredData(propVTE,1,0,1,1,[],colorLine,jitterIdx,colorIdx)

@@ -24,8 +24,14 @@
 %               don't want to use
 %
 %   colorCode_jitter: do want your jitter colorcoded? This is a struct
-%                       array. colorCode_jitter.color1 and ...color2 are
-%                       colors you choose.
+%                       array. colorCode_jitter.increase should be the
+%                       color that you want the line to be connecting two
+%                       values that changed positively. Defaults to red.
+%                       colorCode_jitter.decrease reflects decreasing
+%                       values between conditions. Defaults to black.
+%                       colorCode_jitter.noChange reflects no change.
+%                       colorCode_jitter.noChange defaults to grey.
+%                 % --- to default, just set colorCode_jitter to 1 --- %
 %
 %   jitterIdx: numerical vector where numbers correspond to group. For
 %               example, if mat is 30x2 (30 observations, 2 variables),
@@ -141,20 +147,52 @@ if plot_bar == 1
                 for i = 1:size(mat,1)
                     
                     for ii = 1:2:size(mat,2) % skip every other column (col1 vs col2 col3vs col4 col5vscol6 etc...)
+                        
                         if mat(i,ii)-mat(i,ii+1) < 0
-                            line([x_axes(i,ii) x_axes(i,ii+1)],...
-                            [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.color1,'linestyle','-','LineWidth',0.5)
-                        elseif mat(i,ii)-mat(i,ii+1) > 0
-                            line([x_axes(i,ii) x_axes(i,ii+1)],...
-                            [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.color2,'linestyle','-','LineWidth',0.5)
-                        elseif mat(i,ii)-mat(i,ii+1) == 0
                             
-                            try
-                                
-                            catch
+                            if isstruct(colorCode_jitter) == 0 && colorCode_jitter == 1
                                 line([x_axes(i,ii) x_axes(i,ii+1)],...
-                                [mat(i,ii) mat(i,ii+1)],'Color',[.8 .8 .8],'linestyle','-','LineWidth',0.5)     
-                                disp('
+                                [mat(i,ii) mat(i,ii+1)],'Color','k','linestyle','-','LineWidth',0.5)                                                                     
+                            elseif isstruct(colorCode_jitter)
+                                try
+                                    line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                    [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.decrease,'linestyle','-','LineWidth',0.5)     
+                                catch
+                                    line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                    [mat(i,ii) mat(i,ii+1)],'Color','r','linestyle','-','LineWidth',0.5)     
+                                    disp('Values that changed negatively between conditions are defaulted to black lines')                                    
+                                end
+                            end                        
+                        elseif mat(i,ii)-mat(i,ii+1) > 0
+                            
+                            if isstruct(colorCode_jitter) == 0 && colorCode_jitter == 1
+                                line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                [mat(i,ii) mat(i,ii+1)],'Color','r','linestyle','-','LineWidth',0.5)                                                                     
+                            elseif isstruct(colorCode_jitter)
+                                try
+                                    line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                    [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.increase,'linestyle','-','LineWidth',0.5)     
+                                catch
+                                    line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                    [mat(i,ii) mat(i,ii+1)],'Color','r','linestyle','-','LineWidth',0.5)     
+                                    disp('Values that changed positively between conditions are defaulted to red lines')                                    
+                                end
+                            end
+                            
+                        elseif mat(i,ii) == mat(i,ii+1) % no change
+                            
+                            if isstruct(colorCode_jitter) == 0 && colorCode_jitter == 1
+                                line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                [mat(i,ii) mat(i,ii+1)],'Color',[.8 .8 .8],'linestyle','-','LineWidth',0.5)                                                                     
+                            elseif isstruct(colorCode_jitter)
+                                try
+                                    line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                    [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.noChange,'linestyle','-','LineWidth',0.5)     
+                                catch
+                                    line([x_axes(i,ii) x_axes(i,ii+1)],...
+                                    [mat(i,ii) mat(i,ii+1)],'Color',[.8 .8 .8],'linestyle','-','LineWidth',0.5)     
+                                    disp('Values that did not change between conditions are defaulted to grey lines')                                    
+                                end
                             end
                         end                            
                     end                    

@@ -160,7 +160,7 @@ if jitter == 1
                 end
             end 
 
-        elseif isempty(colorCode_jitter) == 0 && exist('jitterIdx')
+        elseif exist('colorCode_jitter') && exist('jitterIdx')
 
             % use the same x-axis data from earlier
             for ii = 1:length(x_axes)
@@ -185,11 +185,11 @@ if jitter == 1
 
                         if isstruct(colorCode_jitter) == 0 && colorCode_jitter == 1
                             line([x_axes(i,ii) x_axes(i,ii+1)],...
-                            [mat(i,ii) mat(i,ii+1)],'Color','r','linestyle','-','LineWidth',0.5)                                                                     
+                            [mat(i,ii) mat(i,ii+1)],'Color','k','linestyle','-','LineWidth',0.5)                                                                     
                         elseif isstruct(colorCode_jitter)
                             try
                                 line([x_axes(i,ii) x_axes(i,ii+1)],...
-                                [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.increase,'linestyle','-','LineWidth',0.5)     
+                                [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.decrease,'linestyle','-','LineWidth',0.5)     
                             catch
                                 line([x_axes(i,ii) x_axes(i,ii+1)],...
                                 [mat(i,ii) mat(i,ii+1)],'Color','r','linestyle','-','LineWidth',0.5)     
@@ -200,14 +200,14 @@ if jitter == 1
 
                         if isstruct(colorCode_jitter) == 0 && colorCode_jitter == 1
                             line([x_axes(i,ii) x_axes(i,ii+1)],...
-                            [mat(i,ii) mat(i,ii+1)],'Color','k','linestyle','-','LineWidth',0.5)                                                                     
+                            [mat(i,ii) mat(i,ii+1)],'Color','r','linestyle','-','LineWidth',0.5)                                                                     
                         elseif isstruct(colorCode_jitter)
                             try
                                 line([x_axes(i,ii) x_axes(i,ii+1)],...
-                                [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.decrease,'linestyle','-','LineWidth',0.5)     
+                                [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.increase,'linestyle','-','LineWidth',0.5)     
                             catch
                                 line([x_axes(i,ii) x_axes(i,ii+1)],...
-                                [mat(i,ii) mat(i,ii+1)],'Color','k','linestyle','-','LineWidth',0.5)     
+                                [mat(i,ii) mat(i,ii+1)],'Color','r','linestyle','-','LineWidth',0.5)     
                                 %disp('Values that changed positively between conditions are defaulted to red lines')                                    
                             end
                         end
@@ -232,7 +232,7 @@ if jitter == 1
 
             end                  
 
-        elseif exist('jitterIdx') && isempty(colorCode_jitter) == 1 % in the case where you want to control the color using an index (like plotting a specific color per rat)
+        elseif exist('jitterIdx') && exist('colorCode_jitter')==0 % in the case where you want to control the color using an index (like plotting a specific color per rat)
 
             % use the same x-axis data from earlier
             for ii = 1:length(x_axes)

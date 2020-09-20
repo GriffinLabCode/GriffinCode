@@ -265,7 +265,7 @@ xOFy_maxima   = x_after1posDef(idxOfy_maxima.loc);
 % extract the second local maxima to be well within the distribution of
 % VTEs to avoid false positives - false positives are worse than false
 % negatives. The second local maxima defines our VTE threshold.
-threshold = xOFy_maxima(2); % this corresponds to the z-score
+threshold = xOFy_maxima(1); % this corresponds to the z-score
 
 % threshold will be the bin that corresponds to the first positive
 % deflection in the data. this was chosen because it should signify some
@@ -278,7 +278,7 @@ l1 = line([threshold threshold],[ylimits(1) ylimits(2)]);
 l1.Color = 'b';
 l1.LineStyle = '--';
 l1.LineWidth = 1;
-text([threshold+0.1],[ylimits(2)/2],['VTE threshold, the 2nd local maxima' ...
+text([threshold+0.1],[ylimits(2)/2],['VTE threshold, the 1st local maxima' ...
      newline 'in the VTE distribution (blue), is ',num2str(threshold)])
 % set color of axes
 ax = gca;
@@ -449,7 +449,8 @@ end
 % because there are so few trials and so few rats, therefore lets look
 % across sessions
 figure()
-colorLine.color1 = 'r'; colorLine.color2 = 'k';
+%colorLine.decrease = 'k'; colorLine.increase = 'r'; colorLine.noChange = [.8 .8 .8]
+colorLine = 1; % default colors
 jitterIdx = 1:6;
 colorIdx{1} = 'r'; colorIdx{2} = 'b'; colorIdx{3} = 'm'; colorIdx{4} = 'y'; colorIdx{5} = 'k'; colorIdx{6} = 'g';
 BarPlotsJitteredData(propVTE,1,0,1,1,[],colorLine,jitterIdx,colorIdx)
