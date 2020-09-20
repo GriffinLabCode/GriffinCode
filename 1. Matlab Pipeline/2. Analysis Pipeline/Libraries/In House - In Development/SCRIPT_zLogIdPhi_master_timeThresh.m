@@ -265,7 +265,7 @@ xOFy_maxima   = x_after1posDef(idxOfy_maxima.loc);
 % extract the second local maxima to be well within the distribution of
 % VTEs to avoid false positives - false positives are worse than false
 % negatives. The second local maxima defines our VTE threshold.
-threshold = xOFy_maxima(1); % this corresponds to the z-score
+threshold = xOFy_maxima(2); % this corresponds to the z-score
 
 % threshold will be the bin that corresponds to the first positive
 % deflection in the data. this was chosen because it should signify some
@@ -278,7 +278,7 @@ l1 = line([threshold threshold],[ylimits(1) ylimits(2)]);
 l1.Color = 'b';
 l1.LineStyle = '--';
 l1.LineWidth = 1;
-text([threshold+0.1],[ylimits(2)/2],['VTE threshold, the 1st local maxima' ...
+text([threshold+0.1],[ylimits(2)/2],['VTE threshold, the 2nd local maxima' ...
      newline 'in the VTE distribution (blue), is ',num2str(threshold)])
 % set color of axes
 ax = gca;
@@ -410,39 +410,31 @@ end
 
 % define a threshold
 %threshold = 1; % zscore
-VTE=[]; Non=[]; trial_VTE = [];
+VTE=[]; Non=[];
 for rati = 1:length(rat)
     
-    VTE(rati,1) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline1 > threshold));
-    VTE(rati,2) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline2 > threshold));    
-    VTE(rati,3) = numel(find(zIdPhi.(rat{rati}).Saline.Baseline > threshold));
-    VTE(rati,4) = numel(find(zIdPhi.(rat{rati}).Saline.Saline > threshold));
-    VTE(rati,5) = numel(find(zIdPhi.(rat{rati}).Muscimol.Baseline > threshold));
-    VTE(rati,6) = numel(find(zIdPhi.(rat{rati}).Muscimol.Muscimol > threshold));
+    VTE(rati,1) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline1 > threshold & timeSpent.(rat{rati}).Baseline.Baseline1 > threshold2));
+    VTE(rati,2) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline2 > threshold & timeSpent.(rat{rati}).Baseline.Baseline2 > threshold2));    
+    VTE(rati,3) = numel(find(zIdPhi.(rat{rati}).Saline.Baseline > threshold & timeSpent.(rat{rati}).Saline.Baseline > threshold2));
+    VTE(rati,4) = numel(find(zIdPhi.(rat{rati}).Saline.Saline > threshold & timeSpent.(rat{rati}).Saline.Saline > threshold2));
+    VTE(rati,5) = numel(find(zIdPhi.(rat{rati}).Muscimol.Baseline > threshold & timeSpent.(rat{rati}).Muscimol.Baseline > threshold2));
+    VTE(rati,6) = numel(find(zIdPhi.(rat{rati}).Muscimol.Muscimol > threshold & timeSpent.(rat{rati}).Muscimol.Muscimol > threshold2));
 
-    Non(rati,1) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline1 < threshold));
-    Non(rati,2) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline2 < threshold));    
-    Non(rati,3) = numel(find(zIdPhi.(rat{rati}).Saline.Baseline < threshold));
-    Non(rati,4) = numel(find(zIdPhi.(rat{rati}).Saline.Saline < threshold));
-    Non(rati,5) = numel(find(zIdPhi.(rat{rati}).Muscimol.Baseline < threshold));
-    Non(rati,6) = numel(find(zIdPhi.(rat{rati}).Muscimol.Muscimol < threshold));   
+    Non(rati,1) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline1 < threshold & timeSpent.(rat{rati}).Baseline.Baseline1 < threshold2));
+    Non(rati,2) = numel(find(zIdPhi.(rat{rati}).Baseline.Baseline2 < threshold & timeSpent.(rat{rati}).Baseline.Baseline2 < threshold2));    
+    Non(rati,3) = numel(find(zIdPhi.(rat{rati}).Saline.Baseline < threshold & timeSpent.(rat{rati}).Saline.Baseline < threshold2));
+    Non(rati,4) = numel(find(zIdPhi.(rat{rati}).Saline.Saline < threshold & timeSpent.(rat{rati}).Saline.Saline < threshold2));
+    Non(rati,5) = numel(find(zIdPhi.(rat{rati}).Muscimol.Baseline < threshold & timeSpent.(rat{rati}).Muscimol.Baseline < threshold2));
+    Non(rati,6) = numel(find(zIdPhi.(rat{rati}).Muscimol.Muscimol < threshold & timeSpent.(rat{rati}).Muscimol.Muscimol < threshold2));   
     
     % get a percentage
     numTrials = numel(zIdPhi.(rat{rati}).Baseline.Baseline1);
-    propVTE(rati,1) = (numel(find(zIdPhi.(rat{rati}).Baseline.Baseline1 > threshold)))/numTrials;
-    propVTE(rati,2) = (numel(find(zIdPhi.(rat{rati}).Baseline.Baseline2 > threshold)))/numTrials;    
-    propVTE(rati,3) = (numel(find(zIdPhi.(rat{rati}).Saline.Baseline > threshold)))/numTrials;
-    propVTE(rati,4) = (numel(find(zIdPhi.(rat{rati}).Saline.Saline > threshold)))/numTrials;
-    propVTE(rati,5) = (numel(find(zIdPhi.(rat{rati}).Muscimol.Baseline > threshold)))/numTrials;
-    propVTE(rati,6) = (numel(find(zIdPhi.(rat{rati}).Muscimol.Muscimol > threshold)))/numTrials; 
-    
-    % trial-based distribution
-    trial_VTE.baseline.baseline1{rati} = zIdPhi.(rat{rati}).Baseline.Baseline1;
-    trial_VTE.baseline.baseline2{rati} = zIdPhi.(rat{rati}).Baseline.Baseline2;    
-    trial_VTE.saline.baseline{rati} = zIdPhi.(rat{rati}).Saline.Baseline;
-    trial_VTE.saline.saline{rati} = zIdPhi.(rat{rati}).Saline.Saline;
-    trial_VTE.muscimol.baseline{rati} = zIdPhi.(rat{rati}).Muscimol.Baseline;
-    trial_VTE.muscimol.muscimol{rati} = zIdPhi.(rat{rati}).Muscimol.Muscimol;    
+    propVTE(rati,1) = (numel(find(zIdPhi.(rat{rati}).Baseline.Baseline1 > threshold & timeSpent.(rat{rati}).Baseline.Baseline1 > threshold2)))/numTrials;
+    propVTE(rati,2) = (numel(find(zIdPhi.(rat{rati}).Baseline.Baseline2 > threshold & timeSpent.(rat{rati}).Baseline.Baseline2 > threshold2)))/numTrials;    
+    propVTE(rati,3) = (numel(find(zIdPhi.(rat{rati}).Saline.Baseline > threshold & timeSpent.(rat{rati}).Saline.Baseline > threshold2)))/numTrials;
+    propVTE(rati,4) = (numel(find(zIdPhi.(rat{rati}).Saline.Saline > threshold & timeSpent.(rat{rati}).Saline.Saline > threshold2)))/numTrials;
+    propVTE(rati,5) = (numel(find(zIdPhi.(rat{rati}).Muscimol.Baseline > threshold & timeSpent.(rat{rati}).Muscimol.Baseline > threshold2)))/numTrials;
+    propVTE(rati,6) = (numel(find(zIdPhi.(rat{rati}).Muscimol.Muscimol > threshold & timeSpent.(rat{rati}).Muscimol.Muscimol > threshold2)))/numTrials;    
 end
 
 % notice that we're not seeing an effect on the single rat scale - probably
@@ -481,18 +473,4 @@ ax.XTickLabelRotation = 45;
 % below isnt correct yet
 %f=get(gca,'Children');
 %legend([f(1),f(2),f(3),f(4),f(5),f(6),f(7)],rat)
-
-% -- using trials, find prop of vte events -- %
-trialFormat = [];
-trialFormat.baseline_data{1} = horzcat(trial_VTE.baseline.baseline1{:});
-trialFormat.baseline_ratTrials{1} = cellfun(@numel,trial_VTE.baseline.baseline1);
-trialFormat.baseline_data{2} = horzcat(trial_VTE.baseline.baseline2{:});
-trialFormat.baseline_ratTrials{2} = cellfun(@numel,trial_VTE.baseline.baseline2);
-
-
-
-
-
-
-
 
