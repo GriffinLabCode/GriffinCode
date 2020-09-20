@@ -143,19 +143,18 @@ if plot_bar == 1
                     for ii = 1:2:size(mat,2) % skip every other column (col1 vs col2 col3vs col4 col5vscol6 etc...)
                         if mat(i,ii)-mat(i,ii+1) < 0
                             line([x_axes(i,ii) x_axes(i,ii+1)],...
-                            [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.decrease,'linestyle','-','LineWidth',0.5)
+                            [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.color1,'linestyle','-','LineWidth',0.5)
                         elseif mat(i,ii)-mat(i,ii+1) > 0
                             line([x_axes(i,ii) x_axes(i,ii+1)],...
-                            [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.increase,'linestyle','-','LineWidth',0.5)
-                        elseif mat(i,ii) == mat(i,ii+1)
-                            disp('WARNING: There were values that did not change between conditions')
+                            [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.color2,'linestyle','-','LineWidth',0.5)
+                        elseif mat(i,ii)-mat(i,ii+1) == 0
+                            
                             try
-                                line([x_axes(i,ii) x_axes(i,ii+1)],...
-                                [mat(i,ii) mat(i,ii+1)],'Color',colorCode_jitter.noChange,'linestyle','-','LineWidth',0.5)                                                                     
+                                
                             catch
                                 line([x_axes(i,ii) x_axes(i,ii+1)],...
                                 [mat(i,ii) mat(i,ii+1)],'Color',[.8 .8 .8],'linestyle','-','LineWidth',0.5)     
-                                disp('Values that did not change between conditions are defaulted to grey lines')                                
+                                disp('
                             end
                         end                            
                     end                    
