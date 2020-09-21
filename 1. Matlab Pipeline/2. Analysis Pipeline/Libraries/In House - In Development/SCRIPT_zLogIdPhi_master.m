@@ -351,8 +351,8 @@ threshold2 = ts_percentile;
 %threshold = 0.5;
 % next, lets plot some examples
 rat_get = 'Usher';    % rat
-day_get = 'Baseline'; % day (baseline, saline, muscimol day)
-con_get = 'Baseline2'; % condition (saline, baseline, or muscimol infusion)
+day_get = 'Muscimol'; % day (baseline, saline, muscimol day)
+con_get = 'Baseline'; % condition (saline, baseline, or muscimol infusion)
 
 % get session IdPhi
 session_zIdPhi = zIdPhi.(rat_get).(day_get).(con_get);

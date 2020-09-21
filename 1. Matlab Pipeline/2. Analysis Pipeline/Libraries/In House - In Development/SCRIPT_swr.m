@@ -245,7 +245,7 @@ for triali = 1:numTrials
 end
 
 %% make a cool fig
-trial = 1;
+trial = 2;
 
 % plot
 figure('color','w'); hold on;
