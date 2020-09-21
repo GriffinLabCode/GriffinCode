@@ -204,10 +204,10 @@ fig = figure('color','w');
 h1 = histogram(zIdPhi_dist); hold on;
 h1.FaceColor = 'r';
 ylimits = ylim;
-title('Distribution of zIdPhi estimates across sessions')
+title('Distribution of z[ln(IdPhi)] estimates across sessions')
 box off
 ylabel('Number of Trials')
-xlabel('zIdPhi')
+xlabel('z[ln(IdPhi)]')
 h1.BinWidth = 0.1;
 zIdPhi_bins = h1.BinEdges;
 axis tight;
@@ -458,8 +458,8 @@ end
 % because there are so few trials and so few rats, therefore lets look
 % across sessions
 figure()
-%colorLine = []; colorLine.decrease = 'm'; colorLine.increase = 'b'; colorLine.noChange = [.8 .8 .8]
-colorLine = 1; % default colors
+colorLine = [];% colorLine.decrease = 'm'; colorLine.increase = 'b'; colorLine.noChange = [.8 .8 .8]
+%colorLine = 0; % default colors
 jitterIdx = 1:6;
 colorIdx{1} = 'r'; colorIdx{2} = 'b'; colorIdx{3} = 'm'; colorIdx{4} = 'y'; colorIdx{5} = 'k'; colorIdx{6} = 'g';
 BarPlotsJitteredData(propVTE,1,0,1,1,[],colorLine,jitterIdx,colorIdx)
@@ -489,8 +489,8 @@ ax.XTickLabelRotation = 45;
 [h,p]=ttest(diffScores,0)
 
 % below isnt correct yet
-%f=get(gca,'Children');
-%legend([f(1),f(2),f(3),f(4),f(5),f(6),f(7)],rat)
+f=get(gca,'Children');
+legend([f(1),f(2),f(3),f(4),f(5),f(6),f(7)],rat)
 
 % -- using trials, find prop of vte events -- %
 trialFormat = [];

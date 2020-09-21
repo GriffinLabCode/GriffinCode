@@ -11,7 +11,7 @@
 clear; clc; %close all;
 
 % datafolder directory
-datafolder = 'X:\01.Experiments\RERh Inactivation Recording\14-22\Baseline\Baseline 1'; 
+datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Morty\Baseline\Baseline 2'; 
 cd(datafolder);
 
 % Interpolate missing data? Alternatives is to exclude missing data, or ignore missing data.
@@ -34,19 +34,19 @@ vt_name = 'VT1.mat';
 %% Create boxes around locations of interest for int creation
 
 % right reward zone (sideways room, R)
-rRW_fld = [500 -20 140 90];
+rRW_fld = [500 -15 140 90];
 
 % left reward zone (sideways room, R)
-lRW_fld = [520 410 110 90];
+lRW_fld = [520 420 110 90];
 
 % central stem (sideways room, R)
 STM_fld = [195 180 380 150]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
 
 % delay pedestal (sideways room, R)
-PED_fld = [15 140 180 220];
+PED_fld = [15 160 180 220];
 
 % choice point/T-junction (sideways room, R)
-CP_fld = [575 185 125 115];
+CP_fld = [575 195 125 115];
 
 
 figure('color','w');
