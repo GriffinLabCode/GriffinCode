@@ -16,7 +16,7 @@
 %
 % written by John Stout on 9/21/2020
 
-function [alternIdx,persevIdx] = alternPersevIdx(datafolder,int_name)
+function [alternIdx,persevIdx,traj_change] = alternPersevIdx(datafolder,int_name)
 
 % load int
 cd(datafolder);

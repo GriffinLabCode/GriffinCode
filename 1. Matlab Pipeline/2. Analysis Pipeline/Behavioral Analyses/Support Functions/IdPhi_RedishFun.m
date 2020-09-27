@@ -1,5 +1,7 @@
 %% redish zIdPhi code
-
+% this code estimates IdPhi using dxdt adaptive windowing
+%
+% written by John Stout with significant help from David Redish
 %{
 % -- parameters to change -- %
 
