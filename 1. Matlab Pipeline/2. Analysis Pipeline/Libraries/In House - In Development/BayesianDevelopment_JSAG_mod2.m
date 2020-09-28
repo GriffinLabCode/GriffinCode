@@ -175,10 +175,31 @@ tau = 0.5; %s
 numSamplesInTau = tau*vt_srate; %*(1/1000); % Nms * 30 samples/sec * (1sec/1000ms) = M samples
 
 % use poisspdf - if we set lambda to spikes and x to position, we can use
-% it
+posterior = cell([1 numTrials]);
 for triali = 1:numTrials
 
     % -- get training data -- %
+    
+    spikes_temp = spks_time{triali};
+    numElements = length(spikes_temp); %272
+    loopingIdx  = 1:numSamplesInTau:numElements;
+    for neuri=1:numNeurons
+        for loopi = 1:numel(loopingIdx)-1 %1:18
+            % need to sum the spikes within the tau window. Note that you have to
+            % do this complicated line below because tau may not evenly fit into
+            % the length of the data. For example 272 (number
+            % of example data points)/ 15 (tau in samples) = 18.13. We need an
+            % integer in order to group the data, not a floating point number.
+
+            % this variable is x in the general equation
+            spikes{triali}(neuri,loopi) = sum(spikes_temp(neuri,loopingIdx(loopi):loopingIdx(loopi+1)-1));
+            
+            % get linear position grouped by tau. This requires averageing
+            % and rounding for an integer
+            actual_pos{triali}(loopi) = round(mean(linearPosition.left{triali}(loopingIdx(loopi):loopingIdx(loopi+1)-1)));
+            
+        end
+    end    
     
     % the rest of the trials were used to estimate the spatial maps
     rate_maps_train = [];
@@ -209,178 +230,24 @@ for triali = 1:numTrials
     end
     
     % multiple across neurons and incorporate the 
-    posterior = prod(cat(3, posterior_per_cell{:}),3);
+    posterior{triali} = prod(cat(3, posterior_per_cell{:}),3);
+    
+    % normalized by C
+    
+    
+    % per each time point, find the maximum probability
+    [max_prob{triali}, decoded_pos{triali}] = max(posterior{triali}');
+    
+    % define decoding error. I made this up using shins stuff. They used
+    % the linear distance between actual position and decoded position.
+    % What we have here is decoded position - actual position normalized by
+    % the sum to force the values between -1 to 1. Then to get one value,
+    % it is summated across times
+    decoding_error(triali) = norm(decoded_pos{triali} - actual_pos{triali});
     
 end
 
-%{
-% this is for when we get the posterior
-figure(); imagesc(prob_spikesGivenPos_avg');
-colormap hot;
-colorbar();
-set(gca,'YDir','normal');
-hold on;
-yyaxis right
-plot(linearPosition.left{1}, 'b','LineWidth', 2,'LineStyle','--');
-xlabel('time'); ylabel('position');
-%}
-
-%hold on;
-%plot(ind, 'g', 'LineWidth',0.1);
-
-%% bayesian decoding
-% these variables are named like those in Shin et al., 2019
-
-%{
-% -- start by doing this for one trial and one neuron, 
-        then we will do it for all neurons and multiply the products, then
-        make for loop to do it across all trials. -- %
-%}
-
-% define the trial to look at
-trial = 1; 
-
-% the expected FR should be the firing rate expected given that you observe
-% the rat in position "x" - since we care about position, using the
-% rate_maps_pos variable.
-%expectedFRs = rate_maps_pos{trial}(1,:); % 1 trial, 1 neuron
-
-% define tau and get the number of samples that is equivalent to it
-tau = 0.5; %s
-numSamplesInTau = tau*vt_srate; %*(1/1000); % Nms * 30 samples/sec * (1sec/1000ms) = M samples
-
-% group neuronal activity based on tau - get data every 15 samples. Now
-% we're interested in time, so we will use instSpk variable, which is
-% spikes across time (see 2nd figure in script)
-
-%spikes per tau for all neurons
-
-spikes_temp = spks_time{trial};
-numElements = length(spikes_temp); %272
-loopingIdx  = 1:15:numElements;
-for i=1:5
-    for ii = 1:numel(loopingIdx)-1 %1:18
-        % need to sum the spikes within the tau window. Note that you have to
-        % do this complicated line below because tau may not evenly fit into
-        % the length of the data. For example 272 (number
-        % of example data points)/ 15 (tau in samples) = 18.13. We need an
-        % integer in order to group the data, not a floating point number.
-        spikes(i,ii) = sum(spikes_temp(i,loopingIdx(ii):loopingIdx(ii+1)-1));
-    end
-end
-
-%spikes is per tau window, but position is not
-%this helps to be able to look at each position and not each position*tau
-%ex. for each 15 data points, position will be different but spikes will be the
-%same
-for neuroni = 1:5
-    for i=1:(numSamplesInTau*18)
-        spike_spread(neuroni,i)=spikes(neuroni,ceil(i/15));
-    end
-end
-
-%this table is organized:
-%for each time point
-%1. position
-%2. firing rate (by position)
-%3. spikes
-%allows us to visualize each variable needed to run poisson and easily
-%access for the formula
-%each cell in spiketimerate{} is a different neuron
-spiketimerate={};
-for n=1:5
-    spiketimerate{n}(1,:)=linearPosition.left{1}(1,:);
-
-    %if I'm in position 1, fill in corresponding rate, etc.
-    for i=1:length(rate_maps_time{trial})
-        for ii = 1:length(rate_maps_pos{trial})
-             if spiketimerate{n}(1,i)==ii
-                 spiketimerate{n}(2,i)=rate_maps_pos{1}(n,ii);
-             end
-        end
-    end
-end
-
-%just to make it match up, obvi bad code, will fix later (any ideas?)
-spike_spread(1,271)=0;
-spike_spread(1,272)=0;
-
-%number of spikes to use for each position
-for n=1:5
-    spiketimerate{n}(3,:)=spike_spread(n,:);
-end
-
-%poisson distribution old (ignore me)
-%has as many unique values as positions
-%{
-for n = 1:numNeurons
-     for time=1:length(rate_maps_time{trial})
-        fr = spiketimerate{n}(2,time);
-        spk = spiketimerate{n}(3,time);
-        
-        pois_num1=(tau*fr)^spk;
-        pois_num2 = exp(-1*tau*fr);
-        pois_denom = factorial(spk);
-        
-        poisson(n,time)= (pois_num1*pois_num2)/pois_denom;
-     
-        %pois(n,time)= (((tau*spiketimerate{n}(2,time))^(spiketimerate{n}(3,time)))*exp(-1*tau*spiketimerate{n}(2,time)))/factorial(spiketimerate{n}(3,time));
-    end
-end
-%}
-
-%cleaned up poisson formula
-%poisson_formula(firingrate, spikes, tau);
-cd 'X:\03. Lab Procedures and Protocols\MATLABToolbox\Allison';
-pf = 'poisson_formula.m';
-
-%poisson distribution old (ignore me)
-for n = 1:numNeurons
-     for time=1:length(rate_maps_time{trial})
-        fr = spiketimerate{n}(2,time);
-        spk = spiketimerate{n}(3,time);
-        poisson(n,time)= poisson_formula(fr,spk,tau);
-     end
-end
-
-%make the probability matrix
-%for each neuron
-%for each timepoint, use spikes from that time point
-%test against all possible firing rates from all positions
-pois_matrix = {};
-for n = 1:numNeurons
-for tp = 1:length(rate_maps_time{trial})
-    for pt = 1:length(rate_maps_pos{trial})
-        % pois_matrix(tp,1)= rate_maps_pos{trial}(1,tp);
-        firer = rate_maps_pos{trial}(n,pt);
-        spk = spike_spread(n,tp);
-        pois_matrix{n}(pt, tp) = poisson_formula(firer,spk,tau);
-    end
-end
-end
-%figure(); imagesc(pois_matrix{5});
-
-%multiply across neurons
-pois_matrix_tot=pois_matrix{1}.*pois_matrix{2}.*pois_matrix{3}.*pois_matrix{4}.*pois_matrix{5};
-%figure(); imagesc(pois_matrix_tot);
-
-%kaefer: for a given window, the likelihoods for all positions were normalized
-%by dividing each by the maximum likelihood of that window
-
-%test tau 1 normalizaton
-t1n = [];
-[t1nc, ind] = max(pois_matrix_tot(:,1:15));
-t1n=(pois_matrix_tot(:,1:15))./t1nc;
-%figure(); imagesc(t1n);
-%colorbar();
-
-pois_matrix_norm = [];
-for i=1:272
-    [m1,i1]=max(pois_matrix_tot(:,i));
-    maxi(i)=m1;
-    ind(i)=i1;
-end
-
+%% plot - incorporate updates to this
 pois_matrix_norm=pois_matrix_tot./maxi;
 figure(); imagesc(pois_matrix_norm);
 colormap hot;
