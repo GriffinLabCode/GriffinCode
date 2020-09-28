@@ -169,14 +169,13 @@ ylabel(c,'Normalized Smoothed Firing Rate');
 tau = 0.5; %s
 numSamplesInTau = tau*vt_srate; %*(1/1000); % Nms * 30 samples/sec * (1sec/1000ms) = M samples
 
-% leave 1 out method per trial
+% get spikes for every trial, this will be in a cell array
+spikes = cell([1 numTrials]);
 for triali = 1:numTrials
-
     % group neuronal activity based on tau - get data every 15 samples. Now
     % we're interested in time, so we will use instSpk variable, which is
     % spikes across time (see 2nd figure in script)
-    spikes_temp = spks_time{triali};
-    numElements = length(spikes_temp); %272
+    numElements = length(spks_time{triali}); %272
     loopingIdx  = 1:numSamplesInTau:numElements;
     for i=1:numNeurons
         for ii = 1:numel(loopingIdx)-1 %1:18
@@ -187,35 +186,41 @@ for triali = 1:numTrials
             % integer in order to group the data, not a floating point number.
 
             % this variable is x in the general equation
-            spikes(i,ii) = sum(spikes_temp(i,loopingIdx(ii):loopingIdx(ii+1)-1));
+            spikes{triali}(i,ii) = sum(spks_time{triali}(i,loopingIdx(ii):loopingIdx(ii+1)-1));
         end
     end
+end
 
-    % due to leave 1 out method, remove one rate_maps_pos trial
+% leave one out
+for triali = 1:numTrials
+
+    % due to leave 1 out method, remove one rate_maps_pos trial based on
+    % the for loop
     rate_maps_train = [];
     rate_maps_train = rate_maps_pos; % temporary
-    rate_maps_train(triali)=[];
+    rate_maps_train(triali)=[]; % remove one trial (this changes per value in for loop)
+    
+    % rate maps testing variable
+    rate_maps_test = rate_maps_pos{triali};
     
     % now consider lambda. On average, this is what the spiking data looks
     % like. poissonpdf(x,lambda) will tell you the probability of observing x
     % given the lambda rate - this may have to be estimated in a leave-1-out
     % fashion
-    lambda = tau*mean(cat(3, rate_maps_pos{:}),3);
+    lambda = tau*mean(cat(3, rate_maps_train{:}),3);
 
     % whats the probability of observing spikes, given position n? This is how
     % you create the matrix!!
     numLinearBins = size(lambda,2);
     for ci = 1:numNeurons % per each neuron
         for n = 1:numLinearBins % per each bin, find the probability of observing spikes
-            prob_spikesGivenPos{ci}(:,n) = poisspdf(spikes(ci,:),lambda(ci,n));
+            prob_spikesGivenPos{ci}(:,n) = poisspdf(spikes{triali}(ci,:),lambda(ci,n));
         end
     end
 
     % multiply across neurons
     prob_spikesGivenPos_avg = mean(cat(3, prob_spikesGivenPos{:}),3);
-
-    
-    
+ 
 end
 
 %{

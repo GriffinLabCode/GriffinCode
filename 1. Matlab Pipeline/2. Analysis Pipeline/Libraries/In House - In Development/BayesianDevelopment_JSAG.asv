@@ -192,9 +192,7 @@ for triali = 1:numTrials
     end
 
     % due to leave 1 out method, remove one rate_maps_pos trial
-    rate_maps_train = [];
-    rate_maps_train = rate_maps_pos; % temporary
-    rate_maps_train(triali)=[];
+    rate_maps_pos
     
     % now consider lambda. On average, this is what the spiking data looks
     % like. poissonpdf(x,lambda) will tell you the probability of observing x
