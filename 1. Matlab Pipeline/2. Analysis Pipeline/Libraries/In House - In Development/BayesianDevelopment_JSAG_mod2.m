@@ -204,7 +204,7 @@ for triali = 1:numTrials
         for timei = 1:timeLength
             % lambda should be testing data spikes
             lambda = spikes{triali}(:,timei);
-            posterior_per_cell{neuri}(timei,:) = poisspdf(training_data(neuri,:),lambda(neuri));
+            posterior_per_cell{neuri}(timei,:) = poisspdf(round(training_data(neuri,:)),lambda(neuri));
         end
     end
     
