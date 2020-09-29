@@ -3,6 +3,7 @@
 % number of trials
 numTrials = size(Int,1);
 
+p1 = []; p2 = [];
 for i = 1:numTrials
     figure('color','w'); hold on;    
     p1 = plot(pos_x,pos_y,'Color',[.8 .8 .8]); 

@@ -2,10 +2,12 @@
 clear; clc
 
 % inputs
-datafolder   = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Baby Groot 9-11-18'; 
-int_name     = 'Int_file.mat';
+%datafolder   = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Baby Groot 9-11-18'; 
+%datafolder   = 'X:\01.Experiments\Completed Studies\DualTask_CDAlternation_HippocampusRecording\0902\0902-02';
+datafolder   = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Baby Groot 9-17-18';
+int_name     = 'Int_file.mat'; % 'Int2_JS'; % 'Int_file.mat';
 vt_name      = 'VT1.mat';
-missing_data = 'exclude';
+missing_data = 'interp';
 vt_srate     = 30; % 30 samples/sec
 measurements.stem     = 137; % in cm
 measurements.goalArm  = 50;
@@ -18,14 +20,21 @@ Startup_linearSkeleton % add paths
 idealTraj = data.idealTraj;
 rmPaths_linearSkeleton % remove paths
 
-% get linear position
+%% get linear position
 mazePos = [1 2]; % was [1 2]
-[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
+stemOrientation = 'y';
+startStemPos = 150; % in pixels
 
-%% load in int and position data
+% load int
+load(int_name);
 
 % load position data
 [ExtractedX, ExtractedY, TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
+
+%[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
+[linearPosition,position] = get_linearPosition(datafolder,idealTraj,Int,ExtractedX,ExtractedY,TimeStamps,mazePos,stemOrientation,startStemPos);
+
+%% load in int and position data
 
 % focus on one trajectory for now
 linearPosition_var = linearPosition.left;
@@ -50,14 +59,6 @@ Int_right = Int(Int(:,3)==0,:);
 
 % define int var for this script
 Int_var = Int_left;
-
-% get data
-numTrials = length(linearPosition_var);
-for triali = 1:numTrials
-    X{triali}  = ExtractedX(TimeStamps >= Int_var(triali,mazePos(1)) & TimeStamps <= Int_var(triali,mazePos(2)));
-    Y{triali}  = ExtractedY(TimeStamps >= Int_var(triali,mazePos(1)) & TimeStamps <= Int_var(triali,mazePos(2)));
-    TS{triali} = TimeStamps(TimeStamps >= Int_var(triali,mazePos(1)) & TimeStamps <= Int_var(triali,mazePos(2)));
-end
 
 %% get spike data
 cd(datafolder);
@@ -84,19 +85,19 @@ for ci = 1:length(clusters)
         
         % get spiketimes
         spks = [];
-        spks = spikeTimes(spikeTimes >= Int_var(triali,mazePos(1)) & spikeTimes <= Int_var(triali,mazePos(2)));       
+        spks = spikeTimes(spikeTimes >= position.TS_left{triali}(1) & spikeTimes <= position.TS_left{triali}(end));       
         
         % how much time in consideration?
-        totalTime = (TS{triali}(end)-TS{triali}(1))/1e6;
+        totalTime = (position.TS_left{triali}(end)-position.TS_left{triali}(1))/1e6;
         
         % get neuronal activity per bin, across time (not avged within bin)
         [smoothFR_time{ci}{triali},~,instSpk{ci}{triali},...
             ~,instSpk_time{ci}{triali}] = ...
-            inst_neuronal_activity(spks,TS{triali},vt_srate,totalTime,resolution_time);        
+            inst_neuronal_activity(spks,position.TS_left{triali},vt_srate,totalTime,resolution_time);        
 
         % get neuronal activity linearized (avg activity per bin)
         [smoothFR_pos{ci}{triali},~,numSpks_pos{ci}{triali},sumTime_pos{ci}{triali},...
-            ~,instTime{triali}] = linearizedFR(spks,TS{triali},linearPosition.left{triali},vt_srate,resolution_pos);
+            ~,instTime{triali}] = linearizedFR(spks,position.TS_left{triali},linearPosition.left{triali},vt_srate,resolution_pos);
                 
         % replace nans with zero
         smoothFR_time{ci}{triali}(isnan(smoothFR_time{ci}{triali})==1)=0;
@@ -120,14 +121,14 @@ for i = 1:numTrials
     rate_maps_time{i} = vertcat(ratesCat_time{1:numNeurons,i});
     rate_maps_pos{i}  = vertcat(ratesCat_pos{1:numNeurons,i});
     spks_time{i}      = vertcat(spksCat_time{1:numNeurons,i});
-    ts_sec{i}         = TS{i}/1e6;
+    ts_sec{i}         = position.TS_left{i}/1e6;
 end
 
 %% figure to make sense of some stuff
 % plot to show difference between rate_maps_time and rate_maps_pos. Note
 % that we're using the a single trial '{trial}' and the first neuron across linear
 % bins '(1,:)'
-trial = 1; % define which trial to look at
+trial = 2; % define which trial to look at
 figure('color','w'); 
 subplot 311;
     plot(rate_maps_pos{trial}(1,:),'r','LineWidth',2); axis tight; box off;
@@ -174,6 +175,7 @@ ylabel(c,'Normalized Smoothed Firing Rate');
 tau = 0.5; %s
 numSamplesInTau = tau*vt_srate; %*(1/1000); % Nms * 30 samples/sec * (1sec/1000ms) = M samples
 
+numTrials = length(rate_maps_pos);
 % use poisspdf - if we set lambda to spikes and x to position, we can use
 posterior = cell([1 numTrials]);
 for triali = 1:numTrials
@@ -183,13 +185,9 @@ for triali = 1:numTrials
     spikes_temp = spks_time{triali};
     numElements = length(spikes_temp); %272
     loopingIdx  = 1:numSamplesInTau:numElements;
-    for neuri=1:numNeurons
-        for loopi = 1:numel(loopingIdx)-1 %1:18
-            % need to sum the spikes within the tau window. Note that you have to
-            % do this complicated line below because tau may not evenly fit into
-            % the length of the data. For example 272 (number
-            % of example data points)/ 15 (tau in samples) = 18.13. We need an
-            % integer in order to group the data, not a floating point number.
+    
+    for neuri=1:numNeurons % loop across each neuron
+        for loopi = 1:numel(loopingIdx)-1 % loop across each tau window
 
             % this variable is x in the general equation
             spikes{triali}(neuri,loopi) = sum(spikes_temp(neuri,loopingIdx(loopi):loopingIdx(loopi+1)-1));
@@ -219,7 +217,7 @@ for triali = 1:numTrials
     % -- now get the posterior probability using the Shin equation -- %
     
     % posterior probability matrix should be a time x position matrix
-    timeLength = length(testing_data);
+    timeLength = size(testing_data,2);
     posterior_per_cell = cell([1 numNeurons]); % this gets redefined each loop (memory-less)
     for neuri = 1:numNeurons
         for timei = 1:timeLength
@@ -247,33 +245,17 @@ for triali = 1:numTrials
     
 end
 
-%test tau 1 normalizaton
-t1n = [];
-[t1nc, ind] = max(pois_matrix_tot(:,1:15));
-t1n=(pois_matrix_tot(:,1:15))./t1nc;
-%figure(); imagesc(t1n);
-%colorbar();
-
-pois_matrix_norm = [];
-for i=1:272
-    [m1,i1]=max(pois_matrix_tot(:,i));
-    maxi(i)=m1;
-    ind(i)=i1;
-end
-
-pois_matrix_norm=pois_matrix_tot./maxi;
-figure(); imagesc(pois_matrix_norm);
+%% plot - incorporate updates to this
+trial = 1;
+figure('color','w'); 
+imagesc(posterior{trial}');
 colormap hot;
 colorbar();
-
 set(gca,'YDir','normal');
-
 hold on;
-plot(linearPosition.left{1}, 'b','LineWidth', 2);
+plot(actual_pos{trial}, 'b','LineWidth', 2,'LineStyle','--');
 xlabel('time'); ylabel('position');
-
-hold on;
-plot(ind, 'g', 'LineWidth',0.1);
+plot(decoded_pos{trial}, 'g', 'LineWidth',0.1);
 
 %%
 % -- rename to probability of spikes|position so we can easily know -- %

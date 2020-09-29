@@ -31,15 +31,18 @@ ExtractedY = ExtractedY./data.measurements.convFact(2);
 % load int file
 %load(int_name)
 
+% separate left/right trials
+Int_left  = find(Int(:,3) == 1); %Int(Int(:,3)==1,:);
+Int_right = find(Int(:,3) == 0); %Int(Int(:,3)==0,:);
+
 % get data
-numTrials = size(Int,1);
 for i = 1:numTrials
-    x_data_temp{i}  = ExtractedX(TimeStamps >= Int(i,mazePos(1)) & TimeStamps <= Int(i,mazePos(2)));
-    y_data_temp{i}  = ExtractedY(TimeStamps >= Int(i,mazePos(1)) & TimeStamps <= Int(i,mazePos(2)));
-    ts_data_temp{i} = TimeStamps(TimeStamps >= Int(i,mazePos(1)) & TimeStamps <= Int(i,mazePos(2)));
+    x_data_temp{i}  = ExtractedX(TimeStamps >= Int(i,1) & TimeStamps <= Int(i,6));
+    y_data_temp{i}  = ExtractedY(TimeStamps >= Int(i,1) & TimeStamps <= Int(i,6));
+    ts_data_temp{i} = TimeStamps(TimeStamps >= Int(i,1) & TimeStamps <= Int(i,6));
 end
 
-% based on position of stem
+% middle position of stem
 if contains(stemOrientation,'x') | contains(stemOrientation,'X')
     %PosMidStem = 500;
     for i = 1:numTrials
@@ -59,15 +62,15 @@ elseif contains(stemOrientation,'y') | contains(stemOrientation,'Y')
 end
 
 % get left trajectory position
-Int_left  = find(Int(:,3) == 1); %Int(Int(:,3)==1,:);
-Int_right = find(Int(:,3) == 0); %Int(Int(:,3)==0,:);
+position.X_left = x_data(
+position.Y_left = ExtractedY(TimeStamps >= Int_left(triali,mazePos(1)) & TimeStamps <= Int_left(triali,mazePos(2)));
 
-position.X_left   = x_data(Int_left);
-position.Y_left   = y_data(Int_left);
-position.TS_left  = ts_data(Int_left);
-position.X_right  = x_data(Int_right);
-position.Y_right  = y_data(Int_right); 
-position.TS_right = ts_data(Int_right);
+
+% get right trajectory position
+for triali = 1:size(Int_right,1)
+    position.X_right{triali} = ExtractedX(TimeStamps >= Int_right(triali,mazePos(1)) & TimeStamps <= Int_right(triali,mazePos(2)));
+    position.Y_right{triali} = ExtractedY(TimeStamps >= Int_right(triali,mazePos(1)) & TimeStamps <= Int_right(triali,mazePos(2)));
+end
 
 %% linearize position
 
