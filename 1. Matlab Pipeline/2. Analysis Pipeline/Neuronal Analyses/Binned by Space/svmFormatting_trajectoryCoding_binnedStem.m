@@ -48,9 +48,7 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
 
             % load animal parameters 
             % only load undefined variables
-            varlist = who; %Find the variables that already exist
-            varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
-            load(int_name,'-regexp', ['^(?!' varlist ')\w']);
+            load(int_name);
     
             % get vt_data 
             [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);                      
@@ -77,8 +75,8 @@ function [FRdata] = svmFormatting_trajectoryCoding_binnedStem(Datafolders,int_na
             %% create bins
             %{
             if stem_dir == 'Y'
-                PosMin = 135; % do not underestimate - you'll end up in start-box
-                PosMax = 400; % over estimate - this doesn't hurt anything
+                stemMin = 135; % do not underestimate - you'll end up in start-box
+                stemMax = 400; % over estimate - this doesn't hurt anything
             elseif stem_dir == 'X'
                 PosMin = 215;
                 PosMax = 641;

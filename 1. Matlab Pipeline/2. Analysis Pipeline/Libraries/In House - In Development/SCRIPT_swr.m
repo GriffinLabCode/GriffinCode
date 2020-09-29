@@ -120,10 +120,17 @@ rmPaths_linearSkeleton % remove paths
 
 % get linear position - use whole maze for plotting purposes
 mazePos = [1 7]; 
-[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
+stemOrientation = 'y';
+startStemPos = 150; % in pixels
 
-% video tracking data
-[ExtractedX, ExtractedY, TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
+% load int
+load(int_name);
+
+% load position data
+[ExtractedX, ExtractedY, TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
+
+%[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
+[linearPosition,position] = get_linearPosition(datafolder,idealTraj,Int,ExtractedX,ExtractedY,TimeStamps,mazePos,stemOrientation,startStemPos);
 
 % get position data from entire run (excluding return arms)
 numTrials = size(Int,1); % define number of trials
