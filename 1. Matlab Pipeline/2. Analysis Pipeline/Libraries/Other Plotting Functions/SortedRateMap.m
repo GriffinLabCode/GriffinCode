@@ -16,7 +16,7 @@
 %
 % writen by John Stout
 
-function [x_sort,idxsort] = SortedRateMap(x,y,plot,jetOn)
+function [x_sort,idxsort] = SortedRateMap(x,y,plot_fig,jetOn)
 
 % normalize each row between 0 and 1
 numcells = size(x,1);
@@ -40,7 +40,7 @@ x_sort = x_norm(idxsort,:);
 
 % make figure
 %figure('color','w');
-if plot == 1
+if plot_fig == 1
     imagesc(x_sort);
     colormap default
     colorbar

@@ -2,17 +2,15 @@
 clear; clc
 
 % inputs
-%datafolder   = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Baby Groot 9-11-18'; 
-%datafolder   = 'X:\01.Experiments\Completed Studies\DualTask_CDAlternation_HippocampusRecording\0902\0902-02';
-datafolder   = 'X:\01.Experiments\John n Andrew\Dual optogenetics w mPFC recordings\All Subjects - DNMP\Good performance\Medial Prefrontal Cortex\Baby Groot 9-17-18';
-int_name     = 'Int_file.mat'; % 'Int2_JS'; % 'Int_file.mat';
+datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Muscimol\Baseline';
+int_name     = 'Int_VTE_JS.mat'; % 'Int2_JS'; % 'Int_file.mat';
 vt_name      = 'VT1.mat';
 missing_data = 'interp';
 vt_srate     = 30; % 30 samples/sec
 clear measurements
 measurements.stem     = 112; % in cm was 137
 measurements.goalArm  = 56; % was 50
-measurements.goalZone = 29; % was 37
+%measurements.goalZone = 29; % was 37
 %measurements.retArm   = 130;
 
 % get linear skeleton
@@ -22,26 +20,36 @@ idealTraj = data.idealTraj;
 rmPaths_linearSkeleton % remove paths
 
 %% get linear position
-mazePos = [1 2]; % was [1 2]
-stemOrientation = 'y';
-startStemPos = 150; % in pixels
-
-% load int
 load(int_name);
 
+mazePos = [1 2]; % was [1 2]
+
 % load position data
-[ExtractedX, ExtractedY, TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
+[ExtractedX, ExtractedY, TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
+
+stemOrientation = 'x';
+
+% define start position for stem
+numTrials = size(Int,1);
+if contains(stemOrientation,'x') | contains(stemOrientation,'X')
+    for triali = 1:numTrials
+        startPos(triali) = ExtractedX(find(Int(triali,1) == TimeStamps_VT));
+    end
+elseif contains(stemOrientation,'y') | contains(stemOrientation,'Y')
+    for triali = 1:numTrials
+        startPos(triali) = ExtractedY(find(Int(triali,1) == TimeStamps_VT));
+    end   
+end
+startStemPos = min(startPos); % in pixels
 
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
-[linearPosition,position] = get_linearPosition(datafolder,idealTraj,Int,ExtractedX,ExtractedY,TimeStamps,mazePos,stemOrientation,startStemPos);
+clear linearPosition position
+[linearPosition,position] = get_linearPosition(datafolder,idealTraj,Int,ExtractedX,ExtractedY,TimeStamps_VT,mazePos,stemOrientation,startStemPos);
 
 %% load in int and position data
 
 % focus on one trajectory for now
 linearPosition_var = linearPosition.left;
-
-% get int and vt data
-load(int_name)
 
 % -- plot to show what a 'linear skeleton' is -- %
 figure('color','w');
@@ -71,6 +79,9 @@ clusters = dir('TT*.txt');
 % many cm (or time points depending on the function) to smooth over
 resolution_time = 1; % time of smoothing
 resolution_pos  = 6; % cm smoothing
+
+% redefine numTrials
+numTrials = length(linearPosition_var);
 
 % get linearized fr for all clusters
 smoothFR = []; instFR = []; numSpks = []; sumTime = []; instSpk = []; instTime = [];
@@ -160,6 +171,10 @@ xlabel(['Linearized Pos (cm): Int columns ',num2str(mazePos(1)),' through ',num2
 ylabel('Neuron Number'); shading interp; c = colorbar;
 ylabel(c,'Normalized Smoothed Firing Rate');
 
+figure('color','w');
+jetOn = 1; plot_fig = 1;
+[x_sort,idxsort] = SortedRateMap(rateMap_norm,rateMap_norm,plot_fig,jetOn);
+
 %% getting a ton of zeros - somethings not right
 % poisspdf(x,lambda) tells you prob of observing each value in x, given
 % lambda. So we should be able to do poisspdf(rate_map,spikes) at each time
@@ -232,7 +247,7 @@ for triali = 1:numTrials
     posterior{triali} = prod(cat(3, posterior_per_cell{:}),3);
     
     % normalized by C
-    
+    posterior{triali} = (normalize(posterior{triali}','range'))';
     
     % per each time point, find the maximum probability
     [max_prob{triali}, decoded_pos{triali}] = max(posterior{triali}');
@@ -242,12 +257,13 @@ for triali = 1:numTrials
     % What we have here is decoded position - actual position normalized by
     % the sum to force the values between -1 to 1. Then to get one value,
     % it is summated across times
-    decoding_error(triali) = norm(decoded_pos{triali} - actual_pos{triali});
+    %decoding_error(triali) = norm(decoded_pos{triali} - actual_pos{triali});
+    decoding_error(triali) = mean(abs(decoded_pos{triali} - actual_pos{triali}));
     
 end
 
 %% plot - incorporate updates to this
-trial = 1;
+trial = 7;
 figure('color','w'); 
 imagesc(posterior{trial}');
 colormap hot;
@@ -257,104 +273,3 @@ hold on;
 plot(actual_pos{trial}, 'b','LineWidth', 2,'LineStyle','--');
 xlabel('time'); ylabel('position');
 plot(decoded_pos{trial}, 'g', 'LineWidth',0.1);
-
-%%
-% -- rename to probability of spikes|position so we can easily know -- %
-%multiply across neurons
-poisson_prod=prod(poisson,1);
-
-figure(); plot(linearPosition.left{1},poisson_prod); xlabel('Linear Position'); ylabel('Probability')
-
-%kaefer
-%for each window, given # of spikes, find highest poisson value and
-%corresponding position
-%i=1:15:272
-
-% -- we need probability estimates for each time point that correspond to
-% each position, even if those estimates are zero -- %
-varIdx = 1:numSamplesInTau:size(spiketimerate{1},2);
-for i = 1:length(varIdx)-1
-    [m1,i1] = max(poisson_prod(varIdx(i):varIdx(i+1)-1)); 
-    maximum(i)=m1;
-    index(i)=i1+varIdx(i)-1;
-   
-    mostlikely(i)=linearPosition.left{1}(index(i));
-end
-
-figure(); 
-plot(timingVar*1000,linearPosition.left{trial},'b','LineWidth',2,'LineStyle','--');
-hold on;
-numMostLikelySamples = floor(timingVar(end)*1000/500) % dynamic var
-% need a variable indicating timing steps
-msStepStart = ((1:18)*500)-500;
-msStepEnd   = (1:18)*500;
-% plot
-plot(msStepStart,mostlikely,'r','LineWidth',2);
-legend('Linear Position','Most Likely Position, given spikes')
-
-%%
-%shin - we should use this to corroborate
-sumfr = sum(rate_maps_pos{trial});
-etosum = exp(-tau*sumfr);
-frtospk = fr^spk;
-
-for n = 1:numNeurons
-     for time=1:length(rate_maps_time{trial})
-        fr = spiketimerate{n}(2,time);
-        spk = spiketimerate{n}(3,time);
-        
-        pois_num1=(tau*fr)^spk;
-        pois_num2 = exp(-1*tau*fr);
-        pois_denom = factorial(spk);
-        
-        poisson(n,time)= (pois_num1*pois_num2)/pois_denom;
-     
-        %pois(n,time)= (((tau*spiketimerate{n}(2,time))^(spiketimerate{n}(3,time)))*exp(-1*tau*spiketimerate{n}(2,time)))/factorial(spiketimerate{n}(3,time));
-    end
-end
-
-
-%{
-%poisson distribution also incorrect
-%{
-for neuroni = 1:numNeurons
-    for positi = 1:length(rate_maps_pos{trial})
-        poisson(neuroni,positi)=(((tau*rate_maps_pos{trial}(neuroni,positi))^spike_spread(neuroni,positi))*exp(-1*tau*rate_maps_pos{trial}(neuroni,positi)))/factorial(spike_spread(neuroni,positi));
-    end
-end
-%}
-
-%multiply across neurons
-%poisson_prod=prod(poisson,1);
-
-%kaefer:
-
-%incorrect poisson distribution
-%this is WRONG but I'm leaving temporarily in case needed for explanation
-%of my thought process
-%{
-for neuroni = 1:numNeurons
-    for positi = 1:length(spikes)
-       poisson(neuroni,positi) = (((tau*rate_maps_pos{trial}(neuroni,positi))^spikes(neuroni,positi))*exp(-1*tau*rate_maps_pos{trial}(neuroni,positi)))/(factorial(spikes(neuroni,positi)));
-    end
-end
-%}
-
-%{
-%multiply neurons to get one value for each tau?
-poisson_prod=prod(poisson,1);
-
-%kaefer 
-[~,argmaxx] = max(poisson_prod);
-disp(argmaxx);
-
-%shin
-for i = 1:length(rate_maps_pos{trial})
-    %sum of FRs across neurons for each posn
-    sumFR(1,i) = sum(rate_maps_pos{trial}(:,ii));
-end
-%}
-%}
-%}
-
-

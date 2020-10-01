@@ -73,7 +73,7 @@ data.pos(2,:) = ExtractedY;
 data.idealTraj = idealized_trajectory_2(data.pos,data.measurements.total_distance);
 
 % information
-data.information.measurements = 'Measurements of actual maze excluding startbox'
+data.information.measurements = 'Measurements of actual maze excluding startbox';
 data.information.pos = 'Cartesian coordinates for rat position. Row 1 is X, row 2 is Y';
 data.information.idealTraj = 'Idealized trajectory used for linearizing position ';
 
