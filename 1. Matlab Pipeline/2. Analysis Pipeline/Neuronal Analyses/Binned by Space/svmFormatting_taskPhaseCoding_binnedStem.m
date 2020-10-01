@@ -45,6 +45,7 @@ function [FRdata] = svmFormatting_taskPhaseCoding_binnedStem(Datafolders,int_nam
 
             % load animal parameters 
             % only load undefined variables
+            clear Int            
             varlist = who; %Find the variables that already exist
             varlist = strjoin(varlist','$|'); %Join into string, separating vars by '|'
             load(int_name,'-regexp', ['^(?!' varlist ')\w']);
