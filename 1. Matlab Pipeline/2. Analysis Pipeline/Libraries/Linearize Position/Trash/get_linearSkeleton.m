@@ -72,6 +72,11 @@ data.pos(2,:) = ExtractedY;
 % get linear skeleton
 data.idealTraj = idealized_trajectory_2(data.pos,data.measurements.total_distance);
 
+Coord = linearSkeleton(x, y, meas_distance, Int_indicator)
+
+% put it all in a struct for tighter packing in the base workspace (when loading variables later)
+idealTraj = struct('idealL',idealL,'idealR',idealR);
+
 % information
 data.information.measurements = 'Measurements of actual maze excluding startbox';
 data.information.pos = 'Cartesian coordinates for rat position. Row 1 is X, row 2 is Y';

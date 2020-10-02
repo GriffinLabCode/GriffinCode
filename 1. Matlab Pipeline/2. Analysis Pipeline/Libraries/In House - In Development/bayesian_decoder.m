@@ -8,8 +8,9 @@ vt_name      = 'VT1.mat';
 missing_data = 'interp';
 vt_srate     = 30; % 30 samples/sec
 clear measurements
-measurements.stem     = 112; % in cm was 137
-measurements.goalArm  = 56; % was 50
+bin_size = 1; % in cm
+measurements.stem     = round(112/bin_size); % in cm was 137
+measurements.goalArm  = round(56/bin_size); % was 50
 %measurements.goalZone = 29; % was 37
 %measurements.retArm   = 130;
 
@@ -18,9 +19,9 @@ measurements.goalArm  = 56; % was 50
 % boundaries of the int file. Or get linear skeleton, then dsearch
 % nposition and timestamps. Currently, this is working better, however, its
 % still not perfect
-Startup_linearSkeleton % add paths
-[data] = get_linearSkeleton(datafolder,int_name,vt_name,missing_data,measurements);
-rmPaths_linearSkeleton % remove paths
+Int_indicator.left  = 1;
+Int_indicator.right = 0;
+[data] = get_linearSkeleton(datafolder,int_name,vt_name,missing_data,measurements,Int_indicator);
 
 % if you make the linear skeleton too long, then you will not get enough
 % points in return. On the contrary, if you make the linear skeleton too
@@ -45,6 +46,10 @@ for triali = 1:numTrials
     end
 end
 
+% calculate converted distance in cm. This tells you how far the rat ran
+conv_distance = round(data.measurements.total_distance*bin_size);
+total_dist = conv_distance;
+
 %% get linear position
 % load int file and define the maze positions of interest
 mazePos = [1 2]; % was [1 2]
@@ -67,7 +72,7 @@ end
 
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
 clear linearPosition position
-[linearPosition,position] = get_linearPosition_2(datafolder,idealTraj,prePosData);
+[linearPosition,position] = get_linearPosition(idealTraj,prePosData);
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,Int,ExtractedX,ExtractedY,TimeStamps_VT,mazePos,stemOrientation,startStemPos);
 
 %% get spike data
@@ -80,6 +85,7 @@ clusters = dir('TT*.txt');
 % many cm (or time points depending on the function) to smooth over
 resolution_time = 1; % time of smoothing
 resolution_pos  = 4; % cm smoothing
+smooth_cm_res   = bin_size*resolution_pos;
 
 % get linearized fr for all clusters
 smoothFR = []; instFR = []; numSpks = []; sumTime = []; instSpk = []; instTime = [];
@@ -107,7 +113,7 @@ for ci = 1:length(clusters)
 
         % get neuronal activity linearized (avg activity per bin)
         [smoothFR_pos{ci}{triali},~,numSpks_pos{ci}{triali},sumTime_pos{ci}{triali},...
-            ~,instTime{triali}] = linearizedFR(spks,position.TS{triali},linearPosition{triali},vt_srate,resolution_pos);
+            ~,instTime{triali}] = linearizedFR(spks,position.TS{triali},linearPosition{triali},total_dist,resolution_pos);
                 
         % replace nans with zero
         smoothFR_time{ci}{triali}(isnan(smoothFR_time{ci}{triali})==1)=0;
@@ -140,8 +146,9 @@ end
 % bins '(1,:)'
 trial = 3; % define which trial to look at
 figure('color','w'); 
+x_axis = linspace(0,conv_distance,data.measurements.total_distance);
 subplot 311;
-    plot(rate_maps_pos{trial}(1,:),'r','LineWidth',2); axis tight; box off;
+    plot(x_axis,rate_maps_pos{trial}(1,:),'r','LineWidth',2); axis tight; box off;
     ylabel('Smoothed FR'); xlabel('Linear Position (cm sized bins)');
     title('Firing Rates grouped by position')
 subplot 312;
@@ -198,7 +205,7 @@ jetOn = 1; plot_fig = 1;
 % define tau and get the number of samples that is equivalent to it
 tau = 0.5; %s
 numSamplesInTau = tau*vt_srate; %*(1/1000); % Nms * 30 samples/sec * (1sec/1000ms) = M samples
-numNeurons = length(spks_time);
+numNeurons = size(clusters,1);
 numTrials = length(rate_maps_pos);
 % use poisspdf - if we set lambda to spikes and x to position, we can use
 posterior = cell([1 numTrials]);
@@ -218,7 +225,7 @@ for triali = 1:numTrials
             
             % get linear position grouped by tau. This requires averageing
             % and rounding for an integer
-            actual_pos{triali}(loopi) = round(mean(linearPosition.left{triali}(loopingIdx(loopi):loopingIdx(loopi+1)-1)));
+            actual_pos{triali}(loopi) = round(mean(linearPosition{triali}(loopingIdx(loopi):loopingIdx(loopi+1)-1)));
             
         end
     end    
@@ -271,7 +278,7 @@ for triali = 1:numTrials
 end
 
 %% plot - incorporate updates to this
-trial = 7;
+trial = 1;
 figure('color','w'); 
 imagesc(posterior{trial}');
 colormap hot;

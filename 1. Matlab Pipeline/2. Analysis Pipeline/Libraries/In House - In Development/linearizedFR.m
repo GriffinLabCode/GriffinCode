@@ -22,7 +22,7 @@
 % instSpk: spikes across time
 % instTime: time
 
-function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR(spks,times,linearPosition,vt_srate,resolution_pos)
+function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR(spks,times,linearPosition,total_dist,resolution_pos)
 
     % find nearest points
     spkSearch = [];
@@ -30,7 +30,7 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR(spks,time
 
     % make time vector - instantaneous time intervals
     instTime = [];
-    instTime = repmat(1/vt_srate,size(times)); % seconds sampling rate
+    instTime = gradient(times/1e6); % this is more exact %repmat(1/vt_srate,size(times)); % seconds sampling rate
           
     % shape of timestamp data - this will be instantaneous spike
     instSpk = [];
@@ -43,9 +43,11 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR(spks,time
     end
     
     % now bin the spikes according to linear position 
-    for i = 1:max(linearPosition) % loop across the number of bins
-        binSpks{i} = instSpk(linearPosition == i);
-        binTime{i} = instTime(linearPosition == i);
+    %total_dist = max(linearPosition); % total distance the rat ran
+    binSpks = cell([1 total_dist]); binTime = cell([1 total_dist]); % initialize
+    for i = 1:total_dist % loop across the number of bins
+        binSpks{i} = instSpk(find(linearPosition == i));
+        binTime{i} = instTime(find(linearPosition == i));
     end
     
     % calculate firing rate per bin
