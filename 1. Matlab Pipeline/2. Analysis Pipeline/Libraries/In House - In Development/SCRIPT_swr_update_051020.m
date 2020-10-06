@@ -36,7 +36,7 @@ params.Fs        = srate;
 [~, lfp_hpc] = interp_TS_to_CSC_length_non_linspaced(data_hpc.Timestamps, data_hpc.Samples);     
 
 % look for theta
-view_auto = 1;
+view_auto = 0;
 if view_auto == 1
     thetaview(Int,Timestamps,lfp_pfc,params,view_auto);
     title([csc_pfc])
@@ -74,7 +74,7 @@ mazePos = [2 7];
 
 % use pfc lfp to detect false positives and remove them from the dataset
 fp_data = pfc_SWRtimes; real_data = hpc_SWRtimes;
-[swr2close] = remFalsePositiveSWRs(fp_data,real_data); % first input should be false positive, second input is removal
+[swr2close] = getFalsePositiveSWRs(fp_data,real_data); % first input should be false positive, second input is removal
 
 % remove
 numTrials = size(Int,1);
@@ -263,7 +263,7 @@ end
 SCRIPT_swr_speed_sanityCheck;
 
 %% make a cool fig
-trial = 1;
+trial = 2;
 SCRIPT_swr_plot;
 
 %% swr rate

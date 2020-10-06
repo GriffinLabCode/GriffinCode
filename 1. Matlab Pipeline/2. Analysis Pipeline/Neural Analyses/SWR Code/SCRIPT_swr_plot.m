@@ -10,29 +10,31 @@ subplot 411
     % find goalzone entry
     GZentryIdx  = find(position.TS{trial} == Int(trial,2));
     timingEntry = timingVar{trial}(GZentryIdx);
-    % plot
-    l1 = line([timingEntry timingEntry],[0 150]);
+    % plot    
+    ylimits = ylim;
+    l1 = line([timingEntry timingEntry],[ylimits(1) ylimits(2)]);
     l1.Color = 'r';
     l1.LineStyle = '--';
-    l1.LineWidth = 2;
+    l1.LineWidth = 1.5;
     title('Red line indicates goal zone entry filter')
     box off; axis tight;
     
 subplot 412
-    plot(timingVar{trial},speed{trial},'k','LineWidth',2)
+    plot(timingVar{trial},speed{trial},'Color',[.5 .5 .5],'LineWidth',2)
     xlabel('Start of trial to end of goal zone')
     ylabel('Speed (cm/sec)')
     box off; axis tight;
     % plot
-    l1 = line([timingEntry timingEntry],[0 40]);
+    ylimits = ylim;
+    l1 = line([timingEntry timingEntry],[ylimits(1) ylimits(2)]);
     l1.Color = 'r';
     l1.LineStyle = '--';
-    l1.LineWidth = 2;    
+    l1.LineWidth = 1.5;    
     xlimits = xlim;
     l2 = line([xlimits(1) xlimits(2)],[speedFilt speedFilt]);
     l2.Color    = 'b';
     l2.LineStyle = '--';
-    l2.LineWidth = 2;
+    l2.LineWidth = 1.5;
     title('Blue line indicates speed filter')
 
     EntryIdx_lfp = []; ExitIdx_lfp = []; xTimes_ts = []; xTimes_sec = [];
@@ -50,8 +52,8 @@ subplot 412
     xTimes_sec = linspace(0,(xTimes_ts(end)-xTimes_ts(1))/1e6,numel(EntryIdx_lfp:ExitIdx_lfp));
     
 % plot lfp data
-subplot 413; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .8 0]); axis tight; box off;
-subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .8 0]); axis tight; box off;
+subplot 413; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;
+subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;
     
     % plot ripple events
     ripStart = []; ripEnd = []; ripStartIdx = []; ripEndIdx = []; xStart=[];
@@ -65,8 +67,8 @@ subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .
     xCheck      = xTimes_ts(ripStartIdx);
     for i = 1:length(ripStartIdx)
         l1 = line([xStart(i) xStart(i)],[-2000 2000]);
-        l1.Color = 'b';
-        l1.LineWidth = 2;
+        l1.Color = 'm';
+        l1.LineWidth = 1;
     end 
     % instead of a line, try a rectangle
     
