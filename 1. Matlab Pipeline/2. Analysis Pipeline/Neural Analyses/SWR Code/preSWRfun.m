@@ -1,3 +1,27 @@
+%% preSWRfun - designed to prepare for swr code
+%
+% this code filters (using 3rd degree butterworth filter) for the
+% phase_bandpass of interest, then using the hilbert transform, the
+% instantaneous power of the filtered data is obtained. Next, a gaussian is
+% convolved with the filtered data to smooth it. It is smoothed with a
+% gaussian that has the width of 32ms with 4ms std based on Loren Frank and
+% Shantanu Jadhav papers. Finally, the data is
+% zscored. Note that this should be applied to the entire LFP vector from a
+% given session so that the mean is very adequately estimated.
+%
+% -- INPUTS -- %
+% lfp: vector of csc data
+% phase_bandpass: filtering window (phase_bandpass = [150 250]
+% srate: sampling rate of the data
+% gauss: should be 1 or 0. 1 indicates smoothing.
+%
+% -- OUTPUTS -- %
+% zPreSWRlfp: lfp that is filtered, transformed, (smoothed), and zscored
+% preSWRlfp: lfp that is filtered, transformed, (and smoothed)
+% lfp_filtered: filtered lfp - useful for plotting and stuff
+%
+% written by John Stout
+
 function [zPreSWRlfp,preSWRlfp,lfp_filtered] = preSWRfun(lfp,phase_bandpass,srate,gauss)
 
 % get filtered and transformed data across entire session for purposes of

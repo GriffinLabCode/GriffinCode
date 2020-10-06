@@ -16,7 +16,7 @@
 %
 % last edit 1/17/18 by John Stout
 
-function [ExtractedX, ExtractedY] = interp_missing_VT_data(VT_data)
+function [ExtractedX, ExtractedY] = interp_missing_VTdata(VT_data)
 
 % fill in missing data with NaNs
 y_data = VT_data.ExtractedY;

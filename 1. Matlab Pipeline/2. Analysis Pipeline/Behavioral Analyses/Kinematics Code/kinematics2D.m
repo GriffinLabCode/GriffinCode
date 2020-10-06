@@ -1,4 +1,4 @@
-%% 2D instantanious speed
+%% 2D instantanious kinematics code
 % This function estimates instantaneous speed, velocity, and acceleration
 % by taking x and y coordinates, estimating their derivates using gradient,
 % a central difference method for derivative estimation that allows the
@@ -11,7 +11,7 @@
 % y: a double containing y-dimension data
 % t: a double containing time stamps derived using the same method for
 %       getting x and y position data (should both be found in VT1.mat)
-% sec_converted: 'Y', 'y', 'n', or 'N'. The 'Y' indicates that you
+% convert2sec : 'Y', 'y', 'n', or 'N'. The 'Y' indicates that you
 %                   converted the timestamps variables to seconds. The 'N'
 %                   option indicates that you did not. 
 %
@@ -22,12 +22,12 @@
 % acc: instantaneous acceleration
 %
 % Written by John Stout
-% last edit 9/17/2020
+% last edit 10/6/2020
 
-function [speed,vel] = instant_speed2(x,y,t,convert2sec)
+function [speed,vel,acc] = kinematics2D(x,y,t,convert2sec)
 
 % sampling frequency
-sfreq = ceil(get_vtSrate(t,convert2sec)); % rounded to a integer for ease of computation and stuff
+sfreq = ceil(getVTsrate(t,convert2sec)); % rounded to a integer for ease of computation and stuff
 
 % handle whether seconds (timestamps variable "t") is converted into
 % seconds. If not, do so.

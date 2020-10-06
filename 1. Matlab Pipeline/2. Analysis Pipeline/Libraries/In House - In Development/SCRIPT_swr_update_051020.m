@@ -69,8 +69,8 @@ mazePos = [2 7];
 [hpc_zPreSWRlfp,hpc_preSWRlfp,hpc_lfp_filtered] = preSWRfun(lfp_hpc,phase_bandpass,srate,gauss);
 
 % swr fun
-[pfc_SWRevents,pfc_SWRtimes,pfc_SWRtimeIdx,pfc_SWRdurations,pfc_trials2rem] = extract_SWR_5(pfc_zPreSWRlfp,mazePos,Int,Timestamps,srate,phase_bandpass,std_above_mean,gauss,InterRippleInterval,plotFig);
-[hpc_SWRevents,hpc_SWRtimes,hpc_SWRtimeIdx,hpc_SWRdurations,hpc_trials2rem] = extract_SWR_5(hpc_zPreSWRlfp,mazePos,Int,Timestamps,srate,phase_bandpass,std_above_mean,gauss,InterRippleInterval,plotFig);
+[pfc_SWRevents,pfc_SWRtimes,pfc_SWRtimeIdx,pfc_SWRdurations,pfc_trials2rem] = extract_SWR(pfc_zPreSWRlfp,mazePos,Int,Timestamps,srate,phase_bandpass,std_above_mean,gauss,InterRippleInterval,plotFig);
+[hpc_SWRevents,hpc_SWRtimes,hpc_SWRtimeIdx,hpc_SWRdurations,hpc_trials2rem] = extract_SWR(hpc_zPreSWRlfp,mazePos,Int,Timestamps,srate,phase_bandpass,std_above_mean,gauss,InterRippleInterval,plotFig);
 
 % use pfc lfp to detect false positives and remove them from the dataset
 fp_data = pfc_SWRtimes; real_data = hpc_SWRtimes;
@@ -178,7 +178,7 @@ end
 % extract the ripple, you may extract the center of the ripple. In other
 % words, doing it this way ensures that we get entire ripple events (from
 % event start to event end), then we can see if the rat was running too fast.
-speedFilt = 5; % 5cm/sec
+speedFilt = 4; % 5cm/sec
     
 % now, extract vt timestamps ONLY after goal zone entry. Use this to
 % extract speed

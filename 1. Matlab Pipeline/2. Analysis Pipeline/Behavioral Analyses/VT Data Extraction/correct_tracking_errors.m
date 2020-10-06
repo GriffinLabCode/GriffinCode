@@ -31,7 +31,7 @@ cd(datafolder);
 [VT_data.ExtractedX,VT_data.ExtractedY,VT_data.TimeStamps] = ignore_missing_VTdata(datafolder,vt_name);
 
 % correct for tracking errors that result in zeroes
-[ExtractedX, ExtractedY] = interp_missing_VT_data(VT_data);
+[ExtractedX, ExtractedY] = interp_missing_VTdata(VT_data);
 
 % calculate distance
 for i = 1:numel(ExtractedX)-1
