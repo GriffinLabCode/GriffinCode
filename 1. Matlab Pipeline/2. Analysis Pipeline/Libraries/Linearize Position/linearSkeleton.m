@@ -45,8 +45,8 @@ plot(xData,yData,'r')
 close;
 
 % add in the stem
-newX2 = horzcat(stemX,newX);
-newY2 = horzcat(stemY,newY);
+newX2 = horzcat(stemX,newX');
+newY2 = horzcat(stemY,newY');
 clear newX newY
 newX = newX2; newY = newY2;
 
@@ -90,6 +90,6 @@ linear_skel = horzcat(lin_temp{:});
 %{
 figure('color','w');
 plot(x,y,'Color',[.8 .8 .8]); hold on;
-plot(linearSkeleton(1,:),linearSkeleton(2,:),'r')
+plot(linear_skel(1,:),linear_skel(2,:),'r')
 %}
 close 

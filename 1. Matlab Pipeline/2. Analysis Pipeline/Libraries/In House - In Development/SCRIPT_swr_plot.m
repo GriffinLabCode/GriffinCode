@@ -2,13 +2,13 @@
 figure('color','w'); hold on;
 subplot 411
     trialDur = []; % initialize
-    trialDur  = (TS{trial}(end)-TS{trial}(1))/1e6; % trial duration
-    timingVar{trial} = linspace(0,trialDur,length(TS{trial})); % variable indicating length of trial duration
-    plot(timingVar{trial},linPos{trial},'k','LineWidth',2)
+    trialDur  = (position.TS{trial}(end)-position.TS{trial}(1))/1e6; % trial duration
+    timingVar{trial} = linspace(0,trialDur,length(position.TS{trial})); % variable indicating length of trial duration
+    plot(timingVar{trial},linearPosition{trial},'k','LineWidth',2)
     xlabel('Start of trial to end of goal zone')
     ylabel('Linear Position (cm)')
     % find goalzone entry
-    GZentryIdx  = find(TS{trial} == Int(trial,2));
+    GZentryIdx  = find(position.TS{trial} == Int(trial,2));
     timingEntry = timingVar{trial}(GZentryIdx);
     % plot
     l1 = line([timingEntry timingEntry],[0 150]);
@@ -38,9 +38,8 @@ subplot 412
     EntryIdx_lfp = []; ExitIdx_lfp = []; xTimes_ts = []; xTimes_sec = [];
    
     % stem entry to goal exit
-    EntryIdx_lfp = dsearchn(Timestamps',Int(trial,1));
-    GoalIdx_lfp  = dsearchn(Timestamps',Int(trial,2));
-    ExitIdx_lfp  = dsearchn(Timestamps',Int(trial,7));
+    EntryIdx_lfp = dsearchn(Timestamps',position.TS{trial}(1));
+    ExitIdx_lfp  = dsearchn(Timestamps',position.TS{trial}(end));
     
     % lfp timestamps (in raw format) from entry to exit
     xTimes_ts = Timestamps(EntryIdx_lfp:ExitIdx_lfp); % lfp timestamps from goal entry to exit
@@ -50,9 +49,9 @@ subplot 412
     % lfp timestamps (in seconds: 0 to N seconds) from entry to exit
     xTimes_sec = linspace(0,(xTimes_ts(end)-xTimes_ts(1))/1e6,numel(EntryIdx_lfp:ExitIdx_lfp));
     
-    % plot lfp data
-    subplot 413; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'k'); axis tight; box off;
-    subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'k'); axis tight; box off;
+% plot lfp data
+subplot 413; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'k'); axis tight; box off;
+subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'k'); axis tight; box off;
     
     % plot ripple events
     ripStart = []; ripEnd = []; ripStartIdx = []; ripEndIdx = []; xStart=[];

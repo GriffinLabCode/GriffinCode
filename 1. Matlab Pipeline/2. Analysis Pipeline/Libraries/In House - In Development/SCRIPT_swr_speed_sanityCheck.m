@@ -4,10 +4,9 @@ for trial = 1:numTrials
     
     EntryIdx_lfp = []; ExitIdx_lfp = []; xTimes_ts = []; xTimes_sec = [];
 
-    % stem entry to goal exit
-    EntryIdx_lfp = dsearchn(Timestamps',Int(trial,1));
-    GoalIdx_lfp  = dsearchn(Timestamps',Int(trial,2));
-    ExitIdx_lfp  = dsearchn(Timestamps',Int(trial,7));
+    % entry idx
+    EntryIdx_lfp = dsearchn(Timestamps',position.TS{trial}(1));
+    ExitIdx_lfp  = dsearchn(Timestamps',position.TS{trial}(end));
 
     % lfp timestamps (in raw format) from entry to exit
     xTimes_ts = [];
