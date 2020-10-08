@@ -32,13 +32,19 @@ numTrials = length(real_swr_times);
 
 % get the difference between false positive event onset and 'real' swr
 % event onset. Make sure the difference is absolute value (no direction
-% required).
+% required). Additionally, for every single fp ripple, you have to compare
+% it to every single real.
 swr_diff_idx = cell([1 numTrials]);
 for triali = 1:numTrials
     % can only do stuff below if there is data from both trials
     if isempty(real_swr_times{triali}) == 0 && isempty(fp_swr_times{triali}) == 0
-        for swri = 1:length(fp_swr_times{triali})
-            swr_diff_idx{triali}(swri) = abs((fp_swr_times{triali}{swri}(1) - real_swr_times{triali}{swri}(1))/1e6);
+        numFPripples = length(fp_swr_times{triali});
+        numRLripples = length(real_swr_times{triali});
+        for swri_fp = 1:numFPripples
+            % for each fp swr times, subtract all real_swr_times
+            for swri_real = 1:numRLripples
+                swr_diff_idx{triali}{swri_real}(swri_fp) = abs(fp_swr_times{triali}{swri_fp}(1)-real_swr_times{triali}{swri_real}(1))/1e6;
+            end
         end
     end
 end
@@ -47,10 +53,15 @@ end
 swr2close = cell([1 numTrials]);
 for triali = 1:numTrials
     if isempty(swr_diff_idx{triali}) == 0 && isempty(fp_swr_times{triali}) == 0
-        for swri = 1:length(swr_diff_idx{triali})
-            swr2close{triali} = find(swr_diff_idx{triali} <= .1);         
+        numRLripples = length(real_swr_times{triali});
+        for swri = 1:numRLripples
+            % make this boolean, and specifically, a 1 if there were any
+            % overlap in fp and real ripples. Do not remove the 'find' function below. 
+            swr2close{triali}{swri} = ~isempty(find(swr_diff_idx{triali}{swri} <= .1)); % find(isempty(find(swr_diff_idx{triali}{swri} <= .1))==0);         
         end
+        swr2close{triali} = find(double(cell2mat(swr2close{triali}))==1); % find(isempty(find(swr_diff_idx{triali}{swri} <= .1))==0);         
     end
 end
+
 
 
