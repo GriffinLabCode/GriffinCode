@@ -181,6 +181,13 @@ end
 % we can use swr_event_index to index any lfp or timestamp from the OG
 % data.
 arraysWithData = find((cellfun(@isempty,swr_event_index))==0);
+
+% first, if there are no trials with swrs, break out of the function
+if isempty(arraysWithData) == 1
+    return
+end
+
+% next, perform sanity checks to ensure the indexing works
 check3 = preSWRlfp(swr_event_index{arraysWithData(1)}{1});
 check4 = swr_events{arraysWithData(1)}{1};
 diffChecks = check4-check3; % this entire vector should be zero
