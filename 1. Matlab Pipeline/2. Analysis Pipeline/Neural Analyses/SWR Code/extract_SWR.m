@@ -180,8 +180,9 @@ end
 % that data should be the exact same size and be identical in value. If so,
 % we can use swr_event_index to index any lfp or timestamp from the OG
 % data.
-check3 = preSWRlfp(swr_event_index{1}{1});
-check4 = swr_events{1}{1};
+arraysWithData = find((cellfun(@isempty,swr_event_index))==0);
+check3 = preSWRlfp(swr_event_index{arraysWithData(1)}{1});
+check4 = swr_events{arraysWithData(1)}{1};
 diffChecks = check4-check3; % this entire vector should be zero
 if isempty(find(diffChecks ~= 0))==0 % if this is not empty, it means that our swr index does not index back to lfp and timestamps
     disp('Error - cannot use swr_event_index to index back to lfp and timestamps full vectors')
