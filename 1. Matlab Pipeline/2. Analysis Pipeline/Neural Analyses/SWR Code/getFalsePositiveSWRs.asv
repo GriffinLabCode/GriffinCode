@@ -43,12 +43,13 @@ for triali = 1:numTrials
     end
 end
 
-% find any events that co-occur within or equal to 100ms
+% find any events that co-occur within 100ms
 swr2close = cell([1 numTrials]);
 for triali = 1:numTrials
     if isempty(swr_diff_idx{triali}) == 0 && isempty(fp_swr_times{triali}) == 0
         for swri = 1:length(swr_diff_idx{triali})
-            swr2close{triali} = find(swr_diff_idx{triali} <= .1);         
+            swr2close{triali} = find(swr_diff_idx{triali} <= .1); %i think the issue lies in the code thinking im asking it to 
+                                       %ID examples of swr_diff_idx{triali} <=.1 instead of swr_diff_idx{triali}{swri}<=.1
         end
     end
 end
