@@ -12,7 +12,7 @@ for i = 1:numTrials
     x_trial = pos_x(pos_t >= Int(i,1) & pos_t <= Int(i,8));
     y_trial = pos_y(pos_t >= Int(i,1) & pos_t <= Int(i,8));
     p2 = plot(x_trial,y_trial,'Color','b');
-    p2.Annotation.LegendInformation.IconDisplayStyle = 'off';    
+    %p2.Annotation.LegendInformation.IconDisplayStyle = 'off';    
     title(['Trial ',num2str(i), ': check that stars are adequate Int locations'])
     box off
     % now plot all Int locations

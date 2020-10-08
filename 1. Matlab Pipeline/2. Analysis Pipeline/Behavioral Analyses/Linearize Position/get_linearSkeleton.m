@@ -43,10 +43,6 @@ load(int_name)
 data.measurements = measurements;
 data.measurements.total_distance = sum(cell2mat(struct2cell(measurements)));
 
-% position data
-data.pos(1,:) = x;
-data.pos(2,:) = y;
-
 % only two trajectories for now. In the future, you could make this
 % flexible.
 disp('Follow the trajectory on the screen ')

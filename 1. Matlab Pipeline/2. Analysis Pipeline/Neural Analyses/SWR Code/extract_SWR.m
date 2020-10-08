@@ -43,7 +43,7 @@
 %
 % written by John Stout
 
-function [SWRevents,SWRtimes,SWRtimeIdx,SWRdurations,trials2rem] = extract_SWR_4(preSWRlfp,mazeLoc,Int,Timestamps,srate,phase_bandpass,std_above_mean,gauss,InterRippleInterval,plotFig)
+function [SWRevents,SWRtimes,SWRtimeIdx,SWRdurations,trials2rem] = extract_SWR(preSWRlfp,mazeLoc,Int,Timestamps,srate,std_above_mean,InterRippleInterval)
 
 %% create a divisor based on sampling rate
 

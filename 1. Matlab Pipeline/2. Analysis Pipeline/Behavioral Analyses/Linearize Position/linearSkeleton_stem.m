@@ -26,6 +26,8 @@ title(['Note the Int locations. ' newline 'Define your stem skeleton to be withi
 plot(x,y,'Color',[.8 .8 .8])
 for i = 1:size(yPos,1)
     plot(xPos(i,:),yPos(i,:),'o','Color','b')
+    ylim([min(yPos(4,:))-200 max(yPos(4,:))+200]);
+    xlim([min(xPos(5,:))-200 max(xPos(2,:))+200]);
 end
 [stemX,stemY] = ginput;
 close;

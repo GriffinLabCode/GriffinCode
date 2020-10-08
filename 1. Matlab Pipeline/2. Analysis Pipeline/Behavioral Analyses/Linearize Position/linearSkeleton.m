@@ -34,6 +34,8 @@ title(['Define your trajectory skeleton to be within the Int locations '  newlin
 plot(x,y,'Color',[.8 .8 .8])
 for i = 1:size(yPos,1)
     plot(xPos(i,:),yPos(i,:),'o','Color','b')
+    ylim([min(yPos(4,:))-200 max(yPos(4,:))+200]);
+    xlim([min(xPos(5,:))-200 max(xPos(2,:))+200]); 
 end
 % get an example left trajectory
 idx_turns = find(Int(:,3)==int_bool);
