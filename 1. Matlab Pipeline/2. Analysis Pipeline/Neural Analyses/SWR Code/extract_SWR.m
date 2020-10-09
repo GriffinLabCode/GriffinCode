@@ -184,6 +184,11 @@ arraysWithData = find((cellfun(@isempty,swr_event_index))==0);
 
 % first, if there are no trials with swrs, break out of the function
 if isempty(arraysWithData) == 1
+    SWRtimes     = [];
+    SWRtimeIdx   = [];
+    SWRevents    = [];
+    SWRdurations = [];
+    trials2rem   = [];
     return
 end
 

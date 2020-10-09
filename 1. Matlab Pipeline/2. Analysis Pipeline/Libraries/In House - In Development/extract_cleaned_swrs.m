@@ -75,21 +75,23 @@ if exist('data_compare') == 1
     % get false positive events
     [~,fp_SWRtimes] = extract_SWR(fp_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.std_above_mean,swrParams.InterRippleInterval);
 
-    % use pfc lfp to detect false positives and remove them from the dataset
-    fp_data = fp_SWRtimes; real_data = hpc_SWRtimes;
-    [swr2close] = getFalsePositiveSWRs(fp_data,real_data); % first input should be false positive, second input is removal
+    % can only do what is below if you actually have false positive events
+    if isempty(fp_SWRtimes) == 0 
+        % use pfc lfp to detect false positives and remove them from the dataset
+        fp_data = fp_SWRtimes; real_data = hpc_SWRtimes;
+        [swr2close] = getFalsePositiveSWRs(fp_data,real_data); % first input should be false positive, second input is removal
 
-    % remove
-    numTrials = size(Int,1);
-    for triali = 1:numTrials
-        if isempty(hpc_SWRevents{triali}) == 0 && isempty(swr2close{triali}) == 0
-            hpc_SWRdurations{triali}(swr2close{triali}) = [];
-            hpc_SWRevents{triali}(swr2close{triali}) = [];
-            hpc_SWRtimeIdx{triali}(swr2close{triali}) = [];
-            hpc_SWRtimes{triali}(swr2close{triali}) = [];
+        % remove
+        numTrials = size(Int,1);
+        for triali = 1:numTrials
+            if isempty(hpc_SWRevents{triali}) == 0 && isempty(swr2close{triali}) == 0
+                hpc_SWRdurations{triali}(swr2close{triali}) = [];
+                hpc_SWRevents{triali}(swr2close{triali}) = [];
+                hpc_SWRtimeIdx{triali}(swr2close{triali}) = [];
+                hpc_SWRtimes{triali}(swr2close{triali}) = [];
+            end
         end
     end
-
 end
 
 % -- rename variables -- %
