@@ -247,7 +247,7 @@ end
 SCRIPT_swr_speed_sanityCheck;
 
 %% make a cool fig
-trial = 2;
+trial = 1;
 SCRIPT_swr_plot;
 
 %% swr rate

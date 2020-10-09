@@ -37,8 +37,30 @@
 % SWRtimes: timestamps of swrs
 %
 % written by John Stout and Suhaas Adiraju
+clear;
 
-function [swr_rate,swr_durations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearPos_name)
+% main Datafolder
+datafolder  = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Saline\Baseline';
+
+% int name and vt name
+int_name     = 'Int_JS_fixed';
+vt_name      = 'VT1.mat';
+missing_data = 'interp'; % interpolate missing data
+
+% csc data names
+csc_hpc     = 'HPC'; 
+csc_compare = 'PFC';
+
+% linear position name
+linearPos_name = 'linearPositionData_JS';
+
+% phase bandpass
+swrParams.phase_bandpass = [150 250];
+swrParams.std_above_mean = 3;
+swrParams.gauss = 1;
+swrParams.InterRippleInterval = 0; % this is the time required between ripples. if ripple occurs within this time range (in sec),
+swrParams.mazePos = [2 7];
+
 % -- get swrs and account for false positives if possible -- %
 cd(datafolder);
 
@@ -238,6 +260,10 @@ end
 
 %% sanity check - checks if speed overlapped with ripples (they shouldn't)
 SCRIPT_swr_speed_sanityCheck;
+
+%% plot example
+% note, its tricky to save the lfp data to import into illustrator
+SCRIPT_swr_plot;
 
 %% swr rate
 % swr count
