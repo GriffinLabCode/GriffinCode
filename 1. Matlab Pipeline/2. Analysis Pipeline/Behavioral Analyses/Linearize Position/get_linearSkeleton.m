@@ -29,7 +29,7 @@
 % data: a structure array containing linear position, linear skeleton and
 %           other outputs.
 
-function [data] = get_linearSkeleton2(datafolder,int_name,vt_name,missing_data,measurements,Int_indicator)
+function [data] = get_linearSkeleton(datafolder,int_name,vt_name,missing_data,measurements,Int_indicator)
 
 % get vt data
 [x,y,ts] = getVTdata(datafolder,missing_data,vt_name);

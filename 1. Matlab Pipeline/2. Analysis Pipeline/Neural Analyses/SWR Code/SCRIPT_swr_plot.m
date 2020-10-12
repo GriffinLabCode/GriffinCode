@@ -38,12 +38,12 @@ subplot 412
     title('Blue line indicates speed filter')
 
     EntryIdx_lfp = []; ExitIdx_lfp = []; xTimes_ts = []; xTimes_sec = [];
-   
+    
     % stem entry to goal exit
-    EntryIdx_lfp = dsearchn(Timestamps',position.TS{trial}(1));
+    EntryIdx_lfp = dsearchn(Timestamps',position.TS{trial}(1)); % was Timestamps'
     ExitIdx_lfp  = dsearchn(Timestamps',position.TS{trial}(end));
     
-    % lfp timestamps (in raw format) from entry to exit
+    % lfp timestamps (in raw format) from entry to exit - was Timestamps
     xTimes_ts = Timestamps(EntryIdx_lfp:ExitIdx_lfp); % lfp timestamps from goal entry to exit
     
     %dsearchn(xTimes_ts',Timestamps(GoalIdx_lfp))
@@ -51,7 +51,7 @@ subplot 412
     % lfp timestamps (in seconds: 0 to N seconds) from entry to exit
     xTimes_sec = linspace(0,(xTimes_ts(end)-xTimes_ts(1))/1e6,numel(EntryIdx_lfp:ExitIdx_lfp));
     
-% plot lfp data
+% plot lfp data - was lfp and lfp_filtered
 subplot 413; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;
 subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;
     
@@ -100,7 +100,8 @@ set(gcf,'Position',[300 250 350 150])
 % -- zoom into ripple -- %
 % plot lfp data
 figure('color','w')
-subplot 211; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;   
+subplot 211; 
+plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;   
 xlim([xStart(1) xStart(8)])
 ylimits = ylim;
 for i = 1:length(ripStartIdx)
@@ -111,7 +112,8 @@ for i = 1:length(ripStartIdx)
     %l2.Color = 'r';
     %l2.LineWidth = 1;   
 end 
-subplot 212; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;
+subplot 212; 
+plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0],'LineStyle','-'); axis tight; box off;
 xlim([xStart(1) xStart(8)])
 ylimits = ylim;
 for i = 1:length(ripStartIdx)

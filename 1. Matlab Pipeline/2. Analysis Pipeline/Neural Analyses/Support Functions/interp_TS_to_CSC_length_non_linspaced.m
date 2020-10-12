@@ -31,6 +31,8 @@ Can plot to see diff, temporal structure will be maintained but Timestamps_new w
         figure; subplot 121; plot(Timestamps); subplot 122; plot(Timestamps_new)
 
 
+written by Andrew Garcia
+
 %}
 function [Timestamps_new, Samples_new] = interp_TS_to_CSC_length_non_linspaced(Timestamps, Samples)
 
@@ -40,11 +42,10 @@ stepper = length(Timestamps)/(length(Samples_new)+512);
 extender = (1:stepper:length(Timestamps));
 Timestamps_new = interp1(TS_length,Timestamps,extender);
 
-if length(Timestamps_new) ~= length(Samples_new);
+if length(Timestamps_new) ~= length(Samples_new)
     error('SOURCE OF ERROR: LENGTH OF TIMESTAMPS_NEW DOES NOT MATCH LENGTH OF SAMPLES_NEW.');
     return;
 else
-    %display('Connected to NetCom Server');
 end
 
 

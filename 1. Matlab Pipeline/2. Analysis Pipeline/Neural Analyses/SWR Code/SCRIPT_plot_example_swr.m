@@ -262,8 +262,20 @@ end
 SCRIPT_swr_speed_sanityCheck;
 
 %% plot example
+trial = 1;
 % note, its tricky to save the lfp data to import into illustrator
 SCRIPT_swr_plot;
+
+%% plot position of the example
+figure('color','w'); hold on;
+plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]);
+plot(position.X{trial},position.Y{trial},'b');
+gzEntryVT = find(TimeStamps_VT == Int(trial,2));
+l1 = line([ExtractedX(gzEntryVT)-40 ExtractedX(gzEntryVT)+40],[ExtractedY(gzEntryVT) ExtractedY(gzEntryVT)])
+l1.Color = 'r';
+l1.LineStyle = '--';
+l1.LineWidth = 1;
+set(gcf,'Position',[300 250 300 250])
 
 %% swr rate
 % swr count
