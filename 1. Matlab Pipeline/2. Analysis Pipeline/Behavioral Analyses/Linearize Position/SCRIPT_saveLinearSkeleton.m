@@ -1,9 +1,9 @@
 %% Script meant for actively linearizing position data
 clear; clc;
-saveName     = 'linearSkeleton_round2'; % rename per round
+saveName     = 'linearSkeleton'; % rename per round 
 %datafolder  = '';
 datafolder   = pwd;
-int_name     = 'Int_JS_fixed';
+int_name     = 'Int_JS_fixed'; % was Int_JS_fixed
 vt_name      = 'VT1.mat';
 missing_data = 'interp';
 vt_srate     = 30; % 30 samples/sec

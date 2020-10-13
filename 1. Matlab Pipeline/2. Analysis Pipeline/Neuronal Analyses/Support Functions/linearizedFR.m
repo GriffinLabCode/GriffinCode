@@ -24,6 +24,10 @@
 
 function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR(spks,times,linearPosition,total_dist,resolution_pos)
 
+    % ensure you are only working with spks within the given time window
+    spks_old = spks; spks = [];
+    spks = spks_old(spks_old >= times(1) & spks_old <= times(end));
+
     % find nearest points
     spkSearch = [];
     spkSearch = dsearchn(times',spks);

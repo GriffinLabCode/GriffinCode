@@ -6,7 +6,7 @@
 % this function takes one days worth of data and computes IdPhi across
 % trials. There are many outputs
 
-function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent] = get_session_IdPhi(datafolder,int_name,vt_name,missing_data,middleStemPosition,stemOrientation,preSmooth)
+function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent] = get_session_IdPhi(datafolder,int_name,vt_name,missing_data,middleStemPosition,stemOrientation,preSmooth,mazeLoc)
 
 % load vt data
 %missing_data = 'interp';
@@ -21,13 +21,18 @@ load(int_name);
 % numtrials
 numTrials = size(Int,1);
 
+% mazeLoc predefined to be stem entry to t exit
+if exist('mazeLoc') == 0
+    mazeLoc = [1 6];
+end
+
 % get data from center of stem to the goal entry - Ratdle baseline 1 has
 % strange int problems. I should redefine int file using the updated file
 % creation, then do this again.
 for i = 1:numTrials
-    x_data_temp{i}  = ExtractedX(TimeStamps >= Int(i,1) & TimeStamps <= Int(i,6));
-    y_data_temp{i}  = ExtractedY(TimeStamps >= Int(i,1) & TimeStamps <= Int(i,6));
-    ts_data_temp{i} = TimeStamps(TimeStamps >= Int(i,1) & TimeStamps <= Int(i,6));
+    x_data_temp{i}  = ExtractedX(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
+    y_data_temp{i}  = ExtractedY(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
+    ts_data_temp{i} = TimeStamps(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
 end
 
 % middle position of stem
@@ -47,6 +52,16 @@ elseif contains(stemOrientation,'y') | contains(stemOrientation,'Y')
         y_data{i}  = y_data_temp{i}(idx_mid);
         ts_data{i} = ts_data_temp{i}(idx_mid);
     end    
+end
+
+% remove empty arrays (this can happen if youre missing data)
+remEmpty = find(~cellfun('isempty',x_data)==0);
+x_data(remEmpty)  =[];
+y_data(remEmpty)  = [];
+ts_data(remEmpty) = [];
+if isempty(remEmpty) == 0
+    disp(['Trials ',num2str(remEmpty),' were removed'])
+    numTrials = length(x_data);
 end
 
 % get timespent

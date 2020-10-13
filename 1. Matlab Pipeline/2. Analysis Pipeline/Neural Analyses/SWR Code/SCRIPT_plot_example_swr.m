@@ -58,7 +58,7 @@ linearPos_name = 'linearPositionData_JS';
 swrParams.phase_bandpass = [150 250];
 swrParams.std_above_mean = 3;
 swrParams.gauss = 1;
-swrParams.InterRippleInterval = 0; % this is the time required between ripples. if ripple occurs within this time range (in sec),
+swrParams.InterRippleInterval = 1; % this is the time required between ripples. if ripple occurs within this time range (in sec),
 swrParams.mazePos = [2 7];
 
 % -- get swrs and account for false positives if possible -- %
@@ -95,7 +95,7 @@ if exist('data_compare') == 1
     % get pre swr data
     fp_zPreSWRlfp = preSWRfun(lfp_compare,swrParams.phase_bandpass,srate,swrParams.gauss);
     % get false positive events
-    [~,fp_SWRtimes] = extract_SWR(fp_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.std_above_mean,swrParams.InterRippleInterval);
+    [~,fp_SWRtimes] = extract_SWR(fp_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.std_above_mean,0);
 
     % can only do what is below if you actually have false positive events
     if isempty(fp_SWRtimes) == 0 
@@ -302,9 +302,8 @@ ylabel('# SWRs')
 xlabel('SWR duration (ms)')
 title('SWR events for all trials')
 
-%{
 %% swr spike timing
-cellNum    = 6;
+cellNum    = 3;
 clusters   = dir('TT*.txt');
 spikeTimes = textread(clusters(cellNum).name);
 
@@ -318,4 +317,3 @@ timesAround = [0.5*1e6 0.5*1e6];
 plotFig = 1;
 
 [FR,n,excludeCell] = PETH_SWR(spikeTimes,SWRtimes_all,timesAround,plotFig)
-%}

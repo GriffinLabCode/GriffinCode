@@ -23,22 +23,22 @@ function [FR,n,excludeCell] = PETH_SWR(spikeTimes,SWRtimes,timesAround,plotFig)
 
 % get time around ripples
 nRipples = length(SWRtimes);
-spkMS    = spikeTimes; % maybe this should b spike per ms (1e3)
+spkMS    = spikeTimes/1e6; % maybe this should b spike per ms (1e3)
 
 for i = 1:nRipples
-    beforeRipple(i,:) = SWRtimes{i}(1)-timesAround(1);
-    afterRipple(i,:)  = SWRtimes{i}(1)+timesAround(2);
-    rippleStart(i,:)  = SWRtimes{i}(1); 
+    beforeRipple(i,:) = SWRtimes{i}(1)/1e6-timesAround(1)/1e6;
+    afterRipple(i,:)  = SWRtimes{i}(1)/1e6+timesAround(2)/1e6;
+    rippleStart(i,:)  = SWRtimes{i}(1)/1e6; 
 end
 
 bin          = 10; % ms bins, for binning purposes
-timeLength   = (timesAround(1)+timesAround(2))/1e3; % converted to ms
+timeLength   = (timesAround(1)+timesAround(2))/1e6; % converted to ms
 edges = (-(timeLength/2):bin:timeLength/2);
 
 if plotFig == 1; figure('color','w'); end
 clear n
 for i = 1:nRipples
-    s  = spkMS(spkMS > beforeRipple(i) & spkMS<afterRipple(i));
+    s = spkMS(spkMS > beforeRipple(i) & spkMS<afterRipple(i));
     ev = rippleStart(i);
     s0 = s - ev; % spike times centered around ripple start
     s0 = s0/1e3; % spikes converted to ms
@@ -60,8 +60,8 @@ if plotFig == 1
 end
 
 % Get firing rate by dividing number of spikes in each bin by bin size
-FR = sum(n,2)./bin; % summing spikes first to account for all the zeros - kinda weird, check with Jadhav
-%FR   = n./bin;
+%FR = sum(n,2)./bin; % summing spikes first to account for all the zeros - kinda weird, check with Jadhav
+FR   = n./bin;
 nAvg = mean(FR,2);
 Std  = std(FR,0,2); 
 SEM  = Std/sqrt(nRipples-1); 
@@ -111,12 +111,10 @@ for i = 1:5000
     shuffle_n(:,:,i) = n(randperm(size(n, 1)),:);
 end
 % now calculate shuffled firing rate for each shuffle
-FRshuffle = sum(shuffle_n,2)./bin;
-%FR = sum(n,2)./bin; % summing spikes first to account for all the zeros - kinda weird, check with Jadhav
+FRshuffle = shuffle_n./bin;
 % get vector average for each shuffle, then average across shuffles.
 %shuffAvg = mean(FRshuffle,2);
-FRshuffle = sum(shuffle_n,3); %mean(shuffle_n,3); %sum(shuffle_n,2)./bin;
-shuffAvg = % mean(mean(FRshuffle,3),2);
+shuffAvg = mean(mean(FRshuffle,3),2);
 shuffAvg_smooth = smoothdata(shuffAvg,'gaussian',VidSrate);
 
 if plotFig == 1
