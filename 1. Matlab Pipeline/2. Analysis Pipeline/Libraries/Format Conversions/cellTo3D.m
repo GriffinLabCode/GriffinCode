@@ -11,6 +11,13 @@
 % written by John Stout, but the newArray code was found here -> https://www.mathworks.com/matlabcentral/answers/35766-cell-array-into-3d-matrix
 
 function [newArray] = cellTo3D(cell_array)
+
+    % if cell array is empty
+    if isempty(cell_array)
+        newArray = [];
+        disp('Input argument was an empty array, output is therefore empty')
+        return
+    end
     
     % check sizes
     check_size = cellfun(@size,cell_array,'UniformOutput',false);
@@ -18,7 +25,6 @@ function [newArray] = cellTo3D(cell_array)
     
     if numel(unique(check_size(:,1))) > 1 | numel(unique(check_size(:,2))) > 1
         error(['The sizes of your cell array are not equal in dimensions'])
-        
     end
     
     % convert to a 3D array
