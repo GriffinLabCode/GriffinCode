@@ -61,6 +61,9 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR(spks,time
     % firing rate (spks/sec) - this is instantaneous firing rate
     FR = numSpks./sumTime; 
     
+    % nans should be 0
+    FR(find(isnan(FR)==1)) = 0;
+      
     % smooth firing rate
     pos_smooth = resolution_pos;
     smoothFR   = smoothdata(FR,'gaussian',pos_smooth);    

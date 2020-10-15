@@ -1,0 +1,9 @@
+%% convert cell array to 3D array
+% this only works if your array is all of equal sizes
+function [newArray] = cellTo3D(cell_array)
+    
+    % check sizes
+    [check_size(1), check_size(2)]c
+    newArray = cat(3, cell_array{:});
+
+end   

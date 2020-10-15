@@ -74,6 +74,9 @@ function [smoothFR,instFR,instSpk,instTime,instSpk_time,meanFR] = inst_neuronal_
     % collapse across specific bins
     instFR = instSpk./instTime;
 
+    % remove nans
+    instFR(find(isnan(instFR)==1)) = 0;    
+
     % if you want, you can derive linearized FR using the instantaneous
     % firing rate
     %{
