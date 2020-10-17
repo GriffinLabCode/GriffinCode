@@ -9,6 +9,8 @@
 %               your input elements from variable "p".
 % survive_alpha: boolean logical variable that denotes which p-values
 %                   survived bh correction
+%
+% written by John Stout using statisticshowto website
 
 function [new_alpha,survive_alpha] = BenjaminiHochberg(p,Q)
 % https://www.statisticshowto.com/benjamini-hochberg-procedure/
