@@ -1,6 +1,6 @@
 %% Script meant for actively linearizing position data
 clear; clc;
-saveName     = 'linearSkeleton'; % rename per round 
+saveName     = 'linearSkeleton2'; % rename per round 
 %datafolder  = '';
 datafolder   = pwd;
 int_name     = 'Int_JS_fixed'; % was Int_JS_fixed
@@ -84,6 +84,6 @@ answer = input(prompt,'s');
 % save data
 if contains(answer,'Y') | contains(answer,'y')
     cd(datafolder);
-    save(saveName,'linearPosition', 'position', 'idealTraj', 'data', 'bin_size');
+    save(saveName,'idealTraj', 'data', 'bin_size');
     disp('linear position data saved to datafolder')
 end

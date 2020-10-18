@@ -11,7 +11,7 @@
 %                      all clusters in the session                     
 %
 % written by John Stout
-% edit 12/16/18, edit 10/15/2020
+% edit 12/16/18, edit 10/15/2020, INCOMPLETE - Probability issue
 
 function [entropy] = shannons_entropy(binned_data)
 
@@ -22,8 +22,20 @@ function [entropy] = shannons_entropy(binned_data)
         error('Data must be a vector')
     end
     
-    % convert your data to probability values
-    prob = binned_data./sum(binned_data);   
+    % generally, whats the probability of observing a spike?
+    prob = binned_data./sum(binned_data); 
+    
+    % this cant be true - shannon entropy values too high
+    % probability of observing 1 spk, given the distribution of spks
+    %prob = poisspdf(1,binned_data); % probability of observing a spk per position. If 1 is most common amount to observe, then it should be found here
+    
+    % assuming a poisson distribution, calculate the average spike across
+    % the distribution. Then ask what the probability of observing one
+    % spike is
+    %prob2 = poisspdf(binned_data2,mean(binned_data2))
+
+    %pd = makedist('Poisson');
+    %y  = pdf(pd,binned_data);
 
     % take the log2 for bits. add eps to prevent taking log2 of zero
     log_var = log2(prob+eps);
