@@ -72,11 +72,13 @@ subplot 211
     plot(idealTraj{left_select}(1,:),idealTraj{left_select}(2,:),'r','LineWidth',2)
     title('Random left trajectory (may be reversed on pos. data)')    
     box off
+    ylim([-10 500])
 subplot 212
     plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]); hold on;
     plot(idealTraj{right_select}(1,:),idealTraj{right_select}(2,:),'b','LineWidth',2)
     title('Random right trajectory (may be reversed on pos. data)')
     box off
+    ylim([-20 550])    
     
 prompt = 'Are you satisfied with the linear skeletons? [Y/N] ';
 answer = input(prompt,'s');
