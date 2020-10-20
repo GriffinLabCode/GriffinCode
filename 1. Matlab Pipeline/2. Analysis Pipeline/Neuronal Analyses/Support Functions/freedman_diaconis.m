@@ -16,9 +16,9 @@
 % Written by John Stout
 % edit on 12/11/18, 10/15/2020
 
-function [nbins] = freedman_diaconis(position)
+function [nbins] = freedman_diaconis(data)
             
     % Freedman-Diaconis rule to statistically estimate number of bins
-    nbins = ceil((max(position)-min(position))/(2*(iqr(position))*(length(position)^(-1/3))));
-
+    nbins = ceil((max(data)-min(data))/(2*(iqr(data))*(length(data)^(-1/3))));
+        
 end

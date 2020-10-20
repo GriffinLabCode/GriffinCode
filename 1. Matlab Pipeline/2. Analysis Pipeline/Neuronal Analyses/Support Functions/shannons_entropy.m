@@ -13,7 +13,7 @@
 % written by John Stout
 % edit 12/16/18, edit 10/15/2020, INCOMPLETE - Probability issue
 
-function [entropy] = shannons_entropy(binned_data)
+function [entropy] = shannons_entropy(binned_data,nbins)
 
     % make sure data is a vector
     checkSize = size(binned_data);
@@ -23,19 +23,14 @@ function [entropy] = shannons_entropy(binned_data)
     end
     
     % generally, whats the probability of observing a spike?
-    prob = binned_data./sum(binned_data); 
+    if exist('nbins')
+        [counts] = hist(binned_data,nbins);
+    else
+        [counts] = hist(binned_data);
+    end
     
-    % this cant be true - shannon entropy values too high
-    % probability of observing 1 spk, given the distribution of spks
-    %prob = poisspdf(1,binned_data); % probability of observing a spk per position. If 1 is most common amount to observe, then it should be found here
-    
-    % assuming a poisson distribution, calculate the average spike across
-    % the distribution. Then ask what the probability of observing one
-    % spike is
-    %prob2 = poisspdf(binned_data2,mean(binned_data2))
-
-    %pd = makedist('Poisson');
-    %y  = pdf(pd,binned_data);
+    % compute probability per bin
+    prob = counts./sum(counts); 
 
     % take the log2 for bits. add eps to prevent taking log2 of zero
     log_var = log2(prob+eps);
@@ -44,7 +39,7 @@ function [entropy] = shannons_entropy(binned_data)
     log_prob = prob.*log_var;
 
     % sum the log-probability values
-    entropy = (sum(log_prob))*-1;
+    entropy = -sum(log_prob);
 
     % get rid of cells that have NaNs (didn't fire)
     entropy(isnan(entropy))=0;
