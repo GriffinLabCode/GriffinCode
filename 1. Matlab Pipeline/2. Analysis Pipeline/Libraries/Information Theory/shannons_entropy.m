@@ -1,17 +1,12 @@
 %% Shannons entropy
-% prob for bin 1 = (bin count/sum of all bin count)
-% log_val for bin 1 = prob*logbase2
-% probability-log-probability for bin 1 = prob*log_val
-% sum the probability-log-probability values and *-1
+% Information is the amount of 'surprise' that a variable contains. The
+% measurement is in bits.
 %
 % Variable formatting: 'binned_data' is a vector containing the data of
 %                       interest
-%
-%                      'clusters' is a Nx1 struct containing the names of
-%                      all clusters in the session                     
-%
+%                   
 % written by John Stout
-% edit 12/16/18, edit 10/15/2020, INCOMPLETE - Probability issue
+% edit 12/16/18, edit 10/15/2020, final edit 10/21/2020
 
 function [entropy] = shannons_entropy(binned_data,nbins)
 
@@ -22,9 +17,9 @@ function [entropy] = shannons_entropy(binned_data,nbins)
         error('Data must be a vector')
     end
     
-    % generally, whats the probability of observing a spike?
+    % generally, whats the probability of observing your variable?
     if exist('nbins')
-        [counts] = hist(binned_data,nbins);
+        [counts] = hist(binned_data,nbins); % nbins can be defined by using estimate_nBins
     else
         [counts] = hist(binned_data);
     end
