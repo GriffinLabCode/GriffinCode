@@ -201,8 +201,7 @@ if swrMod_test == 1 | contains(swrMod_test,[{'y'},{'Y'}])
     
     % I think Jadhav uses a difference score to determine if the unit
     % increases or decreases after the ripple
-    stats.diff_preXpost = mean(preFR)-mean(postFR);
-    stats.preXpostSWR_mod_ranksum = ranksum(preFR,postFR);
+    diffFR = mean(preFR)-mean(postFR);
 
     if plotFig == 1 | contains(plotFig,[{'y'},{'Y'}]);
         figure('color','w')

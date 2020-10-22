@@ -67,7 +67,7 @@ srate      = round(numValSam/totalTime); % this is the sampling rate
 [hpc_zPreSWRlfp,hpc_preSWRlfp,hpc_lfp_filtered] = preSWRfun(lfp_hpc,swrParams.phase_bandpass,srate,swrParams.gauss);
 
 % swr fun
-[hpc_SWRevents,hpc_SWRtimes,hpc_SWRtimeIdx,hpc_SWRdurations] = extract_SWR(hpc_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.std_above_mean,swrParams.InterRippleInterval);
+[hpc_SWRevents,hpc_SWRtimes,hpc_SWRtimeIdx,hpc_SWRdurations] = extract_SWR(hpc_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.swr_stdevs,swrParams.InterRippleInterval);
 
 % this is going to be used to detect false positives when the data is
 % available

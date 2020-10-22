@@ -46,7 +46,7 @@
 function [swr_rate,swr_durations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearPos_name)
 
 % get default swr parameters if your input is empty
-if isempty(swrParams)
+if isempty('swrParams')
     swrParams = get_swrParams;
 end
 
@@ -268,6 +268,7 @@ swr_rate = SWRcount./timeInZone; % in Hz (swrs/sec)
 %histogram(SWRrate)
 
 %% swr durations
+%{
 swr_durations = horzcat(SWRdurations{:});
 figure('color','w')
 h1 = histogram(swr_durations);
@@ -276,7 +277,7 @@ box off
 ylabel('# SWRs')
 xlabel('SWR duration (ms)')
 title('SWR events for all trials')
-
+%}
 %{
 %% swr spike timing
 cellNum    = 6;

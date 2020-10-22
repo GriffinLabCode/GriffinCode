@@ -4,7 +4,7 @@ function [swrParams] = get_swrParams()
     % phase bandpass filter
     swrParams.phase_bandpass = [150 250];
     % how many stds above mean for swr detection?
-    swrParams.std_above_mean = 3;
+    swrParams.swr_stdevs = [4 1];
     % smooth hilbert with gaussian?
     swrParams.gauss = 1;
     % This excludes ripples that occur within its defined time window

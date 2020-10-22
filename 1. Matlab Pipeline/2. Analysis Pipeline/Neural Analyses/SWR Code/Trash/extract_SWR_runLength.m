@@ -22,10 +22,9 @@
 % gauss:          1 if smooth hilbert transformed data with gaussian, 0
 %                  otherwise
 % plotFig:        1 if you want to plot out individual steps, 0 otherwise
-% swr_stdevs:     onset and offset standard deviation for ripple
-%                   extraction. Jadhav uses 3 onset/offset, buzsaki uses [4
-%                   1] onset/offset (Fernandez Ruiz Science Long-duration
-%                   hippocampal sharp wave ripples...)
+% std_above_mean: how many standard deviations above the mean? This is how
+%                   you extract ripples. Anywhere from 3 to 6 is used in
+%                   literature
 % InterRippleInterval: time (in sec) where if a ripple occurs within this
 %                       time window, following another ripple, it is
 %                       removed. See Jadhav et al., 2016. This is relevant
@@ -44,7 +43,7 @@
 %
 % written by John Stout
 
-function [SWRevents,SWRtimes,SWRtimeIdx,SWRdurations,trials2rem] = extract_SWR(preSWRlfp,mazeLoc,Int,Timestamps,srate,swr_stdevs,InterRippleInterval)
+function [SWRevents,SWRtimes,SWRtimeIdx,SWRdurations,trials2rem] = extract_SWR(preSWRlfp,mazeLoc,Int,Timestamps,srate,std_above_mean,InterRippleInterval)
 
 %% create a divisor based on sampling rate
 
@@ -76,45 +75,57 @@ for triali = 1:numTrials
     % index of lfp timestamps for extracting ripple
     LFPidx{triali}       = find(Timestamps > Int(triali,mazeLoc(1)) & Timestamps < Int(triali,mazeLoc(2)));
 
-    % Buzsakis method from the fernandez ruiz science paper on long
-    % duration ripples found ripples > 4std and ended the ripple time when
-    % it dipped below 1std. Currently, We track when the ripple starts at
-    % std_above_mean and its over after it dips below. But this may be why
-    % the time durations are not that long.
-    idxAbove = [];
-    idxAbove = find(zSmooth_data{triali} >= swr_stdevs(1));
-    
-    % skip to next loop if no ripples
-    if isempty(idxAbove)
+    % use RunLength function. Possible_swrs indicates the start and end of 
+    % periods where the std is greater than the user define threshold.
+    [~, ~, possible_swrs{triali}] = RunLength(zSmooth_data{triali} >= std_above_mean);
+
+    % if the possible_swrs{triali} cell is empty, and its the first loop,
+    % you may get an error. so we add an if statement
+    if isempty(possible_swrs{triali})==1 % if there WERE ripples, do the following...
+        trials2rem(triali) = 1;
         continue
-    end 
-    
-    % define std_above_mean start time
-    idxDiff = []; idxChangeDiff = []; idxStart = [];
-    idxDiff       = diff(idxAbove);
-    idxChangeDiff = [1 find(idxDiff ~= 1)+1];
-    idxStart      = idxAbove(idxChangeDiff);
-    
-    % get end of ripple event (dips below 1)
-    idxEnd = [];
-    for i = 1:length(idxStart)
-        restOfData  = []; idxBelowAll = []; idxBelow = [];
-        restOfData  = zSmooth_data{triali}(idxStart(i):length(zSmooth_data{triali}));
-        idxBelowAll = find(restOfData < swr_stdevs(2));
-        idxBelow    = idxBelowAll(1);
-        idxEnd(i)   = idxStart(i)+(idxBelow-2);
     end
-    
-    % possible ripples
-    idxRippleTimes{triali}(:,1) = idxStart;
-    idxRippleTimes{triali}(:,2) = idxEnd;
-    
+        
+    % sometimes, the first value may not reach threshold. Therefore account
+    % for those instances.
+    if zSmooth_data{triali}(possible_swrs{triali}(1)) < std_above_mean
+        possible_swrs{triali}(1) = []; % for some reason this is "1" despite it not being important
+    end
+
+    % if this array is now empty, skip
+    if isempty(possible_swrs{triali})==1
+        trials2rem(triali) = 1;
+        continue
+    end
+
+    % sometimes, the final value will reach threshold with no end point in
+    % sight, we need to erase these cases. Note that
+    % possible_swrs{triali}(end) SHOULD NOT be > std_above_mean. In fact
+    % possible_swrs{triali}(end), and possible_swrs{triali}(2:2:length(possible_swrs{triali}))
+    % should not reach threshold. The index accounts for the onset of the
+    % ripple to one element beyond the end of the ripple. Therefore, 
+    % possible_swrs{triali}(end-1) should ALWAYS reach threshold. The same
+    % is true for
+    % possible_swrs{triali}(2:2:length(possible_swrs{triali}))-1. The '-1'
+    % allows us to get the potential SWR offset.
+    if zSmooth_data{triali}(possible_swrs{triali}(end)) > std_above_mean && zSmooth_data{triali}(possible_swrs{triali}(end-1)) < std_above_mean
+        possible_swrs{triali}(end) = []; % for some reason this is "1" despite it not being important
+    end    
+
+    % get start of potential ripples
+    startPos = [];
+    startPos = possible_swrs{triali}(1:2:length(possible_swrs{triali}));
+
+    % get end of potential ripple. % must subtract 1, the possible_swrs var 
+    % indicates the start of swr and 1 after the end of swr
+    endPos = [];
+    endPos = possible_swrs{triali}(2:2:length(possible_swrs{triali}))-1; 
+
     % sanity check - make sure that startPos and endPos are above set
     % std_above_mean
-    %swr_stdevs = [4 1];
     check1 = []; check2 = [];
-    check1 = find(zSmooth_data{triali}(idxRippleTimes{triali}(:,1)) < swr_stdevs(1));
-    check2 = find(zSmooth_data{triali}(idxRippleTimes{triali}(:,1)) < swr_stdevs(2));
+    check1 = find(zSmooth_data{triali}(startPos) < std_above_mean);
+    check2 = find(zSmooth_data{triali}(endPos) < std_above_mean);
 
     % if either are not empty, something is wrong
     if isempty(check1)==0 || isempty(check2)==0
@@ -122,9 +133,12 @@ for triali = 1:numTrials
         return
     end
 
+    % concatenate data
+    idxRippleTimes{triali} = horzcat(startPos',endPos');
+
     % find any instances where the potential ripple does not meet the
     % duration requirements and exlude the potential ripple
-    ripDuration{triali} = idxRippleTimes{triali}(:,2) -idxRippleTimes{triali}(:,1);
+    ripDuration{triali} = idxRippleTimes{triali}(:,2) - idxRippleTimes{triali}(:,1);
 
     % exlude events that lasted less than 15ms
     notLongEnough = [];
@@ -184,6 +198,16 @@ check4 = swr_events{arraysWithData(1)}{1};
 diffChecks = check4-check3; % this entire vector should be zero
 if isempty(find(diffChecks ~= 0))==0 % if this is not empty, it means that our swr index does not index back to lfp and timestamps
     disp('Error - cannot use swr_event_index to index back to lfp and timestamps full vectors')
+end
+
+% sanity check 3 - make sure there are no instances where std is less than
+% what the user set it as
+for triali = 1:numTrials
+    for swri = 1:length(swr_events{triali})
+        if isempty(find(swr_events{triali}{swri} < std_above_mean))==0
+            disp('*BUG ALERT* - swr event dipped below defined threshold')
+        end
+    end
 end
 
 % don't include swr events if two events are less than 1 sec apart (Jadhav
