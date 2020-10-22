@@ -326,12 +326,14 @@ while next == 0
     eventDiff = []; idxGet = [];
     % difference between even times
     eventDiff = diff(eventTimes./1e6);
-    % find instances less than 1 sec
-    idxGet    = find(eventDiff < 1);
+    % find instances less than half sec
+    idxGet    = find(eventDiff < 0.5);
     % only look at the first idxGet value (this will change for each while
     % loop)
-    if eventDiff(idxGet(1)) < 1
-        eventTimes(idxGet(1)) = [];
+    if isempty(idxGet)
+        next = 1;
+   elseif eventDiff(idxGet(1)) < 0.5
+        eventTimes(idxGet(1)) = [];        
     end
     
     if isempty(find(diff(eventTimes./1e6) < 1)) | isempty(idxGet)
@@ -341,10 +343,12 @@ end
 eventDiff = (diff(eventTimes))/1e6;
 
 % extract neuron
-cellNum  = 10;
+cellNum  = 6;
 spikeTimes = spkTimes{cellNum};
 
-% PETH function
+% PETH function - currently, the PETH significance is not a good metric.
+% Use jadhavs method or a different approach. Currently i'm comparing
+% pre-post mean rates in PETH, but this is no good.
 timesAround = [0.5*1e6 0.5*1e6];
 timeRes = 20;
 timeScale = 'ms';
@@ -352,4 +356,7 @@ swrMod_test = 'y';
 plotFig = 'y';
 [FRsmooth,nAvg,FR,n,stats,shuffAvg_smooth,shuffAvg,shuffle_n] = ...
     PETH(spikeTimes,eventTimes,timesAround,timeRes,timeScale,plotFig,swrMod_test);
+nSpks = length(find(n == 1));
+disp([num2str(nSpks),' spikes total'])
 stats.swrMod_zTest_p
+stats.preXpostSWR_mod_ranksum
