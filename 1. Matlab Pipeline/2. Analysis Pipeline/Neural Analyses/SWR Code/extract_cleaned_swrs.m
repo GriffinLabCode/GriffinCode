@@ -44,13 +44,7 @@
 % written by John Stout and Suhaas Adiraju
 
 function [swr_rate,swr_durations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearPos_name)
-
-% get default swr parameters if your input is empty
-if isempty(swrParams)
-    swrParams = get_swrParams;
-end
-
-% change directory to datafolder
+% -- get swrs and account for false positives if possible -- %
 cd(datafolder);
 
 % load int
