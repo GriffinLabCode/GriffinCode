@@ -263,6 +263,7 @@ swr_rate = SWRcount./timeInZone; % in Hz (swrs/sec)
 
 %% swr durations
 swr_durations = horzcat(SWRdurations{:});
+%{
 figure('color','w')
 h1 = histogram(swr_durations);
 h1.FaceColor = 'b';
@@ -270,7 +271,7 @@ box off
 ylabel('# SWRs')
 xlabel('SWR duration (ms)')
 title('SWR events for all trials')
-
+%}
 %{
 %% swr spike timing
 cellNum    = 6;
