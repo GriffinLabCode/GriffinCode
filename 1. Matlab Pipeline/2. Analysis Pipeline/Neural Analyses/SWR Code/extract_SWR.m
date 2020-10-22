@@ -226,46 +226,55 @@ if InterRippleInterval > 0
             next = 0; 
 
             % interface with user in case the code gets stuck
-            disp(['Attempting to remove events that occur within ',num2str(InterRippleInterval),' sec.']);
+            disp(['Attempting to remove events that occur within ',num2str(InterRippleInterval),' sec on trial ',num2str(triali)]);
             
             % only run if there are actual events
             while next == 0
                 % loop across events (minus 1 bc we're going to take event
                 % i+1)
-                for i = 1:swrCount-1
+                if swrCount > 1
+                    for i = 1:swrCount-1
 
-                    % find cases where swrs are < 1 sec apart
-                    timeOffset = (swr_timestamp{triali}{i+1}(1)-swr_timestamp{triali}{i}(1))/1e6;
+                        % find cases where swrs are < 1 sec apart
+                        timeOffset = (swr_timestamp{triali}{i+1}(1)-swr_timestamp{triali}{i}(1))/1e6;
 
-                    % remove those instances when you find them
-                    if timeOffset < InterRippleInterval && timeOffset > 0
+                        % Only remove data if time offset < defined window, the
+                        % time offset is positive, and if the loop does not
+                        % equal the total swr count (this gets things stuck).
+                        if timeOffset < InterRippleInterval && timeOffset > 0 && i ~= swrCount
 
-                        disp('Removing swr event...')
+                            disp('Removing swr event...')
 
-                        % remove data
-                        swr_events{triali}(i+1)      = []; % remove data
-                        swr_timestamp{triali}(i+1)   = [];
-                        swr_event_index{triali}(i+1) = []; 
+                            % remove data
+                            swr_events{triali}(i+1)      = []; % remove data
+                            swr_timestamp{triali}(i+1)   = [];
+                            swr_event_index{triali}(i+1) = []; 
 
-                        % redefine swrCount
-                        swrCount = length(swr_events{triali});
+                            % redefine swrCount
+                            swrCount = length(swr_events{triali});
 
-                        % must break out of for loop, then redefine loop
-                        break
+                            % break out of for loop after redefining swrCount,
+                            % then the for loop redefines swrCount with the
+                            % updated data. This is complicated bc the loop is
+                            % changing inside the loop.
+                            break
 
+                        elseif timeOffset < 0
+                            disp('Error with time indexing')
+                            break
+
+                        end
+
+                        % break out of while loop
+                        if i == swrCount-1
+                            disp('Removal completed')
+                            next = 1;
+                        end
                     end
-
-                    % time offset should never be a negative integer. If it is, something
-                    % is wrong.
-                    if timeOffset < 0
-                        disp('Error with time indexing')
-                        break
-                    end 
-
-                    if i == swrCount-1
-                        disp(['Successfully removed swr events within ',num2str(InterRippleInterval),' sec.']')
-                        next = 1;
-                    end
+                % if there is only 1 event, exit the while loop, go to the
+                % next trial.
+                elseif swrCount == 1
+                    next = 1;
                 end
             end
         end
