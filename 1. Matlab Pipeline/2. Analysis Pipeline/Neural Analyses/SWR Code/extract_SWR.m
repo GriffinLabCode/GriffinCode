@@ -226,7 +226,7 @@ if InterRippleInterval > 0
             next = 0; 
 
             % interface with user in case the code gets stuck
-            disp('Attempting to remove events that occur within the defined time window');
+            disp(['Attempting to remove events that occur within ',num2str(InterRippleInterval),' sec.']);
             
             % only run if there are actual events
             while next == 0
@@ -263,7 +263,7 @@ if InterRippleInterval > 0
                     end 
 
                     if i == swrCount-1
-                        disp('Successfully removed swr events within the defined time window')
+                        disp(['Successfully removed swr events within ',num2str(InterRippleInterval),' sec.']')
                         next = 1;
                     end
                 end
