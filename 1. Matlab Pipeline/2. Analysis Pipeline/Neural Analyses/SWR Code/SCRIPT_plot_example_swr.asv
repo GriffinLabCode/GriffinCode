@@ -323,25 +323,19 @@ end
 eventTimes_og = eventTimes;
 next = 0;
 while next == 0
-    eventDiff = []; idxGet = [];
-    % difference between even times
     eventDiff = diff(eventTimes./1e6);
-    % find instances less than 1 sec
-    idxGet    = find(eventDiff < 1);
-    % only look at the first idxGet value (this will change for each while
-    % loop)
-    if eventDiff(idxGet(1)) < 1
-        eventTimes(idxGet(1)) = [];
+    if eventDiff(1) < 1
+        eventTimes(1) = [];
     end
     
-    if isempty(find(diff(eventTimes./1e6) < 1)) | isempty(idxGet)
+    if isempty(find(diff(eventTimes./1e6) < 1))
         next = 1;
     end
 end
 eventDiff = (diff(eventTimes))/1e6;
 
 % extract neuron
-cellNum  = 10;
+cellNum  = 6;
 spikeTimes = spkTimes{cellNum};
 
 % PETH function
