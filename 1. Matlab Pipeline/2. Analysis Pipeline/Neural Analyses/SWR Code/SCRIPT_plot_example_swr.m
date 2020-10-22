@@ -56,7 +56,7 @@ linearPos_name = 'linearPositionData_JS';
 
 % phase bandpass
 swrParams.phase_bandpass = [150 250];
-swrParams.std_above_mean = 3;
+swrParams.swr_stdevs = [4 1];
 swrParams.gauss = 1;
 swrParams.InterRippleInterval = 1; % this is the time required between ripples. if ripple occurs within this time range (in sec),
 swrParams.mazePos = [2 7];
@@ -85,36 +85,40 @@ srate      = round(numValSam/totalTime); % this is the sampling rate
 [hpc_zPreSWRlfp,hpc_preSWRlfp,hpc_lfp_filtered] = preSWRfun(lfp_hpc,swrParams.phase_bandpass,srate,swrParams.gauss);
 
 % swr fun
-[hpc_SWRevents,hpc_SWRtimes,hpc_SWRtimeIdx,hpc_SWRdurations] = extract_SWR(hpc_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.std_above_mean,swrParams.InterRippleInterval);
+[hpc_SWRevents,hpc_SWRtimes,hpc_SWRtimeIdx,hpc_SWRdurations] = extract_SWR(hpc_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.swr_stdevs,swrParams.InterRippleInterval);
 
 % this is going to be used to detect false positives when the data is
 % available
-if exist('data_compare') == 1
-    % get lfp
-    [~, lfp_compare] = interp_TS_to_CSC_length_non_linspaced(data_compare.Timestamps, data_compare.Samples);     
-    % get pre swr data
-    fp_zPreSWRlfp = preSWRfun(lfp_compare,swrParams.phase_bandpass,srate,swrParams.gauss);
-    % get false positive events
-    [~,fp_SWRtimes] = extract_SWR(fp_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.std_above_mean,0);
+if swrParams.falsePositive == 1 | contains(swrParams.falsePositive,'y') | contains(swrParams.falsePositive,'Y')
+    try data_compare = load(csc_compare); end % this may not load if non existent
+    if exist('data_compare') == 1
+        % get lfp
+        [~, lfp_compare] = interp_TS_to_CSC_length_non_linspaced(data_compare.Timestamps, data_compare.Samples);     
+        % get pre swr data
+        fp_zPreSWRlfp = preSWRfun(lfp_compare,swrParams.phase_bandpass,srate,swrParams.gauss);
+        % get false positive events
+        [~,fp_SWRtimes] = extract_SWR(fp_zPreSWRlfp,swrParams.mazePos,Int,Timestamps,srate,swrParams.std_above_mean,swrParams.InterRippleInterval);
 
-    % can only do what is below if you actually have false positive events
-    if isempty(fp_SWRtimes) == 0 
-        % use pfc lfp to detect false positives and remove them from the dataset
-        fp_data = fp_SWRtimes; real_data = hpc_SWRtimes;
-        [swr2close] = getFalsePositiveSWRs(fp_data,real_data); % first input should be false positive, second input is removal
+        % can only do what is below if you actually have false positive events
+        if isempty(fp_SWRtimes) == 0 
+            % use pfc lfp to detect false positives and remove them from the dataset
+            fp_data = fp_SWRtimes; real_data = hpc_SWRtimes;
+            [swr2close] = getFalsePositiveSWRs(fp_data,real_data); % first input should be false positive, second input is removal
 
-        % remove
-        numTrials = size(Int,1);
-        for triali = 1:numTrials
-            if isempty(hpc_SWRevents{triali}) == 0 && isempty(swr2close{triali}) == 0
-                hpc_SWRdurations{triali}(swr2close{triali}) = [];
-                hpc_SWRevents{triali}(swr2close{triali}) = [];
-                hpc_SWRtimeIdx{triali}(swr2close{triali}) = [];
-                hpc_SWRtimes{triali}(swr2close{triali}) = [];
+            % remove
+            numTrials = size(Int,1);
+            for triali = 1:numTrials
+                if isempty(hpc_SWRevents{triali}) == 0 && isempty(swr2close{triali}) == 0
+                    hpc_SWRdurations{triali}(swr2close{triali}) = [];
+                    hpc_SWRevents{triali}(swr2close{triali}) = [];
+                    hpc_SWRtimeIdx{triali}(swr2close{triali}) = [];
+                    hpc_SWRtimes{triali}(swr2close{triali}) = [];
+                end
             end
         end
     end
 end
+
 
 % -- rename variables -- %
 SWRtimeIdx   = hpc_SWRtimeIdx;
