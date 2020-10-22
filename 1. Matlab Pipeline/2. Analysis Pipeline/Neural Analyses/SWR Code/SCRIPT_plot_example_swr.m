@@ -52,14 +52,15 @@ csc_hpc     = 'HPC';
 csc_compare = 'PFC';
 
 % linear position name
-linearPos_name = 'linearPositionData_JS';
+linearPos_name = 'linearSkeleton_Round2';
 
 % phase bandpass
 swrParams.phase_bandpass = [150 250];
 swrParams.swr_stdevs = [4 1];
 swrParams.gauss = 1;
-swrParams.InterRippleInterval = 1; % this is the time required between ripples. if ripple occurs within this time range (in sec),
+swrParams.InterRippleInterval = 0; % this is the time required between ripples. if ripple occurs within this time range (in sec),
 swrParams.mazePos = [2 7];
+swrParams.falsePositive = 'n';
 
 % -- get swrs and account for false positives if possible -- %
 cd(datafolder);
@@ -69,7 +70,6 @@ load(int_name);
 
 % load csc
 data_hpc = load(csc_hpc);
-try data_compare = load(csc_compare); end % this may not load if non existent
 
 % calculate and define the sampling rate
 totalTime  = (data_hpc.Timestamps(2)-data_hpc.Timestamps(1))/1e6; % this is the time between valid samples
