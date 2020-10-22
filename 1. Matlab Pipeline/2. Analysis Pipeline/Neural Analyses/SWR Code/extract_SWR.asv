@@ -215,23 +215,12 @@ end
 % ripple events
 if InterRippleInterval > 0
    for triali = 1:numTrials
-       
-        % get number of swr events
         swrCount = length(swr_events{triali});
+        next = 0; % defined for while loop
         
-        % only do whats below if you have more than 1 swr event
-        if swrCount > 1
-            
-            % defined for while loop
-            next = 0; 
-
-            % interface with user in case the code gets stuck
-            disp('Attempting to remove events that occur within the defined time window');
-            
-            % only run if there are actual events
+        disp('Removing events that occur within the defined time window');
+        if isempty(swr_events{triali}) == 0 % only run if there are actual events
             while next == 0
-                % loop across events (minus 1 bc we're going to take event
-                % i+1)
                 for i = 1:swrCount-1
 
                     % find cases where swrs are < 1 sec apart
@@ -239,8 +228,6 @@ if InterRippleInterval > 0
 
                     % remove those instances when you find them
                     if timeOffset < InterRippleInterval && timeOffset > 0
-
-                        disp('Removing swr event...')
 
                         % remove data
                         swr_events{triali}(i+1)      = []; % remove data
@@ -263,7 +250,6 @@ if InterRippleInterval > 0
                     end 
 
                     if i == swrCount-1
-                        disp('Successfully removed swr events within the defined time window')
                         next = 1;
                     end
                 end
