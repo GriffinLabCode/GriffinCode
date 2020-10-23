@@ -192,12 +192,12 @@ for triali = 1:numTrials
             % doing the buzsaki method, we should loop across ripples, then
             % extreact 1 sec around ripple and use the hypotenuse method
             % for exclusion
-            %speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-(vt_srate/2):idxSwr2Vt(end)+(vt_srate/2));
-            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1):idxSwr2Vt(end));
+            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-(vt_srate/2):idxSwr2Vt(end)+(vt_srate/2));
+            %speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1):idxSwr2Vt(end));
             
             % this line is probably going to cause errors if there isn't
             % enough vt data extracted per trial.
-            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
+            %speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
             
             % find instances where speed exceeds threshold
             speedRem_temp{triali}{ripi} = find(speedDurRipple{triali}{ripi} >= speedFilt);

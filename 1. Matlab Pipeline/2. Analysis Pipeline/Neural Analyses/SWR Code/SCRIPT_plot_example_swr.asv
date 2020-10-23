@@ -208,8 +208,8 @@ for triali = 1:numTrials
             % for each ripple, get speed in a 1 sec window surrounding the
             % event
             %speedDurRipple{triali}{ripi} = speedAfterEntry{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
-            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
-            %speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1):idxSwr2Vt(end));
+            %speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
+            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1):idxSwr2Vt(end));
             
             % find instances where speed exceeds threshold
             speedRem_temp{triali}{ripi} = find(speedDurRipple{triali}{ripi} >= speedFilt);

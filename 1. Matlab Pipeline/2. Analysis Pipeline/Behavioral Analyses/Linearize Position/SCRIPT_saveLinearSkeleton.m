@@ -9,12 +9,12 @@ missing_data = 'interp';
 vt_srate     = 30; % 30 samples/sec
 
 clear measurements
-bin_size              = 5; % in cm
+bin_size              = 1; % in cm
 measurements.stem     = round(112/bin_size); % in cm was 137
 measurements.goalArm  = round(56/bin_size);  % was 50
 measurements.goalZone = round(29.21/bin_size); %round(42/bin_size);  % was 37
-measurements.goalExit = round(12.7/bin_size);
-%measurements.retArm   = %117; % was 130
+%measurements.goalExit = round(12.7/bin_size);
+measurements.retArm   = round(116.84/bin_size); % was 130
 
 % updated linear position code
 Int_indicator.left  = 1;

@@ -36,6 +36,7 @@ for i = 1:size(yPos,1)
     plot(xPos(i,:),yPos(i,:),'o','Color','b')
     ylim([min(yPos(4,:))-200 max(yPos(4,:))+200]);
     xlim([min(xPos(5,:))-200 max(xPos(2,:))+200]); 
+    plot(stemX(1),stemY(1),'o','Color','r')
 end
 % get an example left trajectory
 idx_turns = find(Int(:,3)==int_bool);

@@ -96,6 +96,13 @@ end
 % need to interpolate linear position data to fit size of lfp
 
 
+linearPosition{1}
+lfp_times{1}
+numBins = length(linearPosition{1})
+extendedBins = linspace(1,numBins(end),length(lfp_times{1}));
+
+linearPos_interp = interp1(1:numBins,linearPosition{1},extendedBins,'spline')
+
 
 
 % mtspectrumc and cohspectrumc?
