@@ -96,7 +96,7 @@ for triali = 1:numTrials
     idxStart      = idxAbove(idxChangeDiff);
     
     % get end of ripple event (dips below 1)
-    idxEnd = [];
+    idxEnd = []; idxRem = [];
     for i = 1:length(idxStart)
         restOfData  = []; idxBelowAll = []; idxBelow = [];
         restOfData  = zSmooth_data{triali}(idxStart(i):length(zSmooth_data{triali}));
@@ -111,8 +111,10 @@ for triali = 1:numTrials
         idxEnd(i)   = idxStart(i)+(idxBelow-2);
     end
     %rem event if it had no end in sight
-    idxStart(logical(idxRem))=[];
-    %idxEnd(idxRem)=[];
+    if isempty(idxRem) == 0
+        idxStart(logical(idxRem))=[];
+        %idxEnd(idxRem)=[];
+    end
     
     % possible ripples
     idxRippleTimes{triali}(:,1) = idxStart;
