@@ -12,6 +12,8 @@
 %                           trial 1 "{1}"
 %
 % -- OUTPUTS -- %
+% linearPositionSmooth: linearized position smoothed using a gaussian
+%                       weighted moving average
 % linearPosition: linearized positions across all trials
 % position_lin: updated position data
 %
@@ -24,7 +26,7 @@
 % rest was written by John Stout.
 
 
-function [linearPosition,position_lin] = get_linearPosition(idealTraj,position_data)
+function [linearPositionSmooth,linearPosition,position_lin] = get_linearPosition(idealTraj,position_data,vt_srate)
 
 % clip data based on linear skeleton
 numTrials   = length(idealTraj);
@@ -34,9 +36,9 @@ position.TS = cell([1 numTrials]);
 for i = 1:numTrials
     
     % estimate start and end of trajectory using skeleton - this will clip the
-    % data
-    startTrajPos  = round(idealTraj{i}(:,1));   % start coordinates
-    endTrajPos    = round(idealTraj{i}(:,end)); % end coordinates
+    % data. This is really important to clip at goal zone correctly.
+    startTrajPos  = idealTraj{i}(:,1);   % start coordinates
+    endTrajPos    = idealTraj{i}(:,end); % end coordinates
     
     idx_start = []; idx_end = [];
     % using the trajectory skeleton, we derived the start and end of the
@@ -47,6 +49,39 @@ for i = 1:numTrials
     
     idx_start = dsearchn(position_data{i}(1:2,:)',startTrajPos');    
     idx_end   = dsearchn(position_data{i}(1:2,:)',endTrajPos');
+        
+    %{
+    % if you stop at goal zone in your linear skeleton, we must account for
+    % its entire occupancy
+    if account4goalZone == 1
+        % get rest of data from the linear position end point to the actual
+        % end point
+        real_end = []; idxSamples = []; restData = [];
+        real_end      = length(position_data{i}(1,:));
+        idxSamples    = [idx_end:real_end];
+        restData(1,:) = position_data{i}(1,idxSamples);
+        restData(2,:) = position_data{i}(2,idxSamples);
+        
+        % 3 bins finds bin for last linear bin, last actual position, and
+        % the middle.
+        restBinned = [];
+        [~, restBinned(1,:)] = hist(restData(1,:),5);
+        [~, restBinned(2,:)] = hist(restData(2,:),5);
+        % the bin nearest to the final bin, but not the final bin, should
+        % be good ( the final bin is the end linear position bin ).
+        newEndTrajPos = [];
+        newEndTrajPos = restBinned(:,4);
+        
+        % get new end
+        idx_end_old = []; 
+        idx_end_old = idx_end; 
+        idx_end_add = dsearchn(position_data{i}(1:2,idx_end_old:real_end)',newEndTrajPos');
+        
+        % define idx_end to account for a slight bump in position
+        idx_end = []; 
+        idx_end = idx_end_old+idx_end_add;
+    end 
+   %}
     
     % timestamps
     time_start(i) = position_data{i}(3,idx_start);
@@ -69,7 +104,21 @@ for i = 1:numTrials
     % get coordinate points between ideal trajectory and real data
     linearPosition{i} = griddata(idealTraj{i}(1,:),idealTraj{i}(2,:),1:length(idealTraj{i}(1,:)),position_lin.X{i},position_lin.Y{i},'nearest');
 
+    % smooth linear position - this is important, especially if you're
+    % using 1cm bins. Smoothing by the sampling rate seems to do the trick.
+    linearPositionSmooth{i} = smoothdata(linearPosition{i},'gauss',vt_srate);
 end
+
+%{
+
+for i = 1:numTrials
+    figure('color','w'); hold on; 
+    plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]);
+    plot(prePosData{i}(1,:),prePosData{i}(2,:),'b','LineWidth',1);
+    plot(position_lin.X{i},position_lin.Y{i},'r','LineWidth',1)
+    pause;
+end
+%}
 
 % errors occur when the actual trajectory is not as long as the expected
 % trajectory. This needs to be handled.

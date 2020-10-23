@@ -261,7 +261,6 @@ SWRcount = cellfun(@numel,SWRtimes);
 
 % total time spent in zone of interest
 for triali = 1:numTrials
-    TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)    
     timeInZone(triali) = (TimesAfterEntry{triali}(end)-TimesAfterEntry{triali}(1))/1e6;
 end
 

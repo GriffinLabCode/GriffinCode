@@ -135,21 +135,9 @@ stats.b_timeXfr_poissonReg = stats_out.beta(2,1);
 
 % shuffle columns of the variable n create 5000 seperate shuffles
 % create a 3D array - EW
-figure('color','w')
 for i = 1:5000
     shuffle_n(:,:,i) = n(randperm(size(n, 1)),:);
- 
 end
-figure('Color','w')
-shuffi = 4;
-for i = 1:nEvents
-    x_label = edges(find(shuffle_n(:,i,shuffi) > 0));
-
-    if isempty(x_label) == 0,plot(x_label,i,'k.'), end
-    axis([-(timeLength/2) timeLength/2 0 nEvents])
-    hold on   
-end
-
 % now calculate shuffled firing rate for each shuffle
 FRshuffle = shuffle_n./timeRes; % get rate for every shuffle
 %FRshuffle = sum(shuffle_n,3)./bin; % get FR for each shuffle
@@ -162,11 +150,15 @@ shuffEventSEM = stderr(shuffAvg')';    % sem across event shuffles
 shuffAvg_smooth = smoothdata(shuffEventAvg,'gaussian',smoothFact);
 
 if plotFig == 1 | contains(plotFig,[{'y'},{'Y'}]);
-    %hold on;
-    %plot(timing,shuffAvg_smooth,'r','LineWidth',2)
+    hold on;
+    plot(timing,shuffAvg_smooth,'r','LineWidth',2)
 end
 
 %% significance testing
+
+% Find the sqr diff between FR and shuffled data
+stats.sqrdiff = (FRsmooth - shuffAvg_smooth').^2;
+%[stats.p_trueXshuff,h,stats.stat_trueXshuff] = ranksum(FRsmooth,shuffAvg_smooth');
 
 if swrMod_test == 1 | contains(swrMod_test,[{'y'},{'Y'}])
 
@@ -187,6 +179,55 @@ if swrMod_test == 1 | contains(swrMod_test,[{'y'},{'Y'}])
     shuffAvg_swr   = mean(FRshuffle,2); % get average for each shuffle
     postShuff_temp = shuffAvg_swr(postEventIdx,:,:);
     postShuff      = reshape(postShuff_temp,[size(postShuff_temp,1) size(postShuff_temp,3)]);
+    
+    % get average of postFR and postShuffle
+    postFR_mean    = mean(postFR);
+    postShuff_mean = mean(postShuff,1);
+
+    if plotFig == 1 | contains(plotFig,[{'y'},{'Y'}])
+        % what if i do a ztest?
+        figure('color','w')
+        histogram(postShuff_mean,10)
+        ylimits = ylim;
+        l1 = line([postFR_mean postFR_mean],[ylimits(1) ylimits(2)]);
+        l1.Color = 'r';
+        l1.LineWidth = 2;
+    end
+
+    % perform z-test
+    m = mean(postShuff_mean);
+    sigma = std(postShuff_mean);
+    [h,stats.swrMod_zTest_p] = ztest(postFR_mean,m,sigma);
+    
+    
+    % tang paper
+    baselineResp = 
+    
+    
+    % I think Jadhav uses a difference score to determine if the unit
+    % increases or decreases after the ripple
+    stats.diff_preXpost = mean(preFR)-mean(postFR);
+    stats.preXpostSWR_mod_ranksum = ranksum(preFR,postFR);
+
+    if plotFig == 1 | contains(plotFig,[{'y'},{'Y'}]);
+        figure('color','w')
+        x = [ones(size(postFR))'; 2*ones(size(postShuff_mean))'];
+        y = [postFR'; postShuff_mean'];
+        b = boxplot(y,x);
+        box off
+        ax = gca;
+        ax.XTickLabel = [{'Post-event'},{'Shuffled data'}];
+        ylabel('Firing Rate (Hz)')        
+        
+        figure('color','w')
+        x = [ones(size(preFR))'; 2*ones(size(postFR))'];
+        y = [preFR'; postFR'];
+        b = boxplot(y,x);
+        box off
+        ax = gca;
+        ax.XTickLabel = [{'Pre-event'},{'Post-event'}];
+        ylabel('Firing Rate (Hz)')
+    end
     
     % baseline response is the mean of all shuffled responses
     baseline_resp = mean(postShuff,2);
@@ -222,12 +263,10 @@ if swrMod_test == 1 | contains(swrMod_test,[{'y'},{'Y'}])
     Y = prctile(mse_shuff_baseline,[5 95]);
     
     if mse_swr_baseline < Y(1) | mse_swr_baseline > Y(2)
-        stats.swr_mod = 'y';
+        stat.swr_mod = 'y';
     else
-        stats.swr_mod = 'n';
+        stat.swr_mod = 'n';
     end
-    
-    [h,stats.p_ztest_mse] = ztest(mse_swr_baseline,mean(mse_shuff_baseline),std(mse_shuff_baseline));
     
 end
 

@@ -69,15 +69,14 @@ right_select = datasample(trials_right,1);
 figure('color','w')
 subplot 211
     plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]); hold on;
-    p = plot(idealTraj{left_select}(1,:),idealTraj{left_select}(2,:),'r','LineWidth',2);
+    p = plot(idealTraj{left_select}(1,:),idealTraj{left_select}(2,:),'r','LineWidth',2)
     p.Marker = 'o';
     title('Random left trajectory (may be reversed on pos. data)')    
     box off
     ylim([-10 500])
 subplot 212
     plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]); hold on;
-    p = plot(idealTraj{right_select}(1,:),idealTraj{right_select}(2,:),'b','LineWidth',2);
-    p.Marker = 'o'
+    pplot(idealTraj{right_select}(1,:),idealTraj{right_select}(2,:),'b','LineWidth',2)
     title('Random right trajectory (may be reversed on pos. data)')
     box off
     ylim([-20 550])    

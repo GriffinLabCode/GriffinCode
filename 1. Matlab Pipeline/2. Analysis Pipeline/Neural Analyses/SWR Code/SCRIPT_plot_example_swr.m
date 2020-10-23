@@ -52,11 +52,11 @@ csc_hpc     = 'HPC';
 csc_compare = 'PFC';
 
 % linear position name
-linearPos_name = 'linearPositionData_JS';
+linearPos_name = 'linearSkeleton_Round2';
 
 % phase bandpass
 swrParams.phase_bandpass = [150 250];
-swrParams.swr_stdevs = [4 1];
+swrParams.swr_stdevs = [3 1];
 swrParams.gauss = 1;
 swrParams.InterRippleInterval = 0; % this is the time required between ripples. if ripple occurs within this time range (in sec),
 swrParams.mazePos = [2 7];
@@ -165,27 +165,28 @@ end
 
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
 clear linearPosition position
-[linearPosition,position] = get_linearPosition(idealTraj,prePosData);
+[linearPosition,~,position] = get_linearPosition(idealTraj,prePosData,vt_srate);
 
 % get velocity
 timingVar = cell([1 numTrials]); accel = cell([1 numTrials]);
 for triali = 1:numTrials
-    
+
     % get velocity, acceleration, and speed.
     trialDur = []; % initialize
     trialDur  = (position.TS{triali}(end)-position.TS{triali}(1))/1e6; % trial duration
     timingVar{triali} = linspace(0,trialDur,length(position.TS{triali})); % variable indicating length of trial duration
     [vel{triali},accel{triali}] = linearPositionKinematics(linearPosition{triali},timingVar{triali}); % get vel and acc
     
-    % smooth speed according to the sampling rate (1second smoothing)
-    speed{triali} = smoothdata(abs(vel{triali}),'gauss',vt_srate); % 1 second smoothing rate
+    % speed
+    speed{triali} = abs(vel{triali}); %smoothdata(abs(vel{triali}),'gauss',vt_srate); % 1 second smoothing rate
 end
     
 %% apply velocity filter
-speedFilt = 4; % 4cm/sec
+speedFilt = 5; % 4cm/sec
     
 % now, extract vt timestamps ONLY after goal zone entry. Use this to
-% extract speed
+% extract speed. Immobility periods are defined when rats are less than
+% 5cm/sec for at least 1 sec (Fernandez-Ruiz et al., 2019)
 speedDurRipple = cell([1 numTrials]);
 speedRem       = cell([1 numTrials]);
 for triali = 1:numTrials
@@ -194,17 +195,20 @@ for triali = 1:numTrials
     GZentryIdx(triali)  = find(position.TS{triali} == Int(triali,2)); % vt timestamps == goal zone entry time
     timingEntry(triali) = timingVar{triali}(GZentryIdx(triali)); % get the actual second time for this - mostly plotting purpose
     
-    % get speed after goal zone entry
-    speedAfterEntry{triali} = speed{triali}(GZentryIdx(triali):end); % speed - get the speed after the goal entry
-    TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)
+    % get speed after goal zone entry - use this later
+    %speedAfterEntry{triali} = speed{triali}(GZentryIdx(triali):end); % speed - get the speed after the goal entry
+    %TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)
     
     % find vt times around ripple evnts
     if isempty(SWRtimes{triali}) == 0 % only extract speed around events if there were any detected ripples
         for ripi = 1:length(SWRtimes{triali})
             % create an index to get speed
-            idxSwr2Vt = dsearchn(TimesAfterEntry{triali}',SWRtimes{triali}{ripi}');
-            % get speed
-            speedDurRipple{triali}{ripi} = speedAfterEntry{triali}(idxSwr2Vt(1):idxSwr2Vt(end));
+            %idxSwr2Vt = dsearchn(TimesAfterEntry{triali}',SWRtimes{triali}{ripi}');
+            idxSwr2Vt = dsearchn(position.TS{triali}',SWRtimes{triali}{ripi}');
+            % for each ripple, get speed in a 1 sec window surrounding the
+            % event
+            %speedDurRipple{triali}{ripi} = speedAfterEntry{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
+            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
             % find instances where speed exceeds threshold
             speedRem_temp{triali}{ripi} = find(speedDurRipple{triali}{ripi} >= speedFilt);
         end
@@ -286,15 +290,17 @@ set(gcf,'Position',[300 250 300 250])
 SWRcount = cellfun(@numel,SWRtimes);
 
 % total time spent in zone of interest
+TimesAfterEntry = []; timeInZone = [];
 for triali = 1:numTrials
+    TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)
     timeInZone(triali) = (TimesAfterEntry{triali}(end)-TimesAfterEntry{triali}(1))/1e6;
 end
 
 % get rate of events
 swr_rate = SWRcount./timeInZone; % in Hz (swrs/sec)
 
-%figure('color','w')
-%histogram(SWRrate)
+figure('color','w')
+histogram(swr_rate)
 
 %% swr durations
 swr_durations = horzcat(SWRdurations{:});
@@ -343,12 +349,15 @@ end
 eventDiff = (diff(eventTimes))/1e6;
 
 % extract neuron
-cellNum  = 6;
+cellNum  = 3; % 6
 spikeTimes = spkTimes{cellNum};
 
 % PETH function - currently, the PETH significance is not a good metric.
 % Use jadhavs method or a different approach. Currently i'm comparing
 % pre-post mean rates in PETH, but this is no good.
+
+% this current example would be a solid modulated candidate, but its
+% nowhere near significant. need to try jadhavs method again
 timesAround = [0.5*1e6 0.5*1e6];
 timeRes = 20;
 timeScale = 'ms';
@@ -358,5 +367,5 @@ plotFig = 'y';
     PETH(spikeTimes,eventTimes,timesAround,timeRes,timeScale,plotFig,swrMod_test);
 nSpks = length(find(n == 1));
 disp([num2str(nSpks),' spikes total'])
-stats.swrMod_zTest_p
-stats.preXpostSWR_mod_ranksum
+stats.swr_mod
+stats.p_ztest_mse

@@ -18,12 +18,7 @@
 %               InterRippleInterval (try setting to 0 or 1), this is the
 %                   time between ripples. if set to 1, then you do not include
 %                   ripples if they co-occur within 1 sec.
-%               mazePos: should be [2 7] for extracting goal zone 
-%               falsePositive: can be 1, y, or Y. Anything else does not
-%                               induce false positive detection. Note that
-%                               this should only be done if you have a wire
-%                               in a different brain region, and that brain
-%                               region does not share a reference with HPC.
+%               mazePos: should be [2 7] for extracting goal zone  
 % csc_hpc: the name of the hpc lfp
 % csc_compare: the name of the lfp to detect false positives (note that
 %               this should be defined, but if it the cortical lfp does not
@@ -42,8 +37,31 @@
 % SWRtimes: timestamps of swrs
 %
 % written by John Stout and Suhaas Adiraju
+clear;
 
-function [swr_rate,swr_durations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearPos_name)
+% main Datafolder
+datafolder  = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Saline\Baseline';
+
+% int name and vt name
+int_name     = 'Int_JS_fixed';
+vt_name      = 'VT1.mat';
+missing_data = 'interp'; % interpolate missing data
+
+% csc data names
+csc_hpc     = 'HPC'; 
+csc_compare = 'PFC';
+
+% linear position name
+linearPos_name = 'linearSkeleton_Round2';
+
+% phase bandpass
+swrParams.phase_bandpass = [150 250];
+swrParams.swr_stdevs = [4 1];
+swrParams.gauss = 1;
+swrParams.InterRippleInterval = 0; % this is the time required between ripples. if ripple occurs within this time range (in sec),
+swrParams.mazePos = [2 7];
+swrParams.falsePositive = 'n';
+
 % -- get swrs and account for false positives if possible -- %
 cd(datafolder);
 
@@ -101,6 +119,7 @@ if swrParams.falsePositive == 1 | contains(swrParams.falsePositive,'y') | contai
     end
 end
 
+
 % -- rename variables -- %
 SWRtimeIdx   = hpc_SWRtimeIdx;
 SWRtimes     = hpc_SWRtimes;
@@ -148,9 +167,8 @@ end
 clear linearPosition position
 [linearPosition,~,position] = get_linearPosition(idealTraj,prePosData,vt_srate);
 
-% get kinematics
+% get velocity
 timingVar = cell([1 numTrials]); accel = cell([1 numTrials]);
-speed = cell([1 numTrials]); vel = cell([1 numTrials]);
 for triali = 1:numTrials
 
     % get velocity, acceleration, and speed.
@@ -177,9 +195,9 @@ for triali = 1:numTrials
     GZentryIdx(triali)  = find(position.TS{triali} == Int(triali,2)); % vt timestamps == goal zone entry time
     timingEntry(triali) = timingVar{triali}(GZentryIdx(triali)); % get the actual second time for this - mostly plotting purpose
     
-    % get speed after goal zone entry - use this later
-    %speedAfterEntry{triali} = speed{triali}(GZentryIdx(triali):end); % speed - get the speed after the goal entry
-    %TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)
+    % get speed after goal zone entry
+    speedAfterEntry{triali} = speed{triali}(GZentryIdx(triali):end); % speed - get the speed after the goal entry
+    TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)
     
     % find vt times around ripple evnts
     if isempty(SWRtimes{triali}) == 0 % only extract speed around events if there were any detected ripples
@@ -190,11 +208,7 @@ for triali = 1:numTrials
             % for each ripple, get speed in a 1 sec window surrounding the
             % event
             %speedDurRipple{triali}{ripi} = speedAfterEntry{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
-            
-            % this line is probably going to cause errors if there isn't
-            % enough vt data extracted per trial.
-            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
-            
+            speedDurRipple{triali}{ripi} = speed
             % find instances where speed exceeds threshold
             speedRem_temp{triali}{ripi} = find(speedDurRipple{triali}{ripi} >= speedFilt);
         end
@@ -255,13 +269,28 @@ end
 %% sanity check - checks if speed overlapped with ripples (they shouldn't)
 SCRIPT_swr_speed_sanityCheck;
 
+%% plot example
+trial = 1;
+% note, its tricky to save the lfp data to import into illustrator
+SCRIPT_swr_plot;
+
+%% plot position of the example
+figure('color','w'); hold on;
+plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]);
+plot(position.X{trial},position.Y{trial},'b');
+gzEntryVT = find(TimeStamps_VT == Int(trial,2));
+l1 = line([ExtractedX(gzEntryVT)-40 ExtractedX(gzEntryVT)+40],[ExtractedY(gzEntryVT) ExtractedY(gzEntryVT)])
+l1.Color = 'r';
+l1.LineStyle = '--';
+l1.LineWidth = 1;
+set(gcf,'Position',[300 250 300 250])
+
 %% swr rate
 % swr count
 SWRcount = cellfun(@numel,SWRtimes);
 
 % total time spent in zone of interest
 for triali = 1:numTrials
-    TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)    
     timeInZone(triali) = (TimesAfterEntry{triali}(end)-TimesAfterEntry{triali}(1))/1e6;
 end
 
@@ -273,7 +302,6 @@ swr_rate = SWRcount./timeInZone; % in Hz (swrs/sec)
 
 %% swr durations
 swr_durations = horzcat(SWRdurations{:});
-%{
 figure('color','w')
 h1 = histogram(swr_durations);
 h1.FaceColor = 'b';
@@ -281,21 +309,58 @@ box off
 ylabel('# SWRs')
 xlabel('SWR duration (ms)')
 title('SWR events for all trials')
-%}
-%{
+
 %% swr spike timing
-cellNum    = 6;
-clusters   = dir('TT*.txt');
-spikeTimes = textread(clusters(cellNum).name);
+spkTimes = get_spkTimes(datafolder,'TT');
 
-% concat spikes
-SWRtimes_all = horzcat(SWRtimes{:});
+% get all events into one array
+SWRevents = horzcat(SWRtimes{:});
 
-% define time window
+% onset of swr event
+eventTimes = [];
+for i = 1:length(SWRevents)
+    eventTimes(i) = SWRevents{i}(1);
+end
+
+% find difference of event times - maybe handle the time difference stuff
+% here
+eventTimes_og = eventTimes;
+next = 0;
+while next == 0
+    eventDiff = []; idxGet = [];
+    % difference between even times
+    eventDiff = diff(eventTimes./1e6);
+    % find instances less than half sec
+    idxGet    = find(eventDiff < 0.5);
+    % only look at the first idxGet value (this will change for each while
+    % loop)
+    if isempty(idxGet)
+        next = 1;
+   elseif eventDiff(idxGet(1)) < 0.5
+        eventTimes(idxGet(1)) = [];        
+    end
+    
+    if isempty(find(diff(eventTimes./1e6) < 1)) | isempty(idxGet)
+        next = 1;
+    end
+end
+eventDiff = (diff(eventTimes))/1e6;
+
+% extract neuron
+cellNum  = 6;
+spikeTimes = spkTimes{cellNum};
+
+% PETH function - currently, the PETH significance is not a good metric.
+% Use jadhavs method or a different approach. Currently i'm comparing
+% pre-post mean rates in PETH, but this is no good.
 timesAround = [0.5*1e6 0.5*1e6];
-
-% plot fig?
-plotFig = 1;
-
-[FR,n,excludeCell] = PETH_SWR(spikeTimes,SWRtimes_all,timesAround,plotFig)
-%}
+timeRes = 20;
+timeScale = 'ms';
+swrMod_test = 'y';
+plotFig = 'y';
+[FRsmooth,nAvg,FR,n,stats,shuffAvg_smooth,shuffAvg,shuffle_n] = ...
+    PETH(spikeTimes,eventTimes,timesAround,timeRes,timeScale,plotFig,swrMod_test);
+nSpks = length(find(n == 1));
+disp([num2str(nSpks),' spikes total'])
+stats.swrMod_zTest_p
+stats.preXpostSWR_mod_ranksum
