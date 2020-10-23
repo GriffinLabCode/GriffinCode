@@ -164,7 +164,7 @@ for triali = 1:numTrials
 end
     
 %% apply velocity filter
-speedFilt = 5; % 4cm/sec
+speedFilt = 4; % 4cm/sec
     
 % now, extract vt timestamps ONLY after goal zone entry. Use this to
 % extract speed. Immobility periods are defined when rats are less than
@@ -189,7 +189,11 @@ for triali = 1:numTrials
             idxSwr2Vt = dsearchn(position.TS{triali}',SWRtimes{triali}{ripi}');
             % for each ripple, get speed in a 1 sec window surrounding the
             % event
-            %speedDurRipple{triali}{ripi} = speedAfterEntry{triali}(idxSwr2Vt(1)-vt_srate/2:idxSwr2Vt(end)+vt_srate/2);
+            % doing the buzsaki method, we should loop across ripples, then
+            % extreact 1 sec around ripple and use the hypotenuse method
+            % for exclusion
+            %speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1)-(vt_srate/2):idxSwr2Vt(end)+(vt_srate/2));
+            speedDurRipple{triali}{ripi} = speed{triali}(idxSwr2Vt(1):idxSwr2Vt(end));
             
             % this line is probably going to cause errors if there isn't
             % enough vt data extracted per trial.
