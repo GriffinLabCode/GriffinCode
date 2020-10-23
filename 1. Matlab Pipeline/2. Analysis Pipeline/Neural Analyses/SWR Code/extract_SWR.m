@@ -101,9 +101,18 @@ for triali = 1:numTrials
         restOfData  = []; idxBelowAll = []; idxBelow = [];
         restOfData  = zSmooth_data{triali}(idxStart(i):length(zSmooth_data{triali}));
         idxBelowAll = find(restOfData < swr_stdevs(2));
+        % sometimes a ripple continues outside of your window. remove that
+        % event
+        if isempty(idxBelowAll)
+            idxRem(i) = 1;
+            continue
+        end
         idxBelow    = idxBelowAll(1);
         idxEnd(i)   = idxStart(i)+(idxBelow-2);
     end
+    %rem event if it had no end in sight
+    idxStart(logical(idxRem))=[];
+    %idxEnd(idxRem)=[];
     
     % possible ripples
     idxRippleTimes{triali}(:,1) = idxStart;
