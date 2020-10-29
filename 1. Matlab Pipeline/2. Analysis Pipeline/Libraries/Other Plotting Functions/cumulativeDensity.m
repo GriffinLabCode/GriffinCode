@@ -27,5 +27,5 @@ function [p,kstat] = cumulativeDensity(data,color,x_label,title_label,saveName,p
     end
     
     if exist('saveName') 
-    print('-painters',[saveName,'.eps'],'-depsc','-r0')
+        print('-painters',[saveName,'.eps'],'-depsc','-r0')
     end

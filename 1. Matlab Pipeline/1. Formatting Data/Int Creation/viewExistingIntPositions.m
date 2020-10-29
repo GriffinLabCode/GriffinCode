@@ -13,6 +13,7 @@
 function [] = viewExistingIntPositions(datafolder,int_name,vt_name,missing_data)
 
 % load data
+cd(datafolder);
 load(int_name)
 [pos_x, pos_y, pos_t] = getVTdata(datafolder,missing_data,vt_name);
 
