@@ -23,7 +23,7 @@ function [p,kstat] = cumulativeDensity(data,color,x_label,title_label,saveName,p
     if exist('paired') & ( paired == 1 | contains(paired,[{'y'},{'Y'}]) )
         [h,p,kstat]=kstest(data{1},data{2});        
     else
-        [h,p,kstat]=kstest2(data{1},data{2});
+        [h,p,kstat]=kstest2(data{1},data{2},'Tail','unequal');
     end
     
     if exist('saveName') 
