@@ -31,4 +31,7 @@ for n = 1:current_rate
     end
 end
 
+% if divisor could not be established using the exact method above
+if exist('divisor') == 0
+    divisor = dsearchn(ds_rates',target_rate);
 end

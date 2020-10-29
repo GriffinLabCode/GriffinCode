@@ -16,7 +16,6 @@ function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent
 % load int
 cd(datafolder);
 load(int_name);
-%load('Int_VTE_JS.mat')
 
 % numtrials
 numTrials = size(Int,1);
