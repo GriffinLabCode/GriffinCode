@@ -9,10 +9,10 @@
 %
 % -- OUTPUTS -- %
 
-function [Samples, Timestamps] = downSampleLFPdata(datafolder,csc_name,target_rate,saveName);
+function [Samples, Timestamps] = downSampleLFPdata(datafolder,csc_name,target_rate,saveName)
 
 % load csc data
-load(csc_name);
+load(csc_name)
 
 % get current rate
 srate = getLFPsrate(Timestamps,Samples);

@@ -7,7 +7,7 @@
 clear; clc
 
 % designate folder where session-specfic files are located (most important)
-datafolder = 'X:\01.Experiments\John n Andrew\SWR confirmation\Testing SWRs'
+datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Ratticus\Saline\Baseline'
 cd(datafolder)
 
 % define which CSCs to convert. Maybe you only want to convert CSCs 1 and
