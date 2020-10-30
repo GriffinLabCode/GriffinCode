@@ -1,4 +1,4 @@
-function [datac,datafit,Amps,freqs]=rmlinesmovingwinc(data,movingwin,tau,params,p,plt,f0)
+function [datac,datafit,Amps,freqs]=rmlinesmovingwinc2(data,movingwin,tau,params,p,plt,f0)
 % fits significant sine waves to data (continuous data) using overlapping windows.
 %
 % Usage: [datac,datafit]=rmlinesmovingwinc(data,movingwin,tau,params,p,plt)
@@ -67,8 +67,10 @@ if length(params.tapers)==3 & movingwin(1)~=params.tapers(2);
     error('Duration of data in params.tapers is inconsistent with movingwin(1), modify params.tapers(2) to proceed')
 end
 
-[tapers,pad,Fs,fpass,err,trialave,params]=getparams(params); % set defaults for params
-clear err trialave
+if exist('params') == 0
+    [tapers,pad,Fs,fpass,err,trialave,params]=getparams(params); % set defaults for params
+    clear err trialave
+end
 if nargin < 6; plt='n'; end;
 %
 % Window,overlap and frequency information
