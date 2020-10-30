@@ -1,6 +1,7 @@
-%% downSampleLFPdata
+%% reduce sampling rate of raw lfp
 %
-% this function downsamples lfp vector
+% this function downsamples raw lfp and timestamps BEFORE conversion. This
+% function is 
 %
 % -- INPUTS -- %
 % datafolder: string directory
@@ -8,10 +9,13 @@
 % target_rate: down sample target rate (say 2000hz), a double variable
 %
 % -- OUTPUTS -- %
+% Samples: matrix of 512xN samples, in raw, downsampled format.
+% Timestamps: vector of N timestamps, in raw, downsampled format
 
-function [Samples, Timestamps] = downSampleLFPdata(datafolder,sra);
+function [Samples, Timestamps] = rateReducerLFP(datafolder,csc_name,target_rate,saveName);
 
 % load csc data
+cd(datafolder);
 load(csc_name);
 
 % get current rate
