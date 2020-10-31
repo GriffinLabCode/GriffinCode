@@ -14,7 +14,7 @@
 %
 % written by John Stout
 
-function [b] = multiBoxPlot(data,xLabels,yLabel,saveName)
+function [b] = multiBarPlot(data,xLabels,yLabel)
 
     % make sure data is oriented correctly
     outSize = size(data{1});
@@ -30,9 +30,14 @@ function [b] = multiBoxPlot(data,xLabels,yLabel,saveName)
     end
 
     % make figure
-    figure('color','w')
-    x = []; y = [];
+    figure('color','w'); hold on;
     for i = 1:length(data)
+        bar(i,mean(data{i}));
+        errorbar(i,mean(data{i}),stderr(data{i}));
+    end
+    ylim([5 7])
+    
+    
         xTemp = [];
         xTemp = i*ones(size(data{i}));
         x = [x;xTemp];
@@ -47,9 +52,5 @@ function [b] = multiBoxPlot(data,xLabels,yLabel,saveName)
     ax.XTickLabel = xLabels;
     ax.XTickLabelRotation = 45;
     ylabel(yLabel);
-    
-    if exist('saveName') 
-        print('-painters',[saveName,'.eps'],'-depsc','-r0')
-    end    
     
     

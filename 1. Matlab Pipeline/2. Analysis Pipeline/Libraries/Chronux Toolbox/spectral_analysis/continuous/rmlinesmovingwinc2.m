@@ -67,10 +67,8 @@ if length(params.tapers)==3 & movingwin(1)~=params.tapers(2);
     error('Duration of data in params.tapers is inconsistent with movingwin(1), modify params.tapers(2) to proceed')
 end
 
-if exist('params') == 0
-    [tapers,pad,Fs,fpass,err,trialave,params]=getparams(params); % set defaults for params
-    clear err trialave
-end
+[tapers,pad,Fs,fpass,err,trialave,params]=getparams(params); % set defaults for params
+clear err trialave
 if nargin < 6; plt='n'; end;
 %
 % Window,overlap and frequency information

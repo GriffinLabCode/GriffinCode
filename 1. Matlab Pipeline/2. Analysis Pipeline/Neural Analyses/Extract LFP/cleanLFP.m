@@ -2,6 +2,16 @@
 %
 % clean lfp data
 %
+% -- INPUTS -- %
+% lfp_data: vector
+% srate: sampling rate of lfp
+% params: chronux parameters
+% movingwin: [0.5 0.01] or [0.25 0.01] works. Adjust as needed. See chronux
+% cleanFreqs: [58 62] tends to get the noise band out
+% 
+% -- OUTPUTS -- %
+% cleaned_lfp: detrended and cleaned lfp data using chronux routines
+%
 % written by John Stout
 
 function [cleaned_lfp] = cleanLFP(lfp_data,srate,params,movingwin,cleanFreqs)
