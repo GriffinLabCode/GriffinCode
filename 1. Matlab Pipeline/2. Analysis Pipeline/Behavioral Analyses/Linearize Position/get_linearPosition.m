@@ -26,7 +26,7 @@
 % rest was written by John Stout.
 
 
-function [linearPositionSmooth,linearPosition,position_lin] = get_linearPosition(idealTraj,position_data,vt_srate)
+function [linearPositionSmooth,linearPosition,position_lin,linearPosUncorrected] = get_linearPosition(idealTraj,position_data,vt_srate)
 
 % clip data based on linear skeleton
 numTrials   = length(idealTraj);
@@ -47,9 +47,13 @@ for i = 1:numTrials
     %[minval,idx] = min(sum(abs(position_data{i}(1:2,:)-startTrajPos)));
     %[minval,idx] = min(sum(abs(position_data{i}(1:2,:)-endTrajPos)));
     
-    idx_start = dsearchn(position_data{i}(1:2,:)',startTrajPos');    
-    idx_end   = dsearchn(position_data{i}(1:2,:)',endTrajPos');
-        
+    % consider first half of the data
+    idx_start = dsearchn(position_data{i}(1:2,1:round(length(position_data{i})/2))',startTrajPos'); 
+    
+    % consider second half of the data
+    idx_end   = dsearchn(position_data{i}(1:2,round(length(position_data{i})/2):end)',endTrajPos');
+    idx_end   = idx_end+(round(length(position_data{i})/2)-1);    
+    
     %{
     % if you stop at goal zone in your linear skeleton, we must account for
     % its entire occupancy
@@ -96,7 +100,6 @@ for i = 1:numTrials
     position_lin.TS{i} = position_data{i}(3,idx_start:idx_end);
 end
 
-
 % linear position
 linearPosition = cell([1 numTrials]);
 for i = 1:numTrials
@@ -106,52 +109,101 @@ for i = 1:numTrials
     
 end
 
+% -- this needs to be completed if you want to use return arm -- %
+
+% store data
+linearPosUncorrected = linearPosition;
+
+%{
 % detect large changes in linear position bins, and fix them
 for i = 1:numTrials
-    % get difference
-    linearDiff = diff(linearPosition{i});
-    % zscore difference
-    zLinearDiff = abs(zscore(linearDiff));
-    % find instances where stds are above 5
-    faultyPos = find(zLinearDiff > 5);
-    if isempty('faultyPos')
+    
+    next = 0;
+    while next == 0
+        
+        % get difference
+        linearDiff = [];
+        linearDiff = diff(linearPosition{i});
+
+        % zscore difference
+        zLinearDiff = [];
+        zLinearDiff = abs(zscore(linearDiff));
+
+        % define x axis
+        xLabel = linspace(0,length(linearPosition{i}),length(linearPosition{i}));
+
+        % remove bad elements and linearly interpolate data
+        badElements = zLinearDiff > 9;
+        % find elements surrounding the badElements and consider them bad
+        % also
+        idxBad = find(badElements == 1);
+        for ii = 1:length(idxBad)
+            if idxBad(ii)-1 > 0
+                badElements(idxBad(ii)-1) = 1;
+            end
+            
+            if idxBad(ii)+1 < length(linearPosition)
+                badElements(idxBad(ii)+1) = 1;
+            end
+        end
+                
+        %badElements = zeros([1 length(badElementsTemp)+1]); badElements(2:end) = badElementsTemp;
+        newY = linearPosition{i}(~badElements);
+        newX = xLabel(~badElements);
+        xq   = xLabel;
+        newY = interp1(newX, newY, xq);
+        
+        % update linear position
+        linearPosition{i} = [];
+        linearPosition{i} = newY;
+
+        % account for instances when the first data is messed up
+        if isempty((isnan(linearPosition{i}(1:15)))) == 0
+            % find first non nan value
+            first_nonnan = find(~isnan(linearPosition{i}),1);
+            % find value preceeding it
+            size_nans = first_nonnan-1;
+            % extract data of equal size from recorded points
+            sample_ydata = linearPosition{i}(first_nonnan:first_nonnan+size_nans-1);
+            % fill in sampled data points
+            linearPosition{i}(1:first_nonnan-1)=0;
+            linearPosition{i}(1:size_nans)=sample_ydata;
+        end     
+        
+        if isempty((isnan(linearPosition{i}))) == 0
+            % find nan
+            nanIdx = find(isnan(linearPosition{i}));
+            % find value preceeding it
+            size_nans = nanIdx-1;
+            % set equal
+            linearPosition{i}(nanIdx) = linearPosition{i}(nanIdx-1);
+        end
+  
+        if isempty(find(badElements > 0))
+            next = 1;
+        else
+            disp(num2str(i))
+        end
+    end
+    
+    % if any errors exist afterwards, they have to be continuous errors
+    idxBad2 = find(zLinearDiff > 5);
+    if isempty(idxBad2)
         continue
     end
-    % get index
-    idxTemp = []; idx = [];
-    for ii = 1:length(faultyPos)-1
-        idxTemp{ii} = faultyPos(ii): faultyPos(ii+1);
-    end
-    idx = horzcat(idxTemp{:});
-    % remove data and replace with nans
-    linearPosition{i}(idx) = 0;
-    linearPosition{i}(linearPosition{i} == 0) = NaN;
     
-    % linearly interpolate (spline) missing data
+    linearPosition{i}(idxBad2(1):idxBad2(end)) = NaN;
     
-    % if the data starts with a big fluctuation
-    if isnan(linearPosition{i}(1:round(vt_srate/2)))
-        % find first non nan value
-        first_nonnan = find(~isnan(linearPosition{i}),1);
-        % find value preceeding it
-        size_nans = first_nonnan-1;
-        % extract data of equal size from recorded points
-        sample_ydata = linearPosition{i}(first_nonnan:first_nonnan+size_nans-1);
-        % fill in sampled data points
-        linearPosition{i}(1:first_nonnan-1)=0;
-        linearPosition{i}(1:size_nans)=sample_ydata;
-    end   
+    % interp
+    xLabel = linspace(0,length(linearPosition{i}),length(linearPosition{i}));
+    badElements = isnan(linearPosition{i});
+    newY = linearPosition{i}(~badElements);
+    newX = xLabel(~badElements);
+    xq   = xLabel;
+    linearPosition{i} = interp1(newX, newY, xq);    
     
-    % grab integer indices of y_data to input to spline - find where NaNs are
-    y  = 1:length(linearPosition{i});
-    m  = isnan(linearPosition{i});
-
-    % query the spline interpolator
-    s  = spline(y(~m),linearPosition{i}(~m),y(m));
-
-    % replace NaN values with interpolated values; plot to see results
-    linearPosition{i}(m)  = round(s);  
 end
+%}
 
 % -- smooth data -- %
 for i = 1:numTrials
