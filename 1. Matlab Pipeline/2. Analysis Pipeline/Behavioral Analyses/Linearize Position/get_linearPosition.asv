@@ -103,7 +103,10 @@ for i = 1:numTrials
     
     % get coordinate points between ideal trajectory and real data
     linearPosition{i} = griddata(idealTraj{i}(1,:),idealTraj{i}(2,:),1:length(idealTraj{i}(1,:)),position_lin.X{i},position_lin.Y{i},'nearest');
-    
+
+    % smooth linear position - this is important, especially if you're
+    % using 1cm bins. Smoothing by the sampling rate seems to do the trick.
+    linearPositionSmooth{i} = smoothdata(linearPosition{i},'gauss',vt_srate);
 end
 
 % detect large changes in linear position bins, and fix them
@@ -114,9 +117,6 @@ for i = 1:numTrials
     zLinearDiff = abs(zscore(linearDiff));
     % find instances where stds are above 5
     faultyPos = find(zLinearDiff > 5);
-    if isempty('faultyPos')
-        continue
-    end
     % get index
     idxTemp = []; idx = [];
     for ii = 1:length(faultyPos)-1
@@ -128,39 +128,20 @@ for i = 1:numTrials
     linearPosition{i}(linearPosition{i} == 0) = NaN;
     
     % linearly interpolate (spline) missing data
-    
-    % if the data starts with a big fluctuation
-    if isnan(linearPosition{i}(1:round(vt_srate/2)))
+    if isnan(linearPosition{i}(1:15))
         % find first non nan value
-        first_nonnan = find(~isnan(linearPosition{i}),1);
+        first_nonnan = find(~isnan(y_data),1);
         % find value preceeding it
         size_nans = first_nonnan-1;
         % extract data of equal size from recorded points
-        sample_ydata = linearPosition{i}(first_nonnan:first_nonnan+size_nans-1);
+        sample_ydata = y_data(first_nonnan:first_nonnan+size_nans-1);
         % fill in sampled data points
-        linearPosition{i}(1:first_nonnan-1)=0;
-        linearPosition{i}(1:size_nans)=sample_ydata;
-    end   
-    
-    % grab integer indices of y_data to input to spline - find where NaNs are
-    y  = 1:length(linearPosition{i});
-    m  = isnan(linearPosition{i});
-
-    % query the spline interpolator
-    s  = spline(y(~m),linearPosition{i}(~m),y(m));
-
-    % replace NaN values with interpolated values; plot to see results
-    linearPosition{i}(m)  = round(s);  
-end
-
-% -- smooth data -- %
-for i = 1:numTrials
-
-    % smooth linear position - this is important, especially if you're
-    % using 1cm bins. Smoothing by the sampling rate seems to do the trick.
-    linearPositionSmooth{i} = smoothdata(linearPosition{i},'gauss',vt_srate);
+        y_data(1:first_nonnan-1)=0;
+        y_data(1:size_nans)=sample_ydata;
+    end    
     
 end
+    
 %{
 
 for i = 1:numTrials
