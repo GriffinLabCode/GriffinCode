@@ -160,7 +160,7 @@ if jitter == 1
                 end
             end 
 
-        elseif isempty(colorCode_jitter) == 0 && exist('jitterIdx')
+        elseif exist('colorCode_jitter') && isempty(colorCode_jitter) == 0 && exist('jitterIdx')
 
             % use the same x-axis data from earlier
             for ii = 1:length(x_axes)
