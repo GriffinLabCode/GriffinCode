@@ -1,22 +1,4 @@
-%% get linear position
-% This code takes the linear skeleton and the parameters identified by your
-% position_data variable (when to start/end) and estimates the linear
-% distance (linear position) from start to finish. 
-%
-% *** It is highly recommended that you use a 1cm resolution. ***
-%
-% This code also rather exhaustively accounts for misplaced linear bins
-% via interpolation and smoothing methods. A misplaced linear bin can occur
-% if the 2D position of the animal overlaps. For example, the rat runs up
-% the stem, sweeps his head into the return arm (while remaining on the
-% stem), then continues forward. This will result in linear bins belonging
-% to the return arm, when in reality they should be grouped into the stem.
-% Interpolation rather nicely handles this issue. In some instances (like
-% say the misplaced bins occur in the beginning or end of the trajectory),
-% the bins are replaced with theoretical bins (first 3 and last 3 ideal
-% bins). When interpolating, NaNs can be placed into the data, however
-% smoothing removes the nans. Additionally, smoothing the data makes it so
-% there are minimal noisy variations in head-position data.
+%% separate left and right trajectories
 %
 % -- INPUTS -- %
 % datafolder: string containing directory of data
@@ -132,9 +114,6 @@ end
 % store data
 linearPosUncorrected = linearPosition;
 
-% initialize variable
-linearPositionSmooth = cell([1 numTrials]);
-
 % detect large changes in linear position bins, and fix them
 for i = 1:numTrials
     
@@ -153,11 +132,8 @@ for i = 1:numTrials
         badElements = linearDiff > 5;
         if isempty(find(badElements > 0))
             next = 1;
-        else
-            disp(['Error detected on trial ',num2str(i)])
         end
         
-        %{
         % find elements surrounding the badElements and consider them bad
         % also
         idxBad = find(badElements == 1);
@@ -181,46 +157,44 @@ for i = 1:numTrials
         % update linear position
         linearPosition{i} = [];
         linearPosition{i} = newY;
-  
-       
+
+        %{
+        % account for instances when the first data is messed up
+        if isempty((isnan(linearPosition{i}(1:15)))) == 0
+            % find first non nan value
+            first_nonnan = find(~isnan(linearPosition{i}),1);
+            % find value preceeding it
+            size_nans = first_nonnan-1;
+            % extract data of equal size from recorded points
+            sample_ydata = linearPosition{i}(first_nonnan:first_nonnan+size_nans-1);
+            % fill in sampled data points
+            linearPosition{i}(1:first_nonnan-1)=0;
+            linearPosition{i}(1:size_nans)=sample_ydata;
+        end     
         
+        if isempty((isnan(linearPosition{i}))) == 0
+            % find nan
+            nanIdx = find(isnan(linearPosition{i}));
+            % find value preceeding it
+            size_nans = nanIdx-1;
+            % set equal
+            linearPosition{i}(nanIdx) = linearPosition{i}(nanIdx-1);
+        end
+        %}
+  
         if isempty(find(badElements > 0))
             next = 1;
         else
             disp(['Error detected on trial ',num2str(i)])
         end
         
-        %}
-        
         % in some situations, there are continued faulty positions
         idxBad = find(badElements == 1);
-
-        % leave while loop if no errors detected
+        
+        % leave loop if no errors detected
         if isempty(idxBad)
-            
-            % leave
-            next = 1;          
-          
-        % for all other cases, do the following...
+            next = 1;
         else
-            % check the first few and last few samples for nans
-            findNans = find(isnan(linearPosition{i})==1);
-            nanArray = findNans;
-            for ii = 1:length(findNans)
-                
-                % if there are events that are occuring in the begginging
-                if findNans(ii) == 1 | findNans(ii) == 2 | findNans(ii) == 3
-                    linearPosition{i}(ii) = ii;
-                    nanArray(ii) = 0;
-                end
-                
-                % there are events occuring at the very end
-                if findNans(ii) == length(linearPosUncorrected{i}) | findNans(ii) == length(linearPosUncorrected{i})-1 | findNans(ii) == length(linearPosUncorrected{i})-2
-                    linearPosition{i}(ii) = ii;
-                    nanArray(ii) = 0;
-                end
-                
-            end
             
             % use 8th of a sec surrounding the onsets to extract and correct
             idxCellBad = [];
@@ -234,29 +208,8 @@ for i = 1:numTrials
             % remove any values less than 1
             idxArrayBad = idxArrayBad_temp(idxArrayBad_temp > 0);
             
-            % if you see that bins 1:3 are bad, just replace them with bins
-            % 1:3. The effect will be negligable on your data
-            idxArrayNew = idxArrayBad;
-            for ii = 1:length(idxArrayBad)
-                
-                % if there are events that are occuring in the begginging
-                if idxArrayBad(ii) == 1 | idxArrayBad(ii) == 2 | idxArrayBad(ii) == 3
-                    linearPosition{i}(ii) = ii;
-                    idxArrayNew(ii) = 0;
-                end
-                
-                % there are events occuring at the very end
-                if idxArrayBad(ii) == length(linearPosUncorrected{i}) | idxArrayBad(ii) == length(linearPosUncorrected{i})-1 | idxArrayBad(ii) == length(linearPosUncorrected{i})-2
-                    linearPosition{i}(ii) = ii;
-                    idxArrayNew(ii) = 0;
-                end
-                
-            end
-            % remove any zeros in the new idx
-            idxArrayNew(idxArrayNew == 0)=[];
-            
             % assign bad elements
-            badElements(idxArrayNew) = 1;
+            badElements(idxArrayBad) = 1;
  
             %{
             % in some situations, there are continued faulty positions
@@ -285,17 +238,6 @@ for i = 1:numTrials
             badElements(largeOutBack1) = 1;
             %}
             
-            % this is weird, but do one spline interp
-            newY = linearPosition{i}(~badElements);
-            newX = xLabel(~badElements);
-            xq   = xLabel;
-            newY = interp1(newX, newY, xq, 'spline');
-
-            % update linear position
-            linearPosition{i} = [];
-            linearPosition{i} = newY; 
-            
-            % then do one normal interp
             newY = linearPosition{i}(~badElements);
             newX = xLabel(~badElements);
             xq   = xLabel;
@@ -303,101 +245,73 @@ for i = 1:numTrials
 
             % update linear position
             linearPosition{i} = [];
-            linearPosition{i} = newY;         
+            linearPosition{i} = newY;   
             
         end
-        
-        % check for nans and fix
-        findNans  = find(isnan(linearPosition{i})==1);
-        findNans2 = findNans;
-        for ii = 1:length(findNans)
-
-            % if there are events that are occuring in the begginging
-            if findNans(ii) == 1 | findNans(ii) == 2 | findNans(ii) == 3
-                linearPosition{i}(ii) = ii;
-                findNans2(ii) = 0;
-            end
-
-            % there are events occuring at the very end
-            if findNans(ii) == length(linearPosUncorrected{i}) | findNans(ii) == length(linearPosUncorrected{i})-1 | findNans(ii) == length(linearPosUncorrected{i})-2
-                linearPosition{i}(ii) = ii;
-                findNans2(ii) = 0;
-            end
-
-        end
-        
-        % remove any zeros in the new idx
-        findNans(findNans2 == 0)=[];
-
-        % assign bad elements
-        badElements(idxArrayNew) = 1; 
-        
-        % this is weird, but do one spline interp
-        newY = linearPosition{i}(~badElements);
-        newX = xLabel(~badElements);
-        xq   = xLabel;
-        newY = interp1(newX, newY, xq, 'spline');        
-        
     end
-
+    
     % if any errors exist afterwards, they have to be continuous errors
     idxBad2 = find(linearDiff > 5);
     if isempty(idxBad2)
-
-        % smooth linear position - this handles any nans present from
-        % interpolation and also accounts for quick and not so important
-        % variations in the rats head position
-        linearPositionSmooth{i} = smoothdata(linearPosition{i},'gauss',vt_srate);
-
         % check the interpolation
         figure('color','w'); plot(linearPosUncorrected{i},'Color',[.5 .5 .5],'LineWidth',1.5); hold on;
         plot(linearPosition{i},'r','LineWidth',1.5);
-        plot(linearPositionSmooth{i},'b','LineWidth',1.5);
-        legend('Original','Interpolated','Interp and Smoothed','Location','Northwest')
-        nanFind = find(isnan(linearPositionSmooth{i})==1);
-        if isempty(nanFind)
-            nanIndicator = 'No NaNs detected';
-        else
-            nanIndicator = 'NaNs detected';
-        end
-        title(['Trial ' num2str(i), ' | ',nanIndicator])
+        legend('Original','Interpolated','Location','Northwest')
+        title(['Trial ' num2str(i)])
         pause;
         continue
-   
-    else
-    
-        % replace with nans
-        linearPosition{i}(idxBad2(1):idxBad2(end)) = NaN;
-
-        % interp
-        xLabel = linspace(0,length(linearPosition{i}),length(linearPosition{i}));
-        badElements = isnan(linearPosition{i});
-        newY = linearPosition{i}(~badElements);
-        newX = xLabel(~badElements);
-        xq   = xLabel;
-        linearPosition{i} = interp1(newX, newY, xq, 'spline');  
-
-        % smooth linear position - this handles any nans present from
-        % interpolation and also accounts for quick and not so important
-        % variations in the rats head position
-        linearPositionSmooth{i} = smoothdata(linearPosition{i},'gauss',vt_srate);
-
-        % check the interpolation
-        figure('color','w'); plot(linearPosUncorrected{i},'Color',[.5 .5 .5],'LineWidth',1.5); hold on;
-        plot(linearPosition{i},'r','LineWidth',1.5);
-        plot(linearPositionSmooth{i},'b','LineWidth',1.5);
-        legend('Original','Interpolated','Interp and Smoothed','Location','Northwest')
-        nanFind = find(isnan(linearPositionSmooth{i})==1);
-        if isempty(nanFind)
-            nanIndicator = 'No NaNs detected';
-        else
-            nanIndicator = 'NaNs detected';
-        end
-        title(['Trial ' num2str(i), ' | ',nanIndicator])
-        pause;
-        
     end
+    
+    linearPosition{i}(idxBad2(1):idxBad2(end)) = NaN;
+    
+    % interp
+    xLabel = linspace(0,length(linearPosition{i}),length(linearPosition{i}));
+    badElements = isnan(linearPosition{i});
+    newY = linearPosition{i}(~badElements);
+    newX = xLabel(~badElements);
+    xq   = xLabel;
+    linearPosition{i} = interp1(newX, newY, xq);    
+    
+    % check the interpolation
+    figure('color','w'); plot(linearPosUncorrected{i},'Color',[.5 .5 .5]); hold on;
+    plot(linearPosition{i},'r');
+    legend('Original','Interpolated','Location','Northwest')
+    title(['Trial ' num2str(i)])
+    pause;
+    
+end
 
-end   
+% -- smooth data -- %
+for i = 1:numTrials
+
+    % smooth linear position - this is important, especially if you're
+    % using 1cm bins. Smoothing by the sampling rate seems to do the trick.
+    linearPositionSmooth{i} = smoothdata(linearPosition{i},'gauss',vt_srate);
+    
+end
+%{
+
+for i = 1:numTrials
+    figure('color','w'); hold on; 
+    plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]);
+    plot(prePosData{i}(1,:),prePosData{i}(2,:),'b','LineWidth',1);
+    plot(position_lin.X{i},position_lin.Y{i},'r','LineWidth',1)
+    pause;
+end
+%}
+
+% errors occur when the actual trajectory is not as long as the expected
+% trajectory. This needs to be handled.
+%{
+i = 1
+figure()
+plot(idealTraj{i}(1,:),idealTraj{i}(2,:),'Color',[.8 .8 .8]); hold on;
+plot(position_lin.X{i},position_lin.Y{i},'r')
+
+
+% missing positions in bins, plot position data with bins per trial
+maxBins = cellfun(@max,linearPosition);
+minBins = cellfun(@min,linearPosition);
+%}
 
 end
