@@ -1,6 +1,6 @@
 %% linear position helper
 
-function [linear_position_sm,position_data] = linearPosition_helper(datafolder,int_name,vt_name,missing_data)
+function [linear_position_sm,position_data] = linearPosition_helper(datafolder,int_name,vt_name,missing_data,linearSkel_name)
 
 % get vt data
 [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
@@ -16,11 +16,18 @@ numTrials = size(Int,1);
 linearStruct = load(linearSkel_name); % load('linearPositionData_JS');
 idealTraj = linearStruct.idealTraj;
 
-% define measurements variable
-measurements = linearStruct.data.measurements;
+try
+    
+    % define measurements variable    
+    measurements = linearStruct.data.measurements;
+    % define bin_size
+    bin_size = linearStruct.data.bin_size;
 
-% define bin_size
-bin_size = linearStruct.data.bin_size;
+catch
+    measurements = linearStruct.measurements;
+    bin_size = linearStruct.bin_size;    
+end
+
 
 % calculate converted distance in cm. This tells you how far the rat ran
 conv_distance = round(measurements.total_distance*bin_size);

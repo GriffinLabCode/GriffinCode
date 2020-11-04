@@ -1,6 +1,17 @@
 %% linear position helper
+%
+% this function is meant to structure your data so that you can accurately
+% get linear position data using T-maze position.
+%
+% One downside that is somewhat inevitable is that between goal exit and
+% goal entry, there is going to be some missing data points. Smoothing
+% seems to handle it well enough. This is a byproduct of a fail-safe coded
+% into the get_linearPosition code that accounts for instances where you
+% start your int file before you start your linear trajectory. 
+%
+% written by John Stout
 
-function [linear_position_sm,position_data] = linearPosition_helper(datafolder,int_name,vt_name,missing_data)
+function [linear_position_sm,position_data] = linearPosition_helper_TmazeEdition(datafolder,int_name,vt_name,missing_data,linearSkel_name)
 
 % get vt data
 [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
@@ -16,11 +27,14 @@ numTrials = size(Int,1);
 linearStruct = load(linearSkel_name); % load('linearPositionData_JS');
 idealTraj = linearStruct.idealTraj;
 
-% define measurements variable
-measurements = linearStruct.data.measurements;
-
-% define bin_size
-bin_size = linearStruct.data.bin_size;
+% define measurements and bin_size variables   
+try   
+    measurements = linearStruct.data.measurements;
+    bin_size = linearStruct.data.bin_size;
+catch
+    measurements = linearStruct.measurements;
+    bin_size = linearStruct.bin_size;    
+end
 
 % calculate converted distance in cm. This tells you how far the rat ran
 conv_distance = round(measurements.total_distance*bin_size);
@@ -28,13 +42,6 @@ total_dist = conv_distance;
 
 % define which measurements to use
 meas2use = [measurements.stem measurements.goalArm];
-
-% define which int measures to use
-Int2use = [1 2]; % stem entry to gz entry
-
-% define int lefts and rights
-trials_left  = find(Int(:,3)==1); % lefts
-trials_right = find(Int(:,3)==0); % rights
 
 %% -- stem to gz -- %%
 
@@ -83,7 +90,9 @@ clear linearPos_gz2ra
 %% concatenate trajectories and position data
 for i = 1:numTrials
     linear_position{i} = horzcat(linearPos_stem2gz{i},linearPos_gz2ra{i});
-    position_data{i}   = horzcat(stem2gzPosData{i},gz2raPosData{i});
+    position_data.X{i} = horzcat(position_stem2gz.X{i},position_gz2ra.X{i});
+    position_data.Y{i} = horzcat(position_stem2gz.Y{i},position_gz2ra.Y{i});
+    position_data.T{i} = horzcat(position_stem2gz.T{i},position_gz2ra.T{i});    
 end
 
 %% smooth data
@@ -94,11 +103,7 @@ for i = 1:numTrials
     linear_position_sm{i} = smoothdata(linear_position{i},'gauss',vt_srate);    
 end
 
-%% save data
-% save data to datafolder
-cd(datafolder)
-save('linearPositionData.mat','linearPositionSmooth','linearPosition','position_lin','linearPosUncorrected','idealTraj','prePosData');
-
+end
 
 
 
