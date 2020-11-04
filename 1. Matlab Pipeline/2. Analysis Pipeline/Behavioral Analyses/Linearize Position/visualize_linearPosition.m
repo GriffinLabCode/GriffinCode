@@ -1,46 +1,34 @@
 %% create and accept/reject linear position data
-% this function is designed so that the user can manually accept/reject
-% linear position variables. It is suggested that the users visualize their
-% linear positions per session so that you know there are no issues with
-% the code.
-%
-% -- INPUTS -- %
-% datafolder: string containing datafolder directory
-% linearPos_name: name of linear skeleton variable (use get_linearSkeleton
-%                   if your data is from a T-maze and you have an int
-%                   file). Use SCRIPT_saveLinearSkeleton for assistance.
-% int_name: name of int file
-% vt_name: video track name
-% missing_data: how to handle missing vt data
-%
-% -- OUTPUTS -- %
-% Outputs are saved and no returned
-%
-% written by John Stout
+% script to accept/reject linear position data
 
-function [] = visualize_linearPosition(datafolder,linearPos_name,int_name,vt_name,missing_data)
+clear; clc; close all;
 
-load(linearPos_name);
+% fix linear bins? This is only really important if bins overlap
+fix_bins = 1;
 
-[ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
+% load int file and define the maze positions of interest
+mazePos = [1 8];
+
+% manually switch to the datafolder of interest
+datafolder = pwd;
+
+% get vt data
+[ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,'interp','VT1.mat');
 
 % vt can vary a little bit, but we can easily define it
 vt_srate = round(getVTsrate(TimeStamps_VT,'y'));
 
 % define number of trials using int
-load(int_name)
+load('Int_JS_fixed')
 numTrials = size(Int,1);
 
 % load linear position data
-linearStruct = load(linearPos_name); % load('linearPositionData_JS');
+linearStruct = load('linearSkeleton_returns_final'); % load('linearPositionData_JS');
 idealTraj = linearStruct.idealTraj;
 
 % calculate converted distance in cm. This tells you how far the rat ran
 conv_distance = round(linearStruct.data.measurements.total_distance*linearStruct.data.bin_size);
 total_dist = conv_distance;
-
-% load int file and define the maze positions of interest
-mazePos = [1 8];
 
 % define int lefts and rights
 trials_left  = find(Int(:,3)==1); % lefts
@@ -56,8 +44,8 @@ for i = 1:numTrials
 end
 
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
-clear linearPosition position
-[linearPositionSmooth,linearPosition,position_lin,linearPosUncorrected] = get_linearPosition(idealTraj,prePosData,vt_srate);
+clear linearPosition linearPositionSmooth linearPosUncorrected position_lin
+[linearPositionSmooth,linearPosition,position_lin,linearPosUncorrected] = get_linearPosition(idealTraj,prePosData,vt_srate,fix_bins);
 
 % save data to datafolder
 cd(datafolder)

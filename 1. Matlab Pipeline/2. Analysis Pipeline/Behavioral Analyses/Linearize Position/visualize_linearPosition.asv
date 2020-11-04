@@ -18,9 +18,10 @@
 %
 % written by John Stout
 
-function [] = visualize_linearPosition(datafolder,linearPos_name,int_name,vt_name,missing_data)
+datafolder = pwd;
 
-load(linearPos_name);
+% load linear skeleton
+load('linearSkeleton_returns_final');
 
 [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
 
@@ -58,7 +59,7 @@ end
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
 clear linearPosition position
 [linearPositionSmooth,linearPosition,position_lin,linearPosUncorrected] = get_linearPosition(idealTraj,prePosData,vt_srate);
-linea
+
 % save data to datafolder
 cd(datafolder)
 save('linearPositionData.mat','linearPositionSmooth','linearPosition','position_lin','linearPosUncorrected','idealTraj','prePosData');
