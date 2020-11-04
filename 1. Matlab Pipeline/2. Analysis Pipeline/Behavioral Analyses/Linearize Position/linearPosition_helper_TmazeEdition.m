@@ -103,6 +103,14 @@ for i = 1:numTrials
     linear_position_sm{i} = smoothdata(linear_position{i},'gauss',vt_srate);    
 end
 
+%{ 
+% to visualize
+for i = 1:length(linear_position_sm);
+    figure(); plot(linear_position_sm{i},'k');
+    pause;
+end
+%}
+
 end
 
 
