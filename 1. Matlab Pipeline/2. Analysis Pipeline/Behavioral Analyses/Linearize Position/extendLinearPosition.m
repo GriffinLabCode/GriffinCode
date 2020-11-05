@@ -16,6 +16,9 @@ function [linearPosExtended] = extendLinearPosition(linearPosition,linearBinRang
     % of number of lfp samples
     extendedBins = linspace(linearBinRange(1),linearBinRange(end),numLFPsamples);
     
+    % create an x axis data variable
+    xData = linspace(linearBinRange(1),linearBinRange(end),length(linearPosition));
+    
     % interpolate data
-    linearPosExtended = interp1(linearBinRange(1):linearBinRange(2),linearPosition,extendedBins,'spline');
+    linearPosExtended = interp1(xData,linearPosition,extendedBins,'spline');
 end

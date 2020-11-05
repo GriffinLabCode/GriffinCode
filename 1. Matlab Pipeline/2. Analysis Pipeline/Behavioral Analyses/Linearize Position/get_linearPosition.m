@@ -5,19 +5,6 @@
 %
 % *** It is highly recommended that you use a 1cm resolution. ***
 %
-% This code also rather exhaustively accounts for misplaced linear bins
-% via interpolation and smoothing methods. A misplaced linear bin can occur
-% if the 2D position of the animal overlaps. For example, the rat runs up
-% the stem, sweeps his head into the return arm (while remaining on the
-% stem), then continues forward. This will result in linear bins belonging
-% to the return arm, when in reality they should be grouped into the stem.
-% Interpolation rather nicely handles this issue. In some instances (like
-% say the misplaced bins occur in the beginning or end of the trajectory),
-% the bins are replaced with theoretical bins (first 3 and last 3 ideal
-% bins). When interpolating, NaNs can be placed into the data, however
-% smoothing removes the nans. Additionally, smoothing the data makes it so
-% there are minimal noisy variations in head-position data.
-%
 % -- INPUTS -- %
 % datafolder: string containing directory of data
 % idealTraj: the trajectory skeleton obtained from get_linearSkeleton

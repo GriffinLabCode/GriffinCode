@@ -11,7 +11,7 @@
 %
 % written by John Stout
 
-function [linear_position_sm,position_data] = linearPosition_helper_TmazeEdition(datafolder,int_name,vt_name,missing_data,linearSkel_name)
+function [linear_position,linear_position_sm,position_data] = linearPosition_helper_TmazeEdition(datafolder,int_name,vt_name,missing_data,linearSkel_name)
 
 % get vt data
 [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
@@ -92,7 +92,7 @@ for i = 1:numTrials
     linear_position{i} = horzcat(linearPos_stem2gz{i},linearPos_gz2ra{i});
     position_data.X{i} = horzcat(position_stem2gz.X{i},position_gz2ra.X{i});
     position_data.Y{i} = horzcat(position_stem2gz.Y{i},position_gz2ra.Y{i});
-    position_data.T{i} = horzcat(position_stem2gz.T{i},position_gz2ra.T{i});    
+    position_data.TS{i} = horzcat(position_stem2gz.TS{i},position_gz2ra.TS{i});    
 end
 
 %% smooth data
