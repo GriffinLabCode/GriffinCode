@@ -43,7 +43,7 @@
 %
 % written by John Stout and Suhaas Adiraju
 
-function [swr_rate,swr_durations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearPos_name)
+function [swr_rate,swr_durations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearSkel_name)
 % -- get swrs and account for false positives if possible -- %
 cd(datafolder);
 
@@ -120,20 +120,14 @@ vt_srate = round(getVTsrate(TimeStamps_VT,'y'));
 % define number of trials using int
 numTrials = size(Int,1);
 
-% load linear position data
-linearStruct = load(linearPos_name); % load('linearPositionData_JS');
-idealTraj = linearStruct.idealTraj;
-
-% calculate converted distance in cm. This tells you how far the rat ran
-conv_distance = round(linearStruct.data.measurements.total_distance*linearStruct.bin_size);
-total_dist = conv_distance;
-
+%{
 % load int file and define the maze positions of interest
 mazePos = [1 7];
 
 % define int lefts and rights
 trials_left  = find(Int(:,3)==1); % lefts
 trials_right = find(Int(:,3)==0); % rights
+
 
 % get position data into one variable
 numTrials  = size(Int,1);
@@ -146,7 +140,12 @@ end
 
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
 clear linearPosition position
-[linearPosition,~,position] = get_linearPosition(idealTraj,prePosData,vt_srate);
+%[linearPosition,~,position] = get_linearPosition(idealTraj,prePosData,vt_srate);
+%}
+
+% get linear position
+clear linearPosition position
+[linearPosition_notSm,linearPosition,position] = linearPosition_helper_TmazeEdition(datafolder,int_name,vt_name,missing_data,linearSkel_name);
 
 % get kinematics
 timingVar = cell([1 numTrials]); accel = cell([1 numTrials]);
@@ -164,7 +163,7 @@ for triali = 1:numTrials
 end
     
 %% apply velocity filter
-speedFilt = 4; % 4cm/sec
+speedFilt = 5; % 4cm/sec
     
 % now, extract vt timestamps ONLY after goal zone entry. Use this to
 % extract speed. Immobility periods are defined when rats are less than
@@ -174,7 +173,7 @@ speedRem       = cell([1 numTrials]);
 for triali = 1:numTrials
     
     % find goalzone entry
-    GZentryIdx(triali)  = find(position.TS{triali} == Int(triali,2)); % vt timestamps == goal zone entry time
+    GZentryIdx(triali)  = dsearchn(position.TS{triali}',Int(triali,2)');%find(position.TS{triali} == Int(triali,2)); % vt timestamps == goal zone entry time
     timingEntry(triali) = timingVar{triali}(GZentryIdx(triali)); % get the actual second time for this - mostly plotting purpose
     
     % get speed after goal zone entry - use this later

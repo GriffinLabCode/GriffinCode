@@ -1,4 +1,7 @@
 %% Pseudo-simultaneous and individual classification
+%
+% AS OF NOW (11-6-2020) DON'T SELECT TRAIN ON 75 TEST ON 25
+%
 % This code uses a classifier found from Henry to classify two classes
 % designed by you. This code supports a few different features: 1) You can
 % train on 75% and test on 25% iteratively, 2) you can take the leave 1 out

@@ -49,9 +49,9 @@ meas2use = [measurements.stem measurements.goalArm];
 numTrials  = size(Int,1);
 prePosData = cell([1 size(Int,1)]);
 for i = 1:numTrials
-    stem2gzPosData{i}(1,:) = ExtractedX(TimeStamps_VT >= Int(i,1) & TimeStamps_VT <= Int(i,2));
-    stem2gzPosData{i}(2,:) = ExtractedY(TimeStamps_VT >= Int(i,1) & TimeStamps_VT <= Int(i,2));
-    stem2gzPosData{i}(3,:) = TimeStamps_VT(TimeStamps_VT >= Int(i,1) & TimeStamps_VT <= Int(i,2));
+    stem2gzPosData{i}(1,:) = ExtractedX(TimeStamps_VT > Int(i,1) & TimeStamps_VT <= Int(i,2));
+    stem2gzPosData{i}(2,:) = ExtractedY(TimeStamps_VT > Int(i,1) & TimeStamps_VT <= Int(i,2));
+    stem2gzPosData{i}(3,:) = TimeStamps_VT(TimeStamps_VT > Int(i,1) & TimeStamps_VT <= Int(i,2));
 end
 
 % get specific linear bins of interest for stem to goal zone entry
@@ -71,9 +71,9 @@ clear linearPos_stem2gz position_lin
 numTrials  = size(Int,1);
 prePosData = cell([1 size(Int,1)]);
 for i = 1:numTrials
-    gz2raPosData{i}(1,:) = ExtractedX(TimeStamps_VT >= Int(i,2) & TimeStamps_VT <= Int(i,8));
-    gz2raPosData{i}(2,:) = ExtractedY(TimeStamps_VT >= Int(i,2) & TimeStamps_VT <= Int(i,8));
-    gz2raPosData{i}(3,:) = TimeStamps_VT(TimeStamps_VT >= Int(i,2) & TimeStamps_VT <= Int(i,8));
+    gz2raPosData{i}(1,:) = ExtractedX(TimeStamps_VT > Int(i,2) & TimeStamps_VT <= Int(i,8));
+    gz2raPosData{i}(2,:) = ExtractedY(TimeStamps_VT > Int(i,2) & TimeStamps_VT <= Int(i,8));
+    gz2raPosData{i}(3,:) = TimeStamps_VT(TimeStamps_VT > Int(i,2) & TimeStamps_VT <= Int(i,8));
 end
 
 % get specific linear bins of interest for stem to goal zone entry
