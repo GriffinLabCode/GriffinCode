@@ -8,7 +8,7 @@ subplot 411
     xlabel('Start of trial to end of goal zone')
     ylabel('Linear Position (cm)')
     % find goalzone entry
-    GZentryIdx  = find(position.TS{trial} == Int(trial,2));
+    GZentryIdx  = dsearchn(position.TS{trial}',Int(trial,2)');
     timingEntry = timingVar{trial}(GZentryIdx);
     % plot    
     ylimits = ylim;
@@ -54,7 +54,8 @@ subplot 412
 % plot lfp data - was lfp and lfp_filtered
 subplot 413; plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;
 subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;
-    
+  
+if isempty(ripStart) == 0
     % plot ripple events
     ripStart = []; ripEnd = []; ripStartIdx = []; ripEndIdx = []; xStart=[];
     for i = 1:length(SWRtimes{trial})
@@ -82,6 +83,9 @@ subplot 414; plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .
     end
     
     set(gcf,'Position',[300 250 600 300])
+else
+    disp('No ripples detected')
+end
 
 % first 5 seconds or something
 EarlyRun_lfp = dsearchn(Timestamps',position.TS{trial}(1)+5*1e6);
@@ -98,34 +102,35 @@ set(gcf,'Position',[300 250 350 150])
 %set(gca,'ycolor',[1 1 1])
 
 % -- zoom into ripple -- %
-% plot lfp data
-figure('color','w')
-subplot 211; 
-plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;   
-xlim([xStart(1) xStart(8)])
-ylimits = ylim;
-for i = 1:length(ripStartIdx)
-    l1 = line([xStart(i) xStart(i)],[-10000 10000]);
-    l1.Color = 'm';
-    l1.LineWidth = 1.5;
-    %l2 = line([xEnd(i) xEnd(i)],[ylimits(1) ylimits(2)]);
-    %l2.Color = 'r';
-    %l2.LineWidth = 1;   
-end 
-subplot 212; 
-plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0],'LineStyle','-'); axis tight; box off;
-xlim([xStart(1) xStart(8)])
-ylimits = ylim;
-for i = 1:length(ripStartIdx)
-    l1 = line([xStart(i) xStart(i)],[-2000 2000]);
-    l1.Color = 'm';
-    l1.LineWidth = 1.5;
-    %l2 = line([xEnd(i) xEnd(i)],[ylimits(1) ylimits(2)]);
-    %l2.Color = 'r';
-    %l2.LineWidth = 1;   
-end 
-set(gcf,'Position',[300 250 350 150])
-
+if isempty(ripStart)==0
+    % plot lfp data
+    figure('color','w')
+    subplot 211; 
+    plot(xTimes_sec,lfp(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0]); axis tight; box off;   
+    xlim([xStart(1) xStart(8)])
+    ylimits = ylim;
+    for i = 1:length(ripStartIdx)
+        l1 = line([xStart(i) xStart(i)],[-10000 10000]);
+        l1.Color = 'm';
+        l1.LineWidth = 1.5;
+        %l2 = line([xEnd(i) xEnd(i)],[ylimits(1) ylimits(2)]);
+        %l2.Color = 'r';
+        %l2.LineWidth = 1;   
+    end 
+    subplot 212; 
+    plot(xTimes_sec,lfp_filtered(EntryIdx_lfp:ExitIdx_lfp),'Color',[0 .4 0],'LineStyle','-'); axis tight; box off;
+    xlim([xStart(1) xStart(8)])
+    ylimits = ylim;
+    for i = 1:length(ripStartIdx)
+        l1 = line([xStart(i) xStart(i)],[-2000 2000]);
+        l1.Color = 'm';
+        l1.LineWidth = 1.5;
+        %l2 = line([xEnd(i) xEnd(i)],[ylimits(1) ylimits(2)]);
+        %l2.Color = 'r';
+        %l2.LineWidth = 1;   
+    end 
+    set(gcf,'Position',[300 250 350 150])
+end
 %{
 % zoom in on at least 1 swr
 timesAround = [0.5*1e6 2.5*1e6];

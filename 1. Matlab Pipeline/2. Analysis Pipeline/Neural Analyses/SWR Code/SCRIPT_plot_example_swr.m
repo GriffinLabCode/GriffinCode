@@ -37,10 +37,11 @@
 % SWRtimes: timestamps of swrs
 %
 % written by John Stout and Suhaas Adiraju
-clear;
+clear; close all;
 
 % main Datafolder
-datafolder  = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Saline\Baseline';
+%datafolder  = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Saline\Baseline';
+datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Muscimol\Muscimol';
 
 % int name and vt name
 int_name     = 'Int_JS_fixed';
@@ -56,7 +57,7 @@ linearSkel_name = 'linearSkeleton_returns_final';
 
 % phase bandpass
 swrParams.phase_bandpass = [150 250];
-swrParams.swr_stdevs = [3 1];
+swrParams.swr_stdevs = [4 1];
 swrParams.gauss = 1;
 swrParams.InterRippleInterval = 0; % this is the time required between ripples. if ripple occurs within this time range (in sec),
 swrParams.mazePos = [2 7];
@@ -191,7 +192,8 @@ speedRem       = cell([1 numTrials]);
 for triali = 1:numTrials
     
     % find goalzone entry
-    GZentryIdx(triali)  = find(position.TS{triali} == Int(triali,2)); % vt timestamps == goal zone entry time
+    %GZentryIdx(triali)  = find(position.TS{triali} == Int(triali,2)); % vt timestamps == goal zone entry time
+    GZentryIdx(triali)  = dsearchn(position.TS{triali}',Int(triali,2)'); % vt timestamps == goal zone entry time
     timingEntry(triali) = timingVar{triali}(GZentryIdx(triali)); % get the actual second time for this - mostly plotting purpose
     
     % get speed after goal zone entry - use this later
@@ -271,7 +273,7 @@ end
 SCRIPT_swr_speed_sanityCheck;
 
 %% plot example
-trial = 1;
+trial = 2;
 % note, its tricky to save the lfp data to import into illustrator
 SCRIPT_swr_plot;
 
@@ -279,7 +281,7 @@ SCRIPT_swr_plot;
 figure('color','w'); hold on;
 plot(ExtractedX,ExtractedY,'Color',[.8 .8 .8]);
 plot(position.X{trial},position.Y{trial},'b');
-gzEntryVT = find(TimeStamps_VT == Int(trial,2));
+gzEntryVT = dsearchn(TimeStamps_VT',Int(trial,2)');
 l1 = line([ExtractedX(gzEntryVT)-40 ExtractedX(gzEntryVT)+40],[ExtractedY(gzEntryVT) ExtractedY(gzEntryVT)])
 l1.Color = 'r';
 l1.LineStyle = '--';
@@ -293,6 +295,7 @@ SWRcount = cellfun(@numel,SWRtimes);
 % total time spent in zone of interest
 TimesAfterEntry = []; timeInZone = [];
 for triali = 1:numTrials
+    GZentryIdx(triali)  = dsearchn(position.TS{triali}',Int(triali,2)'); % vt timestamps == goal zone entry time    
     TimesAfterEntry{triali} = position.TS{triali}(GZentryIdx(triali):end); % vt-data - get vt timestamps after goal zone entry (they should already be clipped by the end of goal zone occupancy)
     timeInZone(triali) = (TimesAfterEntry{triali}(end)-TimesAfterEntry{triali}(1))/1e6;
 end
