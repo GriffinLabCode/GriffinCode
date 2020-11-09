@@ -11,7 +11,7 @@
 %
 % written by John Stout
 
-function [linear_position,linear_position_sm,position_data] = linearPosition_helper_TmazeEdition(datafolder,int_name,vt_name,missing_data,linearSkel_name)
+function [linear_position,linear_position_sm,position_data,total_dist] = linearPosition_helper_TmazeEdition(datafolder,int_name,vt_name,missing_data,linearSkel_name)
 
 % get vt data
 [ExtractedX,ExtractedY,TimeStamps_VT] = getVTdata(datafolder,missing_data,vt_name);
