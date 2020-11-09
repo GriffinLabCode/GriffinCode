@@ -12,12 +12,24 @@
 %
 % written by John Stout
 
-function [sem] = stderr(mat)
-    
-    if size(mat,1) == 1 || size(mat,2) == 1
-        sem    = (nanstd(mat))./(sqrt(length(mat))); % if mat is a vector
-    else
-        sem    = (nanstd(mat))./(sqrt(size(mat,1))); % if mat is a matrix (observations X variables)
+function [sem] = stderr(mat,fun_arg)
+
+    if fun_arg == 1
+        
+        sem    = (nanstd(mat))./(sqrt(size(mat,1))); % if mat is a vector        
+        
+    elseif fun_arg == 2
+
+        sem    = (nanstd(mat'))./(sqrt(size(mat,2))); % if mat is a vector                
+        
+    elseif isempty('fun_arg') | exist('fun_arg') == 0
+        
+        if size(mat,1) == 1 || size(mat,2) == 1
+            sem    = (nanstd(mat))./(sqrt(length(mat))); % if mat is a vector
+        else
+            sem    = (nanstd(mat))./(sqrt(size(mat,1))); % if mat is a matrix (observations X variables)
+        end     
+        
     end
 
 end

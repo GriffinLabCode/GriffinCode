@@ -71,36 +71,33 @@ end
 
 % take average
 dataBinnedMethod = [];
-dataBinnedMethod = cellfun2(dataBinned,method,method_inputs);
+dataBinnedMethod = cellfun2(dataBinned,fun_apply,method_inputs);
 
-% often, doing the method above can leave you with nans. Therefore, you may
-% not need to do this
-if find(cellfun('isempty',dataBinnedMethod) > 0)
-    if contains(noData,[{'interp'} {'interpolate'}])
+if find(cellfun('isempty',dataBinnedMethod)
+if contains(noData,[{'interp'} {'interpolate'}])
+    
+    % do interpolation to handle NaNs
+    xLabel = linspace(0,total_dist,total_dist);
+    badElements = isnan(dataBinnedMethod);
+    newY = dataBinnedMethod(~badElements);
+    newX = xLabel(~badElements);
+    xq   = xLabel;
+    dataInterp = interp1(newX, newY, xq, 'spline');
 
-        % do interpolation to handle NaNs
-        xLabel = linspace(0,total_dist,total_dist);
-        badElements = isnan(dataBinnedMethod);
-        newY = dataBinnedMethod(~badElements);
-        newX = xLabel(~badElements);
-        xq   = xLabel;
-        dataInterp = interp1(newX, newY, xq, 'spline');
-
-        % organize output
-        dataOut = dataInterp;
-
-    elseif contains(noData,[{'zero'} {'zeros'}]) 
-
-        % find nans and replace with zero
-        badElements = isnan(dataBinnedMethod);
-        dataBinnedMethod(badElements) = 0;
-
-        % organize output
-        dataOut = dataBinnedMethod;
-
-    elseif contains(noData,[{'raw'}]) | isempty(noData);
-        dataOut = dataBinnedMethod;
-    end
-else
+    % organize output
+    dataOut = dataInterp;
+    
+elseif contains(noData,[{'zero'} {'zeros'}]) 
+    
+    % find nans and replace with zero
+    badElements = isnan(dataBinnedMethod);
+    dataBinnedMethod(badElements) = 0;
+    
+    % organize output
+    dataOut = dataBinnedMethod;
+    
+elseif contains(noData,[{'raw'}]) | isempty(noData);
     dataOut = dataBinnedMethod;
 end
+
+
