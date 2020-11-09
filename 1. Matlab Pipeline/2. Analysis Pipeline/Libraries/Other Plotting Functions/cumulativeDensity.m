@@ -26,6 +26,11 @@ function [p,kstat] = cumulativeDensity(data,color,x_label,title_label,saveName,p
         [h,p,kstat]=kstest2(data{1},data{2},'Tail','unequal');
     end
     
+    ylimits = ylim;
+    xlimits = xlim;
+    text(xlimits(2)/2,ylimits(2)/2,['D = ',num2str(kstat) newline 'p = ', num2str(p)])
+
+    
     if exist('saveName') 
         print('-painters',[saveName,'.eps'],'-depsc','-r0')
     end
