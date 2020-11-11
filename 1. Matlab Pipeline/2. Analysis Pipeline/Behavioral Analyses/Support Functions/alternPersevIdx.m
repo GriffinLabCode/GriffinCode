@@ -16,11 +16,7 @@
 %
 % written by John Stout on 9/21/2020
 
-function [alternIdx,persevErrorIdx,persevIdx,errorRate,traj_change] = alternPersevIdx(datafolder,int_name)
-
-% load int
-cd(datafolder);
-load(int_name);
+function [alternIdx,persevErrorIdx,persevIdx,errorRate,traj_change] = alternPersevIdx(Int)
 
 % numtrials
 numTrials = size(Int,1);

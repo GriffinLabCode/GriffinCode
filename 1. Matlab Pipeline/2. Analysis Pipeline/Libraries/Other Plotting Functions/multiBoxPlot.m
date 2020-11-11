@@ -47,9 +47,11 @@ function [b] = multiBoxPlot(data,xLabels,yLabel,saveName)
     ax.XTickLabel = xLabels;
     ax.XTickLabelRotation = 45;
     ylabel(yLabel);
-    
+    set(gcf,'Position',[300 250 350 300])
+
     if exist('saveName') 
         print('-painters',[saveName,'.eps'],'-depsc','-r0')
     end    
     
+
     
