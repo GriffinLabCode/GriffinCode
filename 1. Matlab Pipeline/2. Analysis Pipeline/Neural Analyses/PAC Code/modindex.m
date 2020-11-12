@@ -26,7 +26,7 @@ function [M] = modindex(data,disp,N)
 
 %%
 
-if nargin < 2
+if nargin < 3
    N = 18;
 end
 
