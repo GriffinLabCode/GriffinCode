@@ -14,7 +14,7 @@
 %
 % written by John Stout
 
-function [cleaned_lfp] = cleanLFP(lfp_data,srate,params,movingwin,cleanFreqs)
+function [cleaned_lfp_movingWin,cleaned_lfp_stationary,detrend_lfp] = cleanLFP(lfp_data,srate,params,movingwin,cleanFreqs)
 
 % defaults
 if exist('params') == 0 | isempty(params)
@@ -37,7 +37,10 @@ end
 detrend_lfp = locdetrend(lfp_data,srate,movingwin);
 
 % account for 60hz noise
-cleaned_lfp = rmlinesmovingwinc2(detrend_lfp,movingwin,10,params,[],[],cleanFreqs);
+cleaned_lfp_movingWin = rmlinesmovingwinc2(detrend_lfp,movingwin,10,params,[],[],cleanFreqs);
+
+% account for 60hz noise method 2
+cleaned_lfp_stationary = rmlinesc2(detrend_lfp,params,[],[],cleanFreqs);
 
 end
 
