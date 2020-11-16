@@ -33,24 +33,10 @@ function [b] = multiBarPlot(data,xLabels,yLabel)
     figure('color','w'); hold on;
     for i = 1:length(data)
         bar(i,mean(data{i}));
-        errorbar(i,mean(data{i}),stderr(data{i}));
+        errorbar(i,mean(data{i}),stderr(data{i},1));
     end
-    ylim([5 7])
-    
-    
-        xTemp = [];
-        xTemp = i*ones(size(data{i}));
-        x = [x;xTemp];
-        
-        yTemp = [];
-        yTemp = data{i};
-        y = [y;yTemp];
-    end
-    b = boxplot(y,x);
     box off
     ax = gca;
     ax.XTickLabel = xLabels;
     ax.XTickLabelRotation = 45;
     ylabel(yLabel);
-    
-    

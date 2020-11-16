@@ -3,7 +3,8 @@
 % incorporated a down-sampling procedure and changed some minor things to
 % improve analysis time. I chose to down-sample after filtering to prevent
 % aliasing problems. The idea to down-sample came from jadhav et al., 2016
-% ('coordinated excitation and inhibition...').
+% ('coordinated excitation and inhibition...'). This greatly improves
+% processing times.
 %
 % The shuffling results should be interpreted with caution.
 %
