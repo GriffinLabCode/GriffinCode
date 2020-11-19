@@ -43,7 +43,7 @@
 %
 % written by John Stout and Suhaas Adiraju
 
-function [swr_rate,swr_durations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearSkel_name)
+function [swr_rate,SWRdurations,SWRcount,SWRtimes] = extract_cleaned_swrs(datafolder,swrParams,csc_hpc,csc_compare,int_name,vt_name,missing_data,linearSkel_name)
 % -- get swrs and account for false positives if possible -- %
 cd(datafolder);
 
@@ -273,32 +273,3 @@ swr_rate = SWRcount./timeInZone; % in Hz (swrs/sec)
 
 %figure('color','w')
 %histogram(SWRrate)
-
-%% swr durations
-swr_durations = horzcat(SWRdurations{:});
-%{
-figure('color','w')
-h1 = histogram(swr_durations);
-h1.FaceColor = 'b';
-box off
-ylabel('# SWRs')
-xlabel('SWR duration (ms)')
-title('SWR events for all trials')
-%}
-%{
-%% swr spike timing
-cellNum    = 6;
-clusters   = dir('TT*.txt');
-spikeTimes = textread(clusters(cellNum).name);
-
-% concat spikes
-SWRtimes_all = horzcat(SWRtimes{:});
-
-% define time window
-timesAround = [0.5*1e6 0.5*1e6];
-
-% plot fig?
-plotFig = 1;
-
-[FR,n,excludeCell] = PETH_SWR(spikeTimes,SWRtimes_all,timesAround,plotFig)
-%}
