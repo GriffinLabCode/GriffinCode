@@ -16,6 +16,13 @@
 
 function [b] = multiBarPlot(data,xLabels,yLabel)
 
+    % check that data is a cell array, if not, convert it. This happens if
+    % you input a vector or matrix
+    if iscell(data) == 0
+        data_og = data; data = [];
+        data{1} = data_og;
+    end
+
     % make sure data is oriented correctly
     outSize = size(data{1});
     
@@ -34,9 +41,16 @@ function [b] = multiBarPlot(data,xLabels,yLabel)
     for i = 1:length(data)
         bar(i,mean(data{i}));
         errorbar(i,mean(data{i}),stderr(data{i},1));
+        x_axes               = ones(size(data{i})).*(1+((rand(size(data{i}))-0.5)/10));               
+        scat                 = scatter(x_axes,data{i});  
+        scat.MarkerEdgeColor = 'k';
+        scat.MarkerFaceColor = [.5 .5 .5];            
     end
     box off
     ax = gca;
+    ax.XTick = [1:length(data)];
     ax.XTickLabel = xLabels;
     ax.XTickLabelRotation = 45;
     ylabel(yLabel);
+    
+    
