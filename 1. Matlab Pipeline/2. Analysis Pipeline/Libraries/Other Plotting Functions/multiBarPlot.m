@@ -39,8 +39,8 @@ function [b] = multiBarPlot(data,xLabels,yLabel)
     % make figure
     figure('color','w'); hold on;
     for i = 1:length(data)
-        bar(i,mean(data{i}));
-        errorbar(i,mean(data{i}),stderr(data{i},1));
+        bar(i,mean(data{i}),'FaceColor',[0 0.5 1]);
+        errorbar(i,mean(data{i}),stderr(data{i},1),'Color',[0 0.5 1]);
         x_axes               = ones(size(data{i})).*(1+((rand(size(data{i}))-0.5)/10));               
         scat                 = scatter(x_axes,data{i});  
         scat.MarkerEdgeColor = 'k';
