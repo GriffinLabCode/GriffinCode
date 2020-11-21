@@ -81,15 +81,17 @@ for i = 1:length(step_phase)-1
         % store data so that rows are amplitude frequencies and colums are
         % phase frequencies
         mod_matrix(ii,i) = M_out.MI;
-    
+        
     end
 end
+
 
 %{
 figure('color','w')
 x = step_phase(1)+1:2:step_phase(end)
 y = step_amp(1)+3:5:step_amp(end)
 pcolor(x,y,mod_matrix); % rows are amplitude freqs, col are phase freqs
+%pcolor(x,y,mod_log)
 colormap(jet)
 shading 'interp'
 ylabel('Frequency for Amplitude (Hz)')
