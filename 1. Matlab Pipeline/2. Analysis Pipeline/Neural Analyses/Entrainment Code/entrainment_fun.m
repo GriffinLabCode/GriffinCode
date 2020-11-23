@@ -60,7 +60,7 @@ Phase        = phase_freq_detect(lfp_use, times_use, 6, 10, srate);
 PhaseRadians = Phase*(pi/180); 
 
 % only include epochs when theta:delta ratio is 4:1
-[thetaDeltaRatio,~,lfp_highTheta] = Theta_Delta_Ratio(LFP,[6 10],[1 4],srate);
+[thetaDeltaRatio,~,lfp_highTheta] = Theta_Delta_Ratio(LFP,[5 9],[0 4],srate);
 TD_idx = find(thetaDeltaRatio >= thetaDelta_threshold);
 
 if shuffle == 0
