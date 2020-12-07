@@ -11,7 +11,7 @@
 % -- OUTPUTS -- %
 % asymmetry_logIdx: Redish style theta asymmetry log(ascending) -log(descending)
 % asymmetry_idx: simpler theta asymmetry method (descending./(ascending+descending)
-%                   where values less than .5 have longer ascending
+%                   where values less than .5 have longer descending
 % cycle_period: in ms, the timing between two peaks of the theta cycle
 % cycle_amp: in voltage (not sure if uv), is the average amplitude between
 %               two cycles
@@ -116,7 +116,7 @@ end
 asymmetry_logIdx = log((ascending)) - log((descending));
 
 % Cole and voytek 2018 https://www.biorxiv.org/content/10.1101/452987v1.full.pdf
-asymmetry_idx = descending./(ascending+descending);
+asymmetry_idx = ascending./(ascending+descending);
 
 % get theta cyle period (in ms)
 % https://www.biorxiv.org/content/10.1101/452987v1.full.pdf
