@@ -9,6 +9,7 @@
 % lfp: vector of lfp
 % lfp_times: vector of lfp time stamps
 % lfp_srate: sampling rate of lfp
+% method; determine which way to extract phase
 %
 % -- OUTPUTS -- %
 % Phase: lfp theta phases vector
@@ -18,13 +19,22 @@
 %
 % written by John Stout
 
-function [Phase, signal_filtered, peak, trough] = get_thetaPhase(lfp,lfp_times,lfp_srate)
+function [Phase, signal_filtered, peak, trough] = get_thetaPhase(lfp,lfp_times,lfp_srate,method)
 
 % filter 1-80Hz like Amemiya et al 2018
 signal_filtered = skaggs_filter_var(lfp,1,80,lfp_srate);
 
 % phase freq detect - get phase bw 6-12 Amemiya et al., 2018
-Phase = phase_freq_detect(signal_filtered, lfp_times, 6, 12, lfp_srate);
+if exist('method')
+    Phase = phase_freq_detect(signal_filtered, lfp_times, 6, 12, lfp_srate);
+elseif method == 1 | contains(method,'interp')
+    Phase = phase_freq_detect(signal_filtered, lfp_times, 6, 12, lfp_srate);
+elseif method == 0 | contains(method,'hilbert')
+    signal_filtered = [];
+    signal_filtered = skaggs_filter_var(lfp,6,12,lfp_srate);
+    % angle of hilbert transform in degrees
+    Phase = rad2deg(angle(hilbert(signal_filtered)));
+end
 
 % using phase, use find function to find closest values to 0, to 180 (peak), and
 % to 360 (trough)
