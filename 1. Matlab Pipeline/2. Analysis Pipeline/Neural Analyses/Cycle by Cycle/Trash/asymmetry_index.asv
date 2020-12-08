@@ -4,20 +4,61 @@
 % datafolder: string datafolder
 % lfp: vector of lfp 
 % lfp_srate: sampling rate of lfp
-% phase_bandpass: 
 
-function [asymmetryIDX] = asymmetry_index(lfp,timesLFP,lfp_srate,phase_bandpass)
+function [asymmetryIDX,ascending,descending] = asymmetry_index(lfp,timesLFP,lfp_srate)
 
-% filter 4-12 hz
-[signal_filtered] = skaggs_filter_var(lfp,phase_bandpass(:,1),phase_bandpass(:,2),lfp_srate);
+% filter 1-80Hz like Amemiya et al 2018
+[signal_filtered] = skaggs_filter_var(lfp,1,80,lfp_srate);
 
-% phase freq detect - get phase
-Phase = phase_freq_detect(signal_filtered, timesLFP, 4, 12, lfp_srate);
+%{
+figure('color','w')
+subplot 211
+plot(timesLFP,lfp,'b');
+legend('raw lfp')
+subplot 212
+plot(timesLFP,signal_filtered,'k');
+legend('1-80hz filt lfp')
+%}
+
+% phase freq detect - get phase bw 6-12 Amemiya et al., 2018
+Phase = phase_freq_detect(signal_filtered, timesLFP, 6, 12, lfp_srate);
+
+%{
+figure('color','w');
+subplot 211;
+    plot(timesLFP,signal_filtered,'k');
+    legend('1-80hz filt lfp')
+    box off
+subplot 212;
+    plot(timesLFP,Phase,'k');
+    legend('6-12Hz phase')
+    box off
+%}
 
 % using phase, use find function to find closest values to 0, to 180 (peak), and
 % to 360 (trough)
 trough = find(Phase == 0); %should i add a line including 360?
 peak   = find(Phase == 180);
+
+% within each theta cycle (time betweek peaks - Amemiya et al., 2018), get
+% ascending and descending
+for i = 1:length(peak)-1
+    
+    % get trough between peaks (within a theta cycle)
+    trough_idx = find(trough > peak(i) & trough < peak(i+1));
+    if isempty(trough_idx) == 1
+        
+        continue
+    else    
+        trough_temp = trough(trough_idx);
+    
+    % ascending is peak - trough
+    ascending(i) = peak(i+1) - trough_temp;
+    
+    % descending is trough - peak
+    descending(i) = peak(i) - trough_temp;
+    
+end
 
 %% FOR DESCENDING [TROUGH - PEAK]
 
