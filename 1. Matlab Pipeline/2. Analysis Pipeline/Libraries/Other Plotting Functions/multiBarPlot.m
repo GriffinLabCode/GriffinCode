@@ -1,4 +1,4 @@
-%% multiBoxPlot
+%% multiBarPlot
 % this function was designed so that you can plot multiple different sizes
 % of data together in a box plot
 %
@@ -14,7 +14,7 @@
 %
 % written by John Stout
 
-function [b] = multiBarPlot(data,xLabels,yLabel)
+function [b] = multiBarPlot(data,xLabels,yLabel,jitter)
 
     % check that data is a cell array, if not, convert it. This happens if
     % you input a vector or matrix
@@ -41,10 +41,14 @@ function [b] = multiBarPlot(data,xLabels,yLabel)
     for i = 1:length(data)
         bar(i,mean(data{i}),'FaceColor',[0 0.5 1]);
         errorbar(i,mean(data{i}),stderr(data{i},1),'Color','k');
-        x_axes               = ones(size(data{i})).*(1+((rand(size(data{i}))-0.5)/10));               
-        scat                 = scatter(x_axes*i,data{i}); % multiply by i to follow the bar graph x axes 
-        scat.MarkerEdgeColor = 'k';
-        scat.MarkerFaceColor = [.5 .5 .5];            
+        if exist('jitter')
+            if jitter == 1 | contains(jitter,'y')
+                x_axes               = ones(size(data{i})).*(1+((rand(size(data{i}))-0.5)/10));               
+                scat                 = scatter(x_axes*i,data{i}); % multiply by i to follow the bar graph x axes 
+                scat.MarkerEdgeColor = 'k';
+                scat.MarkerFaceColor = [.5 .5 .5];  
+            end
+        end
     end
     box off
     ax = gca;
