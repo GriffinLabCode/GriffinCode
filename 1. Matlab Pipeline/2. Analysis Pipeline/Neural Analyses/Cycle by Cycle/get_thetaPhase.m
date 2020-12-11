@@ -26,12 +26,12 @@ signal_filtered = skaggs_filter_var(lfp,1,80,lfp_srate);
 
 % phase freq detect - get phase bw 6-12 Amemiya et al., 2018
 if exist('method') == 0
-    Phase = phase_freq_detect(signal_filtered, lfp_times, 6, 12, lfp_srate);
+    Phase = phase_freq_detect(signal_filtered, lfp_times, 4, 12, lfp_srate);
 elseif method == 1 | contains(method,'interp')
-    Phase = phase_freq_detect(signal_filtered, lfp_times, 6, 12, lfp_srate);
+    Phase = phase_freq_detect(signal_filtered, lfp_times, 4, 12, lfp_srate);
 elseif method == 0 | contains(method,'hilbert')
     signal_filtered = [];
-    signal_filtered = skaggs_filter_var(lfp,6,12,lfp_srate);
+    signal_filtered = skaggs_filter_var(lfp,4,12,lfp_srate);
     % angle of hilbert transform in degrees
     Phase = rad2deg(angle(hilbert(signal_filtered)));
 end
