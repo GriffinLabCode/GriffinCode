@@ -28,10 +28,10 @@
 % p value obtained to represent significant modulation
 %
 %
-function [mrl,mrl_subbed,p,spkPhaseRad,spkPhaseDeg,z] = entrainment_fun(LFP,spikes,signalTimes,phase_bandpass,srate,downSample,shuffle,thetaDelta_threshold)
+function [mrl,mrl_subbed,p,spkPhaseRad,spkPhaseDeg,z] = entrainment_fun(LFP,spikes,signalTimes,filt_bandpass,phase_bandpass,srate,downSample,shuffle,spkCount,thetaDelta_threshold)
 
 % Filter phase signal
-[signal_filtered] = skaggs_filter_var(LFP,phase_bandpass(:,1),phase_bandpass(:,2),srate);
+[signal_filtered] = skaggs_filter_var(LFP,filt_bandpass(:,1),filt_bandpass(:,2),srate);
 
 if downSample == 1
     
@@ -55,13 +55,17 @@ else
     
 end
 
-% Extract phase information from filtered signal
-Phase        = phase_freq_detect(lfp_use, times_use, 6, 10, srate); 
-PhaseRadians = Phase*(pi/180); 
-
+%{
 % only include epochs when theta:delta ratio is 4:1
-[thetaDeltaRatio,~,lfp_highTheta] = Theta_Delta_Ratio(LFP,[5 9],[0 4],srate);
-TD_idx = find(thetaDeltaRatio >= thetaDelta_threshold);
+[~,~,lfp_highTheta,times_highTheta] = Theta_Delta_Ratio(LFP,signalTimes,thetaDelta_threshold,[5 9],[1 4],srate);
+
+% per each theta cycle, calculate a theta:delta ratio. 
+[TDratio] = thetaDeltaRatio_cycleXcycle(LFP,signalTimes,srate);
+%}
+
+% Extract phase information from filtered signal
+Phase        = phase_freq_detect(lfp_use, times_use, phase_bandpass(1), phase_bandpass(2), srate); 
+PhaseRadians = Phase*(pi/180); 
 
 if shuffle == 0
     
@@ -74,28 +78,39 @@ if shuffle == 0
     end
     
     % only include if theta:delta > 4
-    phaseIdx    = intersect(spk_ind,TD_idx);
-    Phase_TD    = Phase(phaseIdx); 
-    PhaseRad_TD = PhaseRadians(phaseIdx);
+    %phaseIdx    = intersect(spk_ind,TD_idx);
+    %Phase_TD    = Phase(phaseIdx); 
+    %PhaseRad_TD = PhaseRadians(phaseIdx);
 
-    % Get rid of spikes that could not be assigned a phase value due to low
-    % amplitude oscillations
-    PhaseRad_TD(isnan(PhaseRad_TD)) = [];
-    Phase_TD(isnan(Phase_TD)) = [];
+    % Get rid of spikes that could not be assigned a phase value 
+    spkPhaseRad(isnan(spkPhaseRad)) = [];
+    spkPhaseDeg(isnan(spkPhaseDeg)) = [];
 
     % Create sub-sampled MRL value from bootstrapped spike-phase distribution
-    permnum = 1000;
-    for i = 1:permnum  
-        random_spikes = randsample(PhaseRad_TD,20);
-        mrl_sub(i)    = circ_r(random_spikes);      
-    end
+    permnum = 1000; % number of permutations
+    %spkCount = 50; % required for random sampling
+    numSpikes = length(spkPhaseRad);
+    
+    if numSpikes >= spkCount
+        for i = 1:permnum  
+            random_spikes = randsample(spkPhaseRad,spkCount);
+            mrl_sub(i)    = circ_r(random_spikes);      
+        end
 
-    % Calculate MRL, Rayleigh's z-statistic, and p-value based on null
-    % hypothesis of uniform spike-phase distribution
-    mrl_subbed  = mean(mrl_sub,2);
-    mrl         = circ_r(PhaseRad_TD); 
-    [p, z]      = circ_rtest(PhaseRad_TD); 
-    %[n, xout] = hist(spkPhaseDeg,[0:30:360]); 
+        % Calculate MRL, Rayleigh's z-statistic, and p-value based on null
+        % hypothesis of uniform spike-phase distribution
+        mrl_subbed  = mean(mrl_sub,2);
+        mrl         = circ_r(spkPhaseRad); 
+        [p, z]      = circ_rtest(spkPhaseRad); 
+        %[n, xout] = hist(spkPhaseDeg,[0:30:360]); 
+    else
+        mrl_subbed  = NaN;
+        mrl         = NaN;
+        p           = NaN;
+        spkPhaseRad = NaN;
+        spkPhaseDeg = NaN;
+        z           = NaN;      
+    end  
 
 elseif shuffle == 1
     
@@ -146,7 +161,8 @@ elseif shuffle == 1
             spkPhaseDeg = NaN;
             z           = NaN;      
         end  
-    end    
+    end
+    
 end
 
 end

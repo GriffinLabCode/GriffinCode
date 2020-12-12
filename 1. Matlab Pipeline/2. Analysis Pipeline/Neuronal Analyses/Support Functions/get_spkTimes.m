@@ -38,14 +38,15 @@ function [spkTimes,clusterID] = get_spkTimes(datafolder,tt_name)
         disp(['No clusters by the name of ',tt_name,' were found.'])
         spkTimes = [];
         clusters = [];
+        clusterID = NaN;
         return
-    end
-    
-    % get field names
-    clusterID = extractfield(clusters,'name');
-    
-    for ci=1:length(clusters)
-        spkTimes{ci} = textread(clusters(ci).name);
-    end
+    else
 
+        % get field names
+        clusterID = extractfield(clusters,'name');
+
+        for ci=1:length(clusters)
+            spkTimes{ci} = textread(clusters(ci).name);
+        end
+    end
 end

@@ -20,7 +20,7 @@
 %
 % written by Suhaas. Modified and organized by JS.
 
-function [theta_delta_rat,ThetaDeltaZ,highAmp_theta] = Theta_Delta_Ratio(LFP,theta_bandpass,delta_bandpass,srate)
+function [theta_delta_rat,ThetaDeltaZ,highAmp_theta,highAmp_times] = Theta_Delta_Ratio(LFP,signalTimes,thetaDelta_threshold,theta_bandpass,delta_bandpass,srate)
 
 % -- FOR THETA -- %
 
@@ -50,8 +50,9 @@ theta_delta_rat = inst_theta_power./inst_delta_power; % theta / delta - was delt
 ThetaDeltaZ = zscore(theta_delta_rat);
 
 % return high amplitude theta - JS 11/15/20
-highThetaIdx  = find(theta_delta_rat >= 4); % Hallock et al., 2016; Brandon et al., 2011
+highThetaIdx  = find(theta_delta_rat >= thetaDelta_threshold); % Hallock et al., 2016; Brandon et al., 2011
 highAmp_theta = LFP(highThetaIdx);
+highAmp_times = signalTimes(highThetaIdx);
 
 end
 
