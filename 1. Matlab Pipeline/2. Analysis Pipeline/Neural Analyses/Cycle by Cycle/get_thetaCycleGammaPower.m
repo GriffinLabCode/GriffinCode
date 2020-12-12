@@ -5,20 +5,13 @@
 % -- OUTPUTS -- %
 % hgXsg_idx: each element indicates a high:low gamma index per theta cycle
 
-%% LG:HG ratio
-% index of high gamma to low gamma. values above .5 indicate that high
-% gamma is higher than low gamma
-
-% -- OUTPUTS -- %
-% hgXsg_idx: each element indicates a high:low gamma index per theta cycle
-
 function [hgXsg_idx,slowGamma,fastGamma] = get_thetaCycleGammaPower(lfp,timesLFP,lfp_srate)
 
 % get peaks and troughs of theta
 [~, ~, peak, trough] = get_thetaPhase(lfp,timesLFP,lfp_srate);
 
 % get cycle times
-[~,cycleLFP] = get_thetaCycleTimes(timesLFP,lfp,peak,trough);
+[cycleTimes,cycleLFP] = get_thetaCycleTimes(timesLFP,lfp,peak,trough);
 
 % within each cycle, get fast gamma and slow gamma
 slowGammaFreq = [30 55]; % input
