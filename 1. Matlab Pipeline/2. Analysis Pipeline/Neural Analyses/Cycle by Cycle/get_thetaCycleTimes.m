@@ -17,7 +17,7 @@
 %
 % written by John Stout
 
-function [cycleTimes] = get_thetaCycleTimes(lfp_times,peak,trough)
+function [cycleTimes,cycleLFP] = get_thetaCycleTimes(lfp_times,lfp,peak,trough)
 
 % loop across theta cycles, filter data in between, calculate theta:delta
 % ratio. Theta cycles are from peak:peak
@@ -38,6 +38,7 @@ for i = 1:length(peak)-1
         
         % get times - cell array
         cycleTimes{i} = lfp_times(peak(i):peak(i+1));
+        cycleLFP{i}   = lfp(peak(i):peak(i+1));
         
     end
 end
