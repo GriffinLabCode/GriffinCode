@@ -2,10 +2,12 @@
 % the fraction of area above 25% of the peak firing rate, Peak must be over
 % 3Hz
 
-function [spatialCoverage] = spatial_coverage(rateMap)
+function [spatialCoverage] = spatial_coverage(rateMap,peakRate)
 
 % find peak rate
-peakRate = max(rateMap);
+if exist('peakRate') == 0
+    peakRate = max(rateMap);
+end
 
 % find threshold
 threshold = peakRate*.25;

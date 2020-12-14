@@ -22,7 +22,7 @@
 function [Phase, signal_filtered, peak, trough] = get_thetaPhase(lfp,lfp_times,lfp_srate,method)
 
 % filter
-signal_filtered = skaggs_filter_var(lfp,1,30,lfp_srate);
+signal_filtered = skaggs_filter_var(lfp,4,12,lfp_srate);
 
 % phase freq detect - get phase bw 6-12 Amemiya et al., 2018
 if exist('method') == 0
