@@ -12,7 +12,7 @@
 %
 % written by John Stout using statisticshowto website
 
-function [new_alpha,survive_alpha] = BenjaminiHochberg(p,Q)
+function [p_cor,new_alpha,survive_alpha] = BenjaminiHochberg(p,Q)
 % https://www.statisticshowto.com/benjamini-hochberg-procedure/
 
 % 1) Put the individual p-values in ascending order
@@ -44,6 +44,8 @@ survive_alpha = sorted_p < new_alpha; % boolean
 survive_alpha = survive_alpha(reSort);
 new_alpha     = new_alpha(reSort); % this is the alpha that each p-value is compared to
 
-end
-
-
+% correct p-values using multiplication. This is essentially the way
+% Bonferroni method works. Since alpha levels are varying, reSort reflects
+% the order (from max to least) in p-values. Multiple the reSort index by
+% the p-values
+p_cor = sorted_p.*reSort;
