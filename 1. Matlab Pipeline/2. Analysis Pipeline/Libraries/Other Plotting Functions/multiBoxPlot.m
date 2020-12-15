@@ -8,13 +8,16 @@
 %           you have two datasets you want to plot next to each other, then
 %           xLabels = [{'data1'},{'data2'}]
 % yLabels: String containing y axis label (ie whats your measurement?)
+% orient: orientation of boxplot. Empty if vertical, 'horizontal' if
+%           horizontal. 'vertcal' will also make it vertical
+% outliers: 'y' if you want to display outliers. anything else if otherwise
 %
 % -- OUTPUTS -- %
 % b: box plot figure
 %
 % written by John Stout
 
-function [b] = multiBoxPlot(data,xLabels,yLabel,saveName)
+function [b] = multiBoxPlot(data,xLabels,yLabel,orient,outliers,saveName)
 
     % make sure data is oriented correctly
     outSize = size(data{1});
@@ -41,7 +44,35 @@ function [b] = multiBoxPlot(data,xLabels,yLabel,saveName)
         yTemp = data{i};
         y = [y;yTemp];
     end
-    b = boxplot(y,x);
+    
+    % handle symbols
+    if contains(outliers,'y')
+
+        % default is vertical
+        if exist('orient') == 0 | isempty('orient')
+            b = boxplot(y,x,'orientation','vertical');
+        elseif exist('orient')
+            try
+                b = boxplot(y,x,'orientation',orient);
+            catch
+                disp('error in orient naming, defaulted to vertical')
+                b = boxplot(y,x,'orientation','vertical');
+            end
+        end     
+        
+    else
+        if exist('orient') == 0 | isempty('orient')
+            b = boxplot(y,x,'orientation','vertical');
+        elseif exist('orient')
+            try
+                b = boxplot(y,x,'orientation',orient,'symbol','');
+            catch
+                disp('error in orient naming, defaulted to vertical')
+                b = boxplot(y,x,'orientation','vertical','symbol','');
+            end
+        end
+    end
+    %axis tight
     box off
     ax = gca;
     ax.XTickLabel = xLabels;
