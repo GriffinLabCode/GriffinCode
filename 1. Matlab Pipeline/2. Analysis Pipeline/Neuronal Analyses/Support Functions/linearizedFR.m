@@ -34,7 +34,7 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR(spks,time
 
     % make time vector - instantaneous time intervals
     instTime = [];
-    instTime = gradient(times/1e6); % this is more exact %repmat(1/vt_srate,size(times)); % seconds sampling rate
+    instTime = gradient(times./1e6); % this is more exact %repmat(1/vt_srate,size(times)); % seconds sampling rate
           
     % shape of timestamp data - this will be instantaneous spike
     instSpk = [];

@@ -77,8 +77,9 @@ function [smoothFR,instFR,instSpk,instTime,instSpk_time,meanFR] = inst_neuronal_
         instSpk_time{triali} = timingVar(instSpk_idx); % use this to plot spks across time
 
         % make time vector - instantaneous time intervals
-        instTime{triali} = repmat(1/vt_srate,size(times{triali})); % seconds sampling rate
-
+        %instTime{triali} = repmat(1/vt_srate,size(times{triali})); % seconds sampling rate
+		instTime{triali}  = gradient(times{triali}./1e6);
+		
         % get instantaneous firing rate - this doesn't really make sense unless you
         % collapse across specific bins
         instFR{triali} = instSpk{triali}./instTime{triali};

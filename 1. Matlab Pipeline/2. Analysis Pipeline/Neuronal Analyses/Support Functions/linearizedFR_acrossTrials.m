@@ -53,7 +53,7 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR_acrossTri
         spkSearch = dsearchn(times{triali}',spks_trial);
         
         % make time vector - instantaneous time intervals
-        instTime{triali} = gradient(times{triali}/1e6); % this is more exact %repmat(1/vt_srate,size(times)); % seconds sampling rate
+        instTime{triali} = gradient(times{triali}./1e6); % this is more exact %repmat(1/vt_srate,size(times)); % seconds sampling rate
 
         % shape of timestamp data - this will be instantaneous spike
         instSpk{triali} = zeros(size(times{triali}));
