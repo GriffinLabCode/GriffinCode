@@ -57,7 +57,7 @@ if signal_data.phase_extraction == 0
     data.Xt_hil = hilbert(data.Xt);
     data.Xt_phase = angle(data.Xt_hil)*(180/pi)+180;
 elseif signal_data.phase_extraction == 1
-    [Phase, InstCycleFrequency, PerCycleFreq, signal_filtered] = phase_freq_detect(data.Xt,data.T,signal_data.phase_bandpass(:,1),signal_data.phase_bandpass(:,2),signal_data.srate);
+    Phase = phase_freq_detect(data.Xt,data.T,signal_data.phase_bandpass(:,1),signal_data.phase_bandpass(:,2),signal_data.srate);
     data.Xt_phase = Phase';
 end
 
@@ -66,6 +66,17 @@ data.Xg_hil = hilbert(data.Xg);
 data.Xg_env = abs(data.Xg_hil);
 hilbert_phase = hilbert(data.Xt);
 data.Xt_env = abs(hilbert_phase);
+
+% check size
+checkSize = size(data.Xt_phase);
+if checkSize(1) == 1
+    data.Xt_phase = data.Xt_phase';
+end
+
+checkSize = size(data.T);
+if checkSize(1) == 1
+    data.T = data.T';
+end
 
 data.Xt_freq = diff(data.Xt_phase)./diff(data.T);
 

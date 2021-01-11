@@ -17,7 +17,7 @@
 %
 % writen by John Stout
 
-function [x_sort,idxsort] = SortedRateMap(x,y,plot_fig,jetOn,axisLabels)
+function [x_sort,idxsort] = SortedRateMap(x,y,smoothFactor,plot_fig,jetOn,axisLabels)
 
 % normalize each row between 0 and 1
 numcells = size(x,1);
@@ -32,12 +32,18 @@ for celli = 1:numcells
     end
 end
 
+% smooth the sorted variable
+for i = 1:size(x_norm,1)
+    x_smooth(i,:) = smoothdata(x_norm(i,:),'gauss',smoothFactor);
+    y_smooth(i,:) = smoothdata(y_norm(i,:),'gauss',smoothFactor);   
+end
+
 % get indices to sort by
-[maxval, idxmax]  = max(y_norm');
+[maxval, idxmax]  = max(y_smooth');
 [matsort,idxsort] = sort(idxmax);
 
 % use idxsort to sort the x_norm variable
-x_sort = x_norm(idxsort,:);
+x_sort = x_smooth(idxsort,:);
 
 % make figure
 %figure('color','w');
