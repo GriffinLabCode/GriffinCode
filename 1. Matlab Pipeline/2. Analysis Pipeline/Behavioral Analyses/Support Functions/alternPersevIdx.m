@@ -16,7 +16,7 @@
 %
 % written by John Stout on 9/21/2020
 
-function [alternIdx,persevErrorIdx,persevIdx,errorRate,traj_change] = alternPersevIdx(Int)
+function [alternIdx,persevIdx,turnBias,errorRate,traj_change] = alternPersevIdx(Int)
 
 % numtrials
 numTrials = size(Int,1);
@@ -49,21 +49,28 @@ numErrors    = numel(left_errors)+numel(right_errors);
 % how many errors are in one direction, normalized by trial count?
 persevErrorIdx = abs(numel(right_errors)-numel(left_errors))/numTrials;
 
-% how many turns are in one direction, in general?
+% Turn bias
 right_turns = find(Int(:,3) == 1);
 left_turns  = find(Int(:,3) == 0);
-persevIdx   = abs(numel(right_turns)-numel(left_turns))/numTrials;
+turnBias   = abs(numel(right_turns)-numel(left_turns))/numTrials;
 
-% if you don't consider the number of incorrect trials, then you have
-% values approaching 1/1 when the rat performed really well, but got a
-% right turn wrong twice (and no lefts). This isn't really perseveration,
-% it could be, but not many samples. Therefore, this metric accounts for
-% the number of lefts and right turns via subtraction, then it normalizes
-% by the number of trials to account for cases where there are minimal
-% incorrect trials, but every incorrect is in one direction
+% perseveration
+% traj change tells you if the previous turn matched the current turn. so
+% traj_change(1) indicates that trial 2 was the same direction as trial 1.
+% However, perseveration indicates a pattern of turning in one direction,
+% therefore, we must consider more than 1 instances. Here, we consider
+% perseveration as an instance of > 2 simultaneous one direction turns
+% if persev = 1, then there was a perseveration, if 0, then there wasn't
+clear persev
+for i = 2:size(Int,1)-1
+    if (Int(i-1,3) == Int(i+1,3)) & (Int(i-1,3) == Int(i,3)) & (Int(i,3) == Int(i+1,3))
+        persev(i-1) = 1;
+    else
+        persev(i-1) = 0;
+    end
+end
 
-% alternation index
-%left_alts  = find(error_idx == 0 & turn_idx == 1);
-%right_alts = find(error_idx == 0 & turn_idx == 0);
-%alternIdx = abs(numel(right_alts)-numel(left_alts))/numTrials;
-%alternIdx  = numel(right_alts)/(numel(left_alts)+numel(right_alts));
+% perseveration index - because of indexing (consideration of 3 consecutive
+% turns = perseveration), we have to do numTrials-2
+persevIdx = sum(persev)/(numTrials-2);
+
