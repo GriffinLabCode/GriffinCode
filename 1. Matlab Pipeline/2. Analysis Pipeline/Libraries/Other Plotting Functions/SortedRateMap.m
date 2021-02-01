@@ -17,33 +17,53 @@
 %
 % writen by John Stout
 
-function [x_sort,idxsort] = SortedRateMap(x,y,smoothFactor,plot_fig,jetOn,axisLabels)
+function [x_sort,idxsort] = SortedRateMap(x,y,smoothFactor,normData,plot_fig,jetOn)
+
+% smooth the sorted variable
+if isempty(smoothFactor) == 0
+    for i = 1:size(x,1)
+        x_smooth(i,:) = smoothdata(x(i,:),'gauss',smoothFactor);
+        y_smooth(i,:) = smoothdata(y(i,:),'gauss',smoothFactor);   
+    end
+else
+    x_smooth = x;
+    y_smooth = y;
+end
 
 % normalize each row between 0 and 1
 numcells = size(x,1);
 numbins  = size(x,2);
 
-for celli = 1:numcells
-    for bini = 1:numbins
-        x_norm(celli,bini) = (x(celli,bini)-min(x(celli,:)))/...
-            (max(x(celli,:))-min(x(celli,:)));   
-        y_norm(celli,bini) = (y(celli,bini)-min(y(celli,:)))/...
-            (max(y(celli,:))-min(y(celli,:)));           
+if contains(normData,'y')
+    for celli = 1:numcells
+        x_norm(celli,:) = normalize(x_smooth(celli,:),'range');
+        y_norm(celli,:) = normalize(y_smooth(celli,:),'range');
+       
+        %{
+        for bini = 1:numbins
+            x_norm(celli,bini) = (x(celli,bini)-min(x(celli,:)))/...
+                (max(x(celli,:))-min(x(celli,:)));   
+            y_norm(celli,bini) = (y(celli,bini)-min(y(celli,:)))/...
+                (max(y(celli,:))-min(y(celli,:)));           
+        end
+        %}
     end
-end
-
-% smooth the sorted variable
-for i = 1:size(x_norm,1)
-    x_smooth(i,:) = smoothdata(x_norm(i,:),'gauss',smoothFactor);
-    y_smooth(i,:) = smoothdata(y_norm(i,:),'gauss',smoothFactor);   
+    
+else
+    x_norm = x_smooth;
+    y_norm = y_smooth;
 end
 
 % get indices to sort by
-[maxval, idxmax]  = max(y_smooth');
+[maxval, idxmax]  = max(y_norm');
 [matsort,idxsort] = sort(idxmax);
 
 % use idxsort to sort the x_norm variable
-x_sort = x_smooth(idxsort,:);
+x_sort = x_norm(idxsort,:);
+
+% remove nan
+%idxRem = find(isnan(x_sort(:,1))==1);
+%x_sort(idxRem,:)=[];
 
 % make figure
 %figure('color','w');
