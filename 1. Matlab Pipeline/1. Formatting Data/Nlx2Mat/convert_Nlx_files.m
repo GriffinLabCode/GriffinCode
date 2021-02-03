@@ -7,18 +7,18 @@
 clear; clc
 
 % designate folder where session-specfic files are located (most important)
-datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Ratticus\Saline\Baseline'
+datafolder = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\Pilot Rat\2021-01-20_09-20-40';
 cd(datafolder)
 
 % define which CSCs to convert. Maybe you only want to convert CSCs 1 and
 % 3. If you want CSCs 1:16: numCSC = 1:16;
-numCSC = [1 3];
+numCSC = [];
 
 %% Timestamps and events
 
 % load & convert Video-Tracking data
 try
-    [TimeStamps, ExtractedX, ExtractedY,ExtractedAngle] = Nlx2MatVT(strcat(datafolder,'\VT1.nvt'), [1 1 1 0 0 0], 0, 1, []);
+    [TimeStamps, ExtractedX, ExtractedY,ExtractedAngle] = Nlx2MatVT(strcat(datafolder,'\VT1.nvt'), [1 1 1 0 0 0], 1, 1, []);
     save(strcat(datafolder,'\VT1.mat'));
     clearvars -except datafolder numCSC
 catch

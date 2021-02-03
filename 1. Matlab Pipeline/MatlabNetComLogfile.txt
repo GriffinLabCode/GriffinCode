@@ -1,11 +1,24 @@
 NetCom Log File Opened - File Name:  MatlabNetComLogfile.txt
-Time Opened: (mm/dd/yyyy): 01/11/2021 At Time: 09:28:44
+Time Opened: (mm/dd/yyyy): 01/19/2021 At Time: 09:49:29
 NetCom Version 3.1.0
 
--* NOTICE  *- (mm/dd/yyyy): 01/11/2021 At Time: 09:28:44 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26200.
--* NOTICE  *- (mm/dd/yyyy): 01/11/2021 At Time: 09:28:44 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
--* NOTICE  *- (mm/dd/yyyy): 01/11/2021 At Time: 09:28:44 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26201.
--* NOTICE  *- (mm/dd/yyyy): 01/11/2021 At Time: 09:29:23 - NodeConnectionClient::AddStreamObject - Object CSC1 has been added to our stream list. Stream Type: CSC
--* NOTICE  *- (mm/dd/yyyy): 01/11/2021 At Time: 09:29:23 - NodeConnectionClient::AddStreamObject - Object CSC9 has been added to our stream list. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 09:49:34 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26200.
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 09:49:34 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 09:49:38 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26201.
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 09:49:43 - NodeConnectionClient::AddStreamObject - Object CSC1 has been added to our stream list. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 09:49:43 - NodeConnectionClient::AddStreamObject - Object CSC9 has been added to our stream list. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: SingleElectrode
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Stereotrode
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Tetrode
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for SingleElectrode stream processing thread. Stream Type: SingleElectrode
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Stereotrode stream processing thread. Stream Type: Stereotrode
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Event
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Video
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:17 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Tetrode stream processing thread. Stream Type: Tetrode
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:18 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for CSC stream processing thread. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:18 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Video stream processing thread. Stream Type: Video
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:18 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Event stream processing thread. Stream Type: Event
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:18 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
+-* NOTICE  *- (mm/dd/yyyy): 01/19/2021 At Time: 12:32:18 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: CSC
 Log File Closed - End of File
 
