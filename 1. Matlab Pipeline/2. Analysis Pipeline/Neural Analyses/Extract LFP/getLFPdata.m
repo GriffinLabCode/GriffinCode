@@ -24,7 +24,7 @@ load(csc_name,'Samples','Timestamps');
 try load(csc_name,'SampleFrequencies'); catch; end % try to load sample frequencies for srate
 
 % convert data - do not linspace
-[lfpTimes, lfp] = interp_TS_to_CSC_length_non_linspaced(Timestamps, Samples);   
+[lfpTimes, lfp] = convertLFPdata(Timestamps, Samples);   
 
 if exist('SampleFrequencies')
     srate = mean(SampleFrequencies);
