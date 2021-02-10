@@ -29,6 +29,20 @@ function [data] = makedatafile_morlet(signal_data)
 
 %%
 
+% check size
+checkSize = size(signal_data.phase_EEG);
+if checkSize(2) == 1
+    signal_data.phase_EEG = signal_data.phase_EEG';
+end
+checkSize = size(signal_data.amplitude_EEG);
+if checkSize(2) == 1
+    signal_data.amplitude_EEG = signal_data.amplitude_EEG';
+end
+checkSize = size(signal_data.timestamps);
+if checkSize(2) == 1
+    signal_data.timestamps= signal_data.timestamps';
+end
+
 data.FS = signal_data.srate;
 data.ADChannel = 64;
 
@@ -76,8 +90,17 @@ data.Xg_env = abs(convolution_result_fft_power);
 
 data.Xt_phase = angle(convolution_result_fft_phase)*(180/pi)+180;
 
+% check size
+checkSize = size(data.Xt_phase);
+if checkSize(1) == 1
+    data.Xt_phase = data.Xt_phase';
+end
+checkSize = size(data.T);
+if checkSize(1) == 1
+    data.T = data.T';
+end
+
 data.Xt_freq = diff(data.Xt_phase)./diff(data.T);
 
 
 end
-
