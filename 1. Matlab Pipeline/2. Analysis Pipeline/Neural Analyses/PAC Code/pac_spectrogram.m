@@ -86,7 +86,7 @@ for i = 1:length(step_phase)-1
 end
 
 
-%{
+
 figure('color','w')
 x = step_phase(1)+1:2:step_phase(end)
 y = step_amp(1)+3:5:step_amp(end)
@@ -97,4 +97,3 @@ shading 'interp'
 ylabel('Frequency for Amplitude (Hz)')
 xlabel('Phase')
 
-%}

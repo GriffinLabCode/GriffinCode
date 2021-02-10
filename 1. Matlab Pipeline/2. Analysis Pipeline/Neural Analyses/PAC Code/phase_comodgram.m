@@ -1,4 +1,4 @@
-function [phase_map_var] = phase_comodgram(signal_data, phase_bins, amplitude_freq_bins, phase_freq_bins, plot)
+function [phase_map_var,M,amplitude_highpass] = phase_comodgram(signal_data, phase_bins, amplitude_freq_bins, phase_freq_bins, plot)
 
 %   This function creates a co-modulogram of normalized amplitude values
 %   across phase bins. 

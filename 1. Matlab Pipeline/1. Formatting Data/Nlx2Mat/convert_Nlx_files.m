@@ -7,12 +7,12 @@
 clear; clc
 
 % designate folder where session-specfic files are located (most important)
-datafolder = 'C:\Users\jstout\Desktop\Data 2 Move\Dandelion - R21\2021-02-09_10-29-33';
+datafolder = 'C:\Users\jstout\Desktop\Data 2 Move\Dandelion - R21\2021-02-10_10-10-57';
 cd(datafolder)
 
 % define which CSCs to convert. Maybe you only want to convert CSCs 1 and
 % 3. If you want CSCs 1:16: numCSC = 1:16;
-numCSC = [3,6,8,10,11];
+numCSC = [1,3,6,8,10,11];
 
 %% Timestamps and events
 
