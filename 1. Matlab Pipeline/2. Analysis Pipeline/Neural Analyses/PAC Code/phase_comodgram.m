@@ -54,7 +54,7 @@ for phasei = 1:length(phase_lowpass)
             [data] = makedatafile_morlet(signal_data);
         end
         
-        [M] = modindex(data,'n',phase_bins);
+        [M] = modindex(data,'y',phase_bins);
         
         phase_map_temp(poweri,1:phase_bins) = M.NormAmp;
         
@@ -74,6 +74,7 @@ colormap(jet)
 shading 'interp'
 ylabel('Frequency for Amplitude (Hz)')
 xlabel('Phase')
+
 end
 
 
