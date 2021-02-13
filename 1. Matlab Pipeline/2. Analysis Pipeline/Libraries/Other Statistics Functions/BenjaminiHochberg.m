@@ -12,7 +12,7 @@
 %
 % written by John Stout using statisticshowto website
 
-function [p_cor,new_alpha,survive_alpha] = BenjaminiHochberg(p,Q)
+function [new_alpha,survive_alpha] = BenjaminiHochberg(p,Q)
 % https://www.statisticshowto.com/benjamini-hochberg-procedure/
 
 % 1) Put the individual p-values in ascending order
@@ -26,6 +26,8 @@ rank_vals = 1:length(sorted_p);
 %   i = individual p-values rank
 %   m = total number of tests
 %   Q = false discovery rate (chosen by you)
+%N = length(rank_vals);
+%Q = (sorted_p*N)/rank_vals;
 if exist("Q") == 0 
     Q   = 0.05; % false discovery rate set to 0.05
 end
@@ -35,16 +37,24 @@ new_alpha = (i./m).*Q; % this is benjamini hochberg
 
 % 4) Compare your original p-values to the critical B-H from step 3, find
 % the largest p-value that is smaller than the critical value
-survive_alpha_temp = sorted_p < new_alpha; % boolean
+survive_temp    = find(sorted_p < new_alpha); % boolean
+largestPsurvive = max(survive_temp);
+new_alpha       = sorted_p(largestPsurvive);
+
+% all values lower than the new alpha, plus the smallest significant is
+% significant
+survive = sorted_p < new_alpha;
+survive(largestPsurvive) = 1;
 
 % re-sort the data
 %[~,reSort] = sort(idx_sort);
 origOrder = dsearchn(sorted_p',p');
 
 % p-values that survived alpha are boolean
-survive_alpha = survive_alpha_temp(origOrder);
-new_alpha     = new_alpha(origOrder); % this is the alpha that each p-value is compared to
+survive_alpha = survive(origOrder);
+orig_p        = sorted_p(origOrder); % this is the alpha that each p-value is compared to
 
+%{
 % correct p-values using multiplication. This is essentially the way
 % Bonferroni method works. Since alpha levels are varying, reSort reflects
 % the order (from max to least) in p-values. Multiple the p-values by
@@ -55,5 +65,5 @@ revOrder = (dsearchn(p_desc',p'))';
 % multiply the least p value by the smallest number, the greatest by the
 % greatest number
 p_cor = p.*revOrder;
-
+%}
 

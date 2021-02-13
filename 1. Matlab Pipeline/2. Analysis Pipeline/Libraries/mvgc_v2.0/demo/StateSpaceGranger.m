@@ -1,4 +1,12 @@
-function [fx2y,fy2x,freqs,ssmo,fx2z,fz2x,fy2z,fz2y] = StateSpaceGranger(data,ssmo,pf)
+%% StateSpaceGranger
+%
+% data is your structure array containing lfp data and sampling rate (see
+% below)
+% ssmo and pf are obtained through EstimateModelOrder
+% trigger_warning = 'n' does not pause within iterations if the frequency
+% resolution is large
+
+function [fx2y,fy2x,freqs,ssmo,fx2z,fz2x,fy2z,fz2y] = StateSpaceGranger(data,ssmo,pf,trigger_warning)
 % MVGC state-space demo
 
 %% Parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -123,9 +131,12 @@ if isempty(fres)
 	fres = 2^nextpow2(nobs);
     fprintf('\nUsing frequency resolution %d\n',fres);
 end
-if fres > 10000 % adjust to taste
-	fprintf(2,'\nWARNING: large frequency resolution = %d - may cause computation time/memory usage problems\nAre you sure you wish to continue [y/n]? ',fres);
-	istr = input(' ','s'); if isempty(istr) || ~strcmpi(istr,'y'); fprintf(2,'Aborting...\n'); return; end
+
+if contains(trigger_warning,'y')
+    if fres > 10000 % adjust to taste
+        fprintf(2,'\nWARNING: large frequency resolution = %d - may cause computation time/memory usage problems\nAre you sure you wish to continue [y/n]? ',fres);
+        istr = input(' ','s'); if isempty(istr) || ~strcmpi(istr,'y'); fprintf(2,'Aborting...\n'); return; end
+    end
 end
 
 ptic(sprintf('\n*** ss_to_spwcgc (at frequency resolution = %d)... ',fres));
