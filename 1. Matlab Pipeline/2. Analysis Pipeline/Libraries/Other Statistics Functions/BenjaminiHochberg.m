@@ -26,9 +26,10 @@ rank_vals = 1:length(sorted_p);
 %   i = individual p-values rank
 %   m = total number of tests
 %   Q = false discovery rate (chosen by you)
-%N = length(rank_vals);
-%Q = (sorted_p*N)/rank_vals;
+
 if exist("Q") == 0 
+    %N = length(rank_vals);
+    %Q = (sorted_p*N)/rank_vals;    
     Q   = 0.05; % false discovery rate set to 0.05
 end
 i         = rank_vals; % ranked p-values
