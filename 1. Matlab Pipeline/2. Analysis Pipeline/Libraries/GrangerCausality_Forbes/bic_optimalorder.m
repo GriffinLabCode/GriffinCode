@@ -21,7 +21,7 @@
 %
 % written by John Stout
 
-function [] = bic_optimalorder(signal1,signal2,srate,orderRuns)
+function [optimalorder,bic_val] = bic_optimalorder(signal1,signal2,srate,orderRuns)
 
 if orderRuns < 10
     orderRuns = 10;
@@ -40,7 +40,7 @@ for orderi = 1:orderRuns
     % disp
     disp(['order ',num2str(orderi)])
     % get temporary average
-    [order_val,optimalorder] = min(mean(bic,1)); 
+    [bic_val,optimalorder] = min(mean(bic,1)); 
     % stop loop if optimal order is less than the loop length as long as
     % you've done at least 10
     if orderi > 10
