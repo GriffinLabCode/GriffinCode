@@ -1,4 +1,4 @@
-function [GCy2x, GCx2y] = GCspectral(datax, datay, order, sfreq)
+function [GCy2x, GCx2y, frequencies] = GCspectral(datax, datay, order, sfreq)
 
 % datax is the signal x which is in 1xN row, N is the length of data x and y;
 % datay is the signal y which is in 1xN row, N is the length of data y and x;
@@ -19,3 +19,6 @@ C2=lsRegression(datay,datax,order,datay,order);
 
 GCy2x = AAA(floor(sfreq/2) : end);
 GCx2y = BBB(floor(sfreq/2) : end);
+
+% define frequency range
+frequencies = 0:floor(sfreq/2);
