@@ -33,7 +33,7 @@ if exist('params') == 0 | isempty(params)
 end
 
 if exist('movingwin') == 0 | isempty(movingwin)
-    movingwin = [.5 .01];
+    movingwin = [.5 .1]; % try [0.5 0.01] also
 end
 
 if exist('cleanFreqs') == 0 | isempty(cleanFreqs)
@@ -47,7 +47,7 @@ try checkFields = extractfield(params,'Fs'); catch; params.Fs = srate; end
 detrend_lfp = locdetrend(lfp_data,srate,movingwin);
 
 % account for 60hz noise
-cleaned_lfp_movingWin = rmlinesmovingwinc2(detrend_lfp,movingwin,10,params,[],[],cleanFreqs);
+cleaned_lfp_movingWin = rmlinesmovingwinc2(detrend_lfp,movingwin,10,params,[],[], cleanFreqs);
 
 % account for 60hz noise method 2
 cleaned_lfp_stationary = rmlinesc2(detrend_lfp,params,[],[],cleanFreqs);

@@ -1,4 +1,4 @@
-%% startup
+  %% startup
 % Run this first
 %
 % last edit 8/3/20 - JS
@@ -13,7 +13,7 @@ catch
     main_directory = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline';
 end
 
-% interface with user to redefine main_directory
+% interface with user to redefine main_directory 
 disp(main_directory)
 prompt = 'Is the directory above the same directory where your "Startup" function is located? [Y/N] ';
 resp = input(prompt,'s');
