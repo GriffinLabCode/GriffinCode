@@ -2,7 +2,7 @@
 %
 % JS custom parameters
 
-function [] = getCustomParams()
+function [params] = getCustomParams()
 
 params.tapers    = [3 5];
 params.trialave  = 0;
