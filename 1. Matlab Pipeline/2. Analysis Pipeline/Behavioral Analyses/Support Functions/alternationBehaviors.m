@@ -16,7 +16,7 @@
 %
 % written by John Stout on 9/21/2020
 
-function [alternIdx,persevIdx,turnBias,errorRate,traj_change] = alternPersevIdx(Int)
+function [alternIdx,persevIdx,turnBias,errorRate,traj_change,errorCorrectError] = alternationBehaviors(Int)
 
 % numtrials
 numTrials = size(Int,1);
@@ -74,14 +74,16 @@ end
 % turns = perseveration), we have to do numTrials-2
 persevIdx = sum(persev)/(numTrials-2);
 
-% error correction
+% error correction - find instances like the following: LL RR or RR LL or
+% RRR LL or LLLLL RR etc... essentially, it finds an error correction error
 clear persev
 for i = 2:size(Int,1)-1
     if (Int(i-1,3) == Int(i,3)) & (Int(i,3) ~= Int(i+1,3)) & (Int(i+1,3) == Int(i+2,3))
-        errorCorrection(i-1) = 1;
+        errorCorrectError(i-1) = 1;
     else
-        errorCorrection(i-1) = 0;
+        errorCorrectError(i-1) = 0;
     end
 end
+errorCorrectError = sum(errorCorrectError);
 
 
