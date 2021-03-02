@@ -6,7 +6,7 @@ codeDir = getCurrentPath();
 addpath(codeDir);
 
 % 
-cd('C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21')
+%cd('C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21')
 
 %% some parameters set by the user
 
