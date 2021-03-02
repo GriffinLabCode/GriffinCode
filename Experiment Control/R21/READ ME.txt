@@ -1,0 +1,12 @@
+This code requires a connection to digital lynx sx using netcom.
+
+The netcom code is in the NetComeDevelopmentPackage provided and was downloaded from neuralynx website.
+
+WAV file samples are used to run .WAV file played on the computer, through the signal mouse, and acquired
+with cheetah. This makes it so you don't need to implant a rat to test some code. You just play a file.
+____________________________________________________________________________________________________________
+
+This code was designed so that you can download it from github and use your own directories to call functions.
+In other words, the directories for this code do not matter and are defined by you.
+
+-JS 7/31/2020
