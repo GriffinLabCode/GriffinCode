@@ -68,6 +68,6 @@ save(save_var);
 
 % second save - for parameters
 save_var2 = strcat(rat_name,'_','baselineParameters');
-save(save_var2,'threshold','LFP1name','LFP2name');
+save(save_var2,'threshold','LFP1name','LFP2name','params','amountOfData');
 
 

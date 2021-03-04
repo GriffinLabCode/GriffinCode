@@ -371,106 +371,24 @@ while session_time < session_length
         % only during delayed alternations will you start the treadmill
         if delay_length > 1
 
-            %{
-            % delay
-            cohDetectionStart = 20;
-            disp(['Brief pause for ',num2str(cohDetectionStart),' secs'])
-            pause(cohDetectionStart);
-            %}
-            
-            % use tic toc to store timing for yoked control and for
-            % controlling the maze
+
+            % use tic toc to store timing for yoked control
             tic;
-            
-            % for loop start
-            coh_temp = [];
-            coh = [];
-                
-            % coherence X duration conditions
+
+            % low coherence, short duration
             if contains(trial_type{triali},low_short{1})
-
-                [coh_trial{triali},timeConv{triali}] = lowCoherenceShortDuration;
-
-                % get elapsed time
-                elapsedT = toc;
-
-                % default delay length is 30 seconds, coherence
-                % detection begins at 20 seconds. If you've elapsed 10
-                % seconds from the 20 second mark (ie the delay is
-                % over) open the door
-                if elapsedT >= (delay_length-cohDetectionStart)
-                    writeline(s,doorFuns.centralOpen);
-                end
-
+                [coh_trial{triali},timeConv{triali}] = lowCoherenceShortDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);
             elseif contains(trial_type{triali},low_long{1})
-
-                [coh_trial{triali},timeConv{triali},thresholdsMet] = lowCoherenceLongDuration;
-
-                % get elapsed time
-                elapsedT = toc;
-
-                % default delay length is 30 seconds, coherence
-                % detection begins at 20 seconds. If you've elapsed 10
-                % seconds from the 20 second mark (ie the delay is
-                % over) open the door
-                if elapsedT >= (delay_length-cohDetectionStart)
-                    writeline(s,doorFuns.centralOpen);
-                end
-
-            elseif contains(trial_type{triali},high_short{1})
-
-                [coh_trial{triali},timeConv{triali},thresholdsMet] = HighCoherenceShortDuration;
-
-                % get elapsed time
-                elapsedT = toc;
-
-                % default delay length is 30 seconds, coherence
-                % detection begins at 20 seconds. If you've elapsed 10
-                % seconds from the 20 second mark (ie the delay is
-                % over) open the door
-                if elapsedT >= (delay_length-cohDetectionStart)
-                    writeline(s,doorFuns.centralOpen);
-                end                    
-
+                [coh_trial{triali},timeConv{triali}] = lowCoherenceLongDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);
+           elseif contains(trial_type{triali},high_short{1})
+                [coh_trial{triali},timeConv{triali}] = HighCoherenceShortDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);
             elseif contains(trial_type{triali},high_long{1})
-
-                [coh_trial{triali},timeConv{triali},thresholdsMet] = HighCoherenceLongDuration;  
-
-                % get elapsed time
-                elapsedT = toc;
-
-                % default delay length is 30 seconds, coherence
-                % detection begins at 20 seconds. If you've elapsed 10
-                % seconds from the 20 second mark (ie the delay is
-                % over) open the door
-                if elapsedT >= (delay_length-cohDetectionStart)
-                    writeline(s,doorFuns.centralOpen);
-                end                    
-
-            % if there is no requirement for waiting
+                [coh_trial{triali},timeConv{triali}] = HighCoherenceLongDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);      
             elseif contains(trial_type{triali},'NO')
-
                 % match previous trial durations, when you use one, replace it
                 % with a nan so you know not to use that duration twice
                 for withini = 1:triali-1 % get all trials except the one you're on (which is a NO threshold trial)
                     if contains(trial_type{withini},'NO') == 0 & isnan(delay_duration_manipulate(withini)) == 0 % if withini is not a NO trial and the value for delay duration exists
-
-                        % -- delay is always capped at 30 seconds -- %
-                        pause(delay_length-cohDetectionStart);
-
-                        % get elapsed time
-                        elapsedT = toc;
-
-                        % default delay length is 30 seconds, coherence
-                        % detection begins at 20 seconds. If you've elapsed 10
-                        % seconds from the 20 second mark (ie the delay is
-                        % over) open the door
-                        if elapsedT >= (delay_length-cohDetectionStart)
-                            writeline(s,doorFuns.centralOpen);
-                        end                                 
-
-                        % -- this duration pausing will pause the rat at the choice-point -- %
-
                         % pause to match a past experimental condition
                         pause(delay_duration_manipulate(withini));
 
@@ -481,21 +399,20 @@ while session_time < session_length
                         % keep looping and pausing
                         break;
                     else
-
                         % if no other conditions are met, then just wait for 30
                         % seconds
-                        if thresholdsMet == 0
-                            pause(delay_length-cohDetectionStart);
-                        end
+                        pause(30);
+
 
                     end
                 end
 
                 % out time
                 delay_duration_master(triali)     = toc;
-                delay_duration_manipulate(triali) = delay_duration_master(triali); % this one will change            
+                delay_duration_manipulate(triali) = toc; % this one will change            
 
             end
+        end 
 
             % if thresholds are ever met, break out of the for loop
             if thresholdsMet == 1

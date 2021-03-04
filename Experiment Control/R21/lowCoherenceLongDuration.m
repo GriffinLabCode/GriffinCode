@@ -5,16 +5,24 @@
 % delay_length
 % amountOfData
 
-function [coh,timeConv] = lowCoherenceLongDuration(varargin)
+function [coh,timeConv] = lowCoherenceLongDuration(LFP1name,LFP2name,delay_length,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart)
 
 % delay
 disp(['Brief pause for ',num2str(delay_length),' secs'])
 pause(delay_length);
 
-% for loop start
-coh_temp = [];
-coh = [];
+% initialize some variables
+timeStamps = []; timeConv  = [];
+coh_met    = []; coh_store = [];
+dur_met    = []; dur_sum   = []; 
+coh_temp   = []; coh = [];
+openDoor = 0;
 for i = 1:looper
+
+    % if your timer has elapsed > some preset time, open the startbox door
+    if toc(tStart) > 10 & openDoor == 0
+        writeline(s,doorFuns.centralOpen)
+    end
 
     % first get a chunk of data the run a moving window on
     if i == 1
@@ -83,11 +91,18 @@ for i = 1:looper
 
         % break out of the coherence detect threshold if thresholds
         % are met
-        if dur_sum >= threshold.low_coherence_duration
+        if dur_sum >= threshold.low_coherence_longDuration
             disp(['YES: Coherence sustained for ',num2str(dur_sum) ' seconds'])
-            break
+            writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
+            return
         else
             disp(['NO: Coherence sustained for ',num2str(dur_sum) ' seconds'])
+        end
+
+
+        % if your timer has elapsed > some preset time, open the startbox door
+        if toc(tStart) > 10 & openDoor == 0
+            writeline(s,doorFuns.centralOpen)
         end
 
     % otherwise, erase these variables, resetting the coherence
@@ -98,6 +113,11 @@ for i = 1:looper
         coh_store = [];
         dur_met   = [];
         dur_sum   = [];
+
+        % if your timer has elapsed > some preset time, open the startbox door
+        if toc(tStart) > 10 & openDoor == 0
+            writeline(s,doorFuns.centralOpen)
+        end
     end
 
     % if your threshold is met, break out, and start the next trial
