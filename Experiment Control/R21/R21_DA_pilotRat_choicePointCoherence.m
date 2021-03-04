@@ -12,6 +12,10 @@ cd('C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21')
 
 
 %% some parameters set by the user
+
+% how long should the session be?
+session_length = 30; % minutes
+
 delay_length = 30; % seconds
 numTrials    = 40;
 pellet_count = 1;
@@ -159,7 +163,8 @@ maze_prep = [doorFuns.tLeftOpen doorFuns.tRightOpen ...
 
 c = clock;
 session_start = str2num(strcat(num2str(c(4)),num2str(c(5))));
-while session_time < 20
+session_time  = session_start-session_start; % quick definitio of this so it starts the while loop
+while session_time < session_length
     for triali = 1:numTrials
 
         % set central door timeout value
@@ -403,6 +408,10 @@ while session_time < 20
         c = clock;
         session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
         session_time = session_time_update-session_start;
+
+        if session_time > session_length
+            break
+        end
     end
 end
 

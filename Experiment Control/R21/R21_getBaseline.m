@@ -14,15 +14,13 @@
 % written by John Stout 
 % last edit 1/19/21
 
-function [threshold] = R21_getBaseline(LFP1name,LFP2name,amountOfData,amountOfTime)
+function [threshold,coh] = R21_getBaseline(LFP1name,LFP2name,amountOfData,amountOfTime,srate)
 
-% setup
-[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,0.25);
 
 %% coherence detection
 
 % for multitapers
-params.tapers = [3 5]; 
+params.tapers = [5 9]; 
 params.Fs     = srate;
 params.fpass  = [4 12];
 

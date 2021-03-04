@@ -1,38 +1,47 @@
 % DA task that incorporates coherence detection
 % must have the matlab pipeline Startup run
+
+%% prep 1 - clear history, workspace, get working directory
 clear; clc
 
+% get directory that houses this code
 codeDir = getCurrentPath();
 addpath(codeDir);
 
-% 
-%cd('C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21')
+%% prep 2 - extract baseline parameters
+dirParams = 'X:\01.Experiments\R21\R21 Pilot Rat\Parameters';
 
-%% some parameters set by the user
+%% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 15; % minutes
+session_length = 30; % minutes
 
-% some parameters for maze control
-delay_length = 0; % seconds
+delay_length = 30; % seconds
 numTrials    = 40;
 pellet_count = 1;
-timeout_len  = 60*10;
+timeout_len  = 60*5;
 
 % define LFPs to use
 LFP1name = 'CSC6';  % hpc
 LFP2name = 'CSC10'; % pfc
 
 % for multitapers
-params.tapers = [5 9]; 
+params.tapers = [3 5]; 
 %params.Fs     = srate;
 params.fpass  = [4 12];
 
 % define amount of data
 amountOfData = 0.25;
 
+% define how much time for baseline run
+amountOfTime_baseline = 10; % minutes
+
 % define a looping time - this is in minutes
-amountOfTime = session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
+amountOfTime = .84; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
+
+%% prep 2
+% set up function
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,0.25);
 
 %% experiment design prep.
 % 5 conditions:
@@ -100,6 +109,23 @@ for i = 1:10000000
 end
 %}
 
+%% coherence detection prep.
+
+% set up with neuralynx
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,amountOfData);
+
+% define sampling rate
+params.Fs     = srate;
+
+% define number of samples that correspond to the amount of data in time
+numSamples2use = amountOfData*srate;
+
+% define for loop
+looper = ceil((amountOfTime*60)/amountOfData); % N minutes * 60sec/1min * (1 loop is about .250 ms of data)
+
+% define total loop time
+total_loop_time = amountOfTime*60; % in seconds
+
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
 next = 0; % set while loop variable
@@ -148,13 +174,9 @@ while session_time < session_length
         % first trial - set up the maze doors appropriately
         writeline(s,maze_prep)
 
-        % close the doors
-        writeline(s,doorFuns.tLeftClose);
-        writeline(s,doorFuns.tRightClose);        
-
         % open central door to let rat off of treadmill
         writeline(s,doorFuns.centralOpen)
-        
+
         % set irTemp to empty matrix
         irTemp = []; 
 
@@ -168,11 +190,6 @@ while session_time < session_length
 
                 % close door
                 writeline(s,doorFuns.centralClose) % close the door behind the rat
-                pause(0.5)
-                %writeline(s,doorFuns.tLeftOpen)
-                %writeline(s,doorFuns.tRightOpen)
-                writeline(s,[doorFuns.tRightOpen doorFuns.tLeftOpen])
-                
                 next = 1;                          % break out of the loop
             end
         end
@@ -343,9 +360,56 @@ while session_time < session_length
         timeStamps = []; timeConv  = [];
         coh_met    = []; coh_store = [];
         dur_met    = []; dur_sum   = [];    
-        
         % only during delayed alternations will you start the treadmill
-        pause(delay_length);
+        if delay_length > 1
+
+            % use tic toc to store timing for yoked control
+            tic;
+            
+            
+            
+            
+            
+            
+
+            % low coherence, short duration
+            if contains(trial_type{triali},low_short{1})
+                [coh_trial{triali},timeConv{triali}] = lowCoherenceShortDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);
+            elseif contains(trial_type{triali},low_long{1})
+                [coh_trial{triali},timeConv{triali}] = lowCoherenceLongDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);
+           elseif contains(trial_type{triali},high_short{1})
+                [coh_trial{triali},timeConv{triali}] = HighCoherenceShortDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);
+            elseif contains(trial_type{triali},high_long{1})
+                [coh_trial{triali},timeConv{triali}] = HighCoherenceLongDuration(LFP1name,LFP2name,delay_length,looper,amountOfData);      
+            elseif contains(trial_type{triali},'NO')
+                % match previous trial durations, when you use one, replace it
+                % with a nan so you know not to use that duration twice
+                for withini = 1:triali-1 % get all trials except the one you're on (which is a NO threshold trial)
+                    if contains(trial_type{withini},'NO') == 0 & isnan(delay_duration_manipulate(withini)) == 0 % if withini is not a NO trial and the value for delay duration exists
+                        % pause to match a past experimental condition
+                        pause(delay_duration_manipulate(withini));
+
+                        % replace the manipulate variable time with NaN
+                        delay_duration_manipulate(withini) = NaN;
+
+                        % finally, break out of the for loop so that we don't
+                        % keep looping and pausing
+                        break;
+                    else
+                        % if no other conditions are met, then just wait for 30
+                        % seconds
+                        pause(30);
+
+
+                    end
+                end
+
+                % out time
+                delay_duration_master(triali)     = toc;
+                delay_duration_manipulate(triali) = toc; % this one will change            
+
+            end
+        end 
         
         % get amount of time past since session start
         c = clock;
@@ -355,7 +419,6 @@ while session_time < session_length
         if session_time > session_length
             break
         end
-        
     end
 end
 
