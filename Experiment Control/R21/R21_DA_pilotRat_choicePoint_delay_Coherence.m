@@ -49,7 +49,7 @@ amountOfData = 0.25;
 
 %% prep 3 - connect with cheetah
 % set up function
-[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,0.25);
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,amountOfData);
 
 %% experiment design prep.
 % 5 conditions:
@@ -393,26 +393,26 @@ while session_time < session_length
                 [coh_trial{triali},timeConv{triali}] = highCoherenceLongDuration(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
             elseif contains(trial_type{triali},'NO')
 
-                    % on the very first trial, this variable will not exist
-                    % yet. Therefore, 
-                    if exist('delay_duration_manipulate') == 0
-
+                    % if there are no yolked controls to delay-match, then
+                    % just pause for the extra 10sec for a total of 30sec
+                    % delay
+                    try 
                         % find instances where there are no nans
                         idx_temp = find(isnan(delay_duration_manipulate)==0);
                         time2use = delay_duration_manipulate(idx_temp(1)); % use the very first value thats not a nan
+                        whichMatch = trial_type{idx_temp(1)};
 
                         % pause for yolked time
+                        disp(['Yolked control pause of ', num2str(time2use), ' to match a ',whichMatch, ' trial'])
                         pause(time2use);
 
                         % replace used time with a nan so it is not re-used later
                         delay_duration_manipulate(idx_temp(1)) = NaN;
-
-                    else
-
+                    catch
                         % if no other conditions are met, then just wait for 30
                         % seconds
-                        pause(10);
-
+                        disp('No yolked controls to delay-match - pause for 10 sec. to make a total of 30s delay')
+                        pause(10);    
                     end
             end
         end
