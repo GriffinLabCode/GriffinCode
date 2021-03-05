@@ -1,0 +1,165 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\NetComExampleStreams.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\NetComExampleStreams.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_NETCOMEXAMPLESTREAMS_DIALOG DIALOGEX 0, 0, 437, 299
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "NetComExampleStreams"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Server Name",IDC_STATIC,22,33,42,8
+    EDITTEXT        IDC_SERVER_NAME,70,29,124,12,ES_AUTOHSCROLL
+    LTEXT           "(User may enter pc name or IP address)",IDC_STATIC,70,43,129,8
+    PUSHBUTTON      "Connect",IDC_CONNECT,207,29,61,14
+    PUSHBUTTON      "Disconnect",IDC_DISCONNECT,280,29,61,14
+    PUSHBUTTON      "Get DAS Objects And Types",IDC_GET_CHEETAH_OBJECTS,150,82,108,14
+    COMBOBOX        IDC_CHEETAH_OBJECTS_LIST,78,105,88,92,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "DAS Objects",IDC_STATIC,19,108,55,8
+    LTEXT           "Object Type",IDC_STATIC,183,108,40,8
+    EDITTEXT        IDC_OBJECT_TYPE,226,105,81,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Num Objects",IDC_STATIC,328,108,42,8
+    EDITTEXT        IDC_NUM_OBJECTS,373,105,41,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Open Stream",IDC_OPEN_STREAM,32,126,75,14
+    PUSHBUTTON      "Close Stream",IDC_CLOSE_STREAM,118,126,75,14
+    LISTBOX         IDC_RECORD_LOG_LIST,14,166,408,123,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Connect/Disconnect Properties",IDC_STATIC,9,9,418,56
+    GROUPBOX        "Stream Properties",IDC_STATIC,9,70,418,80
+    GROUPBOX        "Record Log",IDC_STATIC,9,156,418,138
+    PUSHBUTTON      "Open All Streams",IDC_OPEN_ALL_STREAMS,233,126,75,14
+    PUSHBUTTON      "Close All Streams",IDC_CLOSE_ALL_STREAMS,319,126,75,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,2,1,0
+ PRODUCTVERSION 1,2,1,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "Neuralynx, Inc"
+            VALUE "FileDescription", "NetCom example of streaming data"
+            VALUE "FileVersion", "1.2.1.0"
+            VALUE "InternalName", "NetComExampleStreams.exe"
+            VALUE "LegalCopyright", "(c) Neuralynx, Inc.  All rights reserved."
+            VALUE "OriginalFilename", "NetComExampleStreams.exe"
+            VALUE "ProductName", "NetComExampleStreams"
+            VALUE "ProductVersion", "1.2.1.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\NetComExampleStreams.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

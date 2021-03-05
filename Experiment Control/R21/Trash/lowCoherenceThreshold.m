@@ -1,0 +1,41 @@
+%% R21 delays
+% -- INPUTS -- %
+% LFP1name
+% LFP2name
+% delay_length
+% amountOfData
+
+
+    % first, if coherence magnitude is met, do whats below
+    if coh(i) <= threshold.low_coherence_magnitude % < bc this is low coh
+        disp('Coherence threshold 1 met')
+
+        % store data
+        coh_met   = coh(i);
+        coh_store = [coh_store,coh_met];
+
+        % calculate, sum durations
+        dur_met = timeConv(i);
+        dur_sum = sum([dur_sum,dur_met]);  
+
+        % break out of the coherence detect threshold if thresholds
+        % are met
+        if dur_sum >= threshold.low_coherence_duration
+            disp(['YES: Coherence sustained for ',num2str(dur_sum) ' seconds'])
+            break
+        else
+            disp(['NO: Coherence sustained for ',num2str(dur_sum) ' seconds'])
+        end
+
+    % otherwise, erase these variables, resetting the coherence
+    % magnitude and duration counters
+    else
+        % if threshold is not met, reset the variable
+        coh_met   = [];
+        coh_store = [];
+        dur_met   = [];
+        dur_sum   = [];
+    end
+
+    % if your threshold is met, break out, and start the next trial
+    disp(['End of loop # ',num2str(i),'/',num2str(looper)])

@@ -7,7 +7,7 @@
 clear; clc
 
 % designate folder where session-specfic files are located (most important)
-datafolder = 'C:\Users\jstout\Desktop\Data 2 Move\Dandelion - R21\2021-02-10_10-10-57';
+datafolder = pwd;
 cd(datafolder)
 
 % define which CSCs to convert. Maybe you only want to convert CSCs 1 and
@@ -55,9 +55,6 @@ for i = numCSC
         disp(['Could not convert CSC',num2str(i)])
     end
 end
-
-% remove neuralynx fun path
-rmpath('X:\03. Lab Procedures and Protocols\MATLABToolbox\Nlx2Mat')
 
 
 

@@ -8,7 +8,7 @@ clear; clc
 
 % datafolder directory - stopped on baseline 1 need to do baseline 2 -
 % 9-2-2020 at 2:19
-datafolder = 'X:\01.Experiments\RERh Inactivation Recording\Morty\Baseline\Baseline 2'; 
+datafolder = pwd;
 datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
