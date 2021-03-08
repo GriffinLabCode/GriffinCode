@@ -58,12 +58,12 @@ amountOfData = 0.25;
 % 3) high coherence, short duration
 % 4) high coherence, long duration
 % 5) no coherence, matched duration
-numTrials = 20;
+numTrials = 40;
 
-low_short  = repmat({'LS'},[numTrials/5 1]);
-low_long   = repmat({'LL'},[numTrials/5 1]);
-high_short = repmat({'HS'},[numTrials/5 1]);
-high_long  = repmat({'HL'},[numTrials/5 1]);
+low_short  = repmat({'LS'},[numTrials/4 1]);
+low_long   = repmat({'LL'},[numTrials/4 1]);
+high_short = repmat({'HS'},[numTrials/4 1]);
+high_long  = repmat({'HL'},[numTrials/4 1]);
 %control    = repmat({'NO'}, [numTrials/2 1]);
 
 all  = [low_short; low_long; high_short; high_long];% control];
