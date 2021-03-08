@@ -34,20 +34,29 @@ vt_name = 'VT1.mat';
 %% Create boxes around locations of interest for int creation
 
 % right reward zone (sideways room, R)
-rRW_fld = [500 -15 140 90];
+minY = -15; addY = 90;
+minX = 500; addX = 140;
+rRW_fld = [minX minY addX addY];
 
 % left reward zone (sideways room, R)
-lRW_fld = [520 420 110 90];
+minY = 420; addY = 90;
+minX = 520; addX = 110;
+lRW_fld = [minX minY addX addY];
 
 % central stem (sideways room, R)
-STM_fld = [195 180 380 150]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
+minY = 180; addY = 150;
+minX = 195; addX = 380;
+STM_fld = [minX minY addX addY]; 
 
 % delay pedestal (sideways room, R)
-PED_fld = [15 160 180 220];
+minY = 160; addY = 220;
+minX = 15;  addX = 180;
+PED_fld = [minX minY addX addY];
 
 % choice point/T-junction (sideways room, R)
-CP_fld = [575 195 125 115];
-
+minY = 195; addY = 115;
+minX = 575; addX = 125;
+CP_fld = [minX minY addX addY]; %[260 150 30 270];
 
 figure('color','w');
 plot(ExtractedX, ExtractedY);
