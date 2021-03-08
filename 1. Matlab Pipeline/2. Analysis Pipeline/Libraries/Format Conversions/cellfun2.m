@@ -20,7 +20,11 @@
 function [fun_out] = cellfun2(cell_array,fun_name,fun_inputs)
 
 %fun_inputs   = {'1'};
-fun_argument = str2double(cell2mat(fun_inputs));
+if ischar(fun_inputs)
+    fun_argument = fun_inputs;
+else
+    fun_argument = str2double(cell2mat(fun_inputs));
+end
 
 %fun_name   = 'mean';
 fun_apply  = str2func(fun_name);
