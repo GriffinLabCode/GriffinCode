@@ -31,7 +31,7 @@ session_length = 30; % minutes
 delay_length = 30; % seconds
 numTrials    = 40;
 pellet_count = 1;
-timeout_len  = 60*5;
+timeout_len  = 60*15;
 
 % define a looping time - this is in minutes
 amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
@@ -165,7 +165,12 @@ for rewardi = 1:pellet_count
     writeline(s,rewFuns.left)
     pause(4)
 end
-        
+
+%% start recording - make a noise when recording begins
+[succeeded, reply] = NlxSendCommand('-StartRecording');
+load gong.mat;
+sound(y);
+
 %% trials
 open_t  = [doorFuns.tLeftOpen doorFuns.tRightOpen];
 close_t = [doorFuns.tLeftClose doorFuns.tRightClose];
@@ -182,9 +187,11 @@ while session_time < session_length
         s.Timeout = timeout_len; % 5 minutes before matlab stops looking for an IR break    
 
         % first trial - set up the maze doors appropriately
+        pause(0.25);
         writeline(s,maze_prep)
 
         % open central door to let rat off of treadmill
+        pause(0.25);
         writeline(s,doorFuns.centralOpen)
 
         % set irTemp to empty matrix
@@ -375,7 +382,7 @@ while session_time < session_length
  
             % pause
             disp('Initial delay pause = 20s')
-            pause(2); % 20 sec
+            pause(20); % 20 sec
 
             % use tic toc to store timing for yoked control
             tStart = tic;
@@ -393,27 +400,27 @@ while session_time < session_length
                 [coh_trial{triali},timeConv{triali}] = highCoherenceLongDuration(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
             elseif contains(trial_type{triali},'NO')
 
-                    % if there are no yolked controls to delay-match, then
-                    % just pause for the extra 10sec for a total of 30sec
-                    % delay
-                    try 
-                        % find instances where there are no nans
-                        idx_temp = find(isnan(delay_duration_manipulate)==0);
-                        time2use = delay_duration_manipulate(idx_temp(1)); % use the very first value thats not a nan
-                        whichMatch = trial_type{idx_temp(1)};
+                % if there are no yolked controls to delay-match, then
+                % just pause for the extra 10sec for a total of 30sec
+                % delay
+                try 
+                    % find instances where there are no nans
+                    idx_temp = find(isnan(delay_duration_manipulate)==0);
+                    time2use = delay_duration_manipulate(idx_temp(1)); % use the very first value thats not a nan
+                    whichMatch = trial_type{idx_temp(1)};
 
-                        % pause for yolked time
-                        disp(['Yolked control pause of ', num2str(time2use), ' to match a ',whichMatch, ' trial'])
-                        pause(time2use);
+                    % pause for yolked time
+                    disp(['Yolked control pause of ', num2str(time2use), ' to match a ',whichMatch, ' trial'])
+                    pause(time2use);
 
-                        % replace used time with a nan so it is not re-used later
-                        delay_duration_manipulate(idx_temp(1)) = NaN;
-                    catch
-                        % if no other conditions are met, then just wait for 30
-                        % seconds
-                        disp('No yolked controls to delay-match - pause for 10 sec. to make a total of 30s delay')
-                        pause(10);    
-                    end
+                    % replace used time with a nan so it is not re-used later
+                    delay_duration_manipulate(idx_temp(1)) = NaN;
+                catch
+                    % if no other conditions are met, then just wait for 30
+                    % seconds
+                    disp('No yolked controls to delay-match - pause for 10 sec. to make a total of 30s delay')
+                    pause(10);    
+                end
             end
         end
 
@@ -430,17 +437,19 @@ while session_time < session_length
         else
             delay_duration_manipulate(triali) = delay_duration_master(triali); % this one will change            
         end
+        
+        % get amount of time past since session start
+        c = clock;
+        session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
+        session_time = session_time_update-session_start;
 
+        if session_time > session_length
+            break
+        end
+        
     end 
         
-    % get amount of time past since session start
-    c = clock;
-    session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
-    session_time = session_time_update-session_start;
 
-    if session_time > session_length
-        break
-    end
 end
 
 
