@@ -61,12 +61,13 @@ amountOfData = 0.25;
 numTrials = 40;
 
 low_short  = repmat({'LS'},[numTrials/4 1]);
-low_long   = repmat({'LL'},[numTrials/4 1]);
+%low_long   = repmat({'LL'},[numTrials/4 1]);
 high_short = repmat({'HS'},[numTrials/4 1]);
-high_long  = repmat({'HL'},[numTrials/4 1]);
-%control    = repmat({'NO'}, [numTrials/2 1]);
+%high_long  = repmat({'HL'},[numTrials/4 1]);
+control    = repmat({'NO'}, [numTrials/2 1]);
 
-all  = [low_short; low_long; high_short; high_long];% control];
+%all  = [low_short; low_long; high_short; high_long];% control];
+all  = [low_short; high_short; control];
 trial_type = all;
 for i = 1:1000
     % notice how it rewrites the both_shuffled variable
@@ -409,8 +410,10 @@ for triali = 1:numTrials
                 time2use = delay_duration_manipulate(idx_temp(1)); % use the very first value thats not a nan
                 whichMatch = trial_type{idx_temp(1)};
 
-                % pause for yolked time
-                disp(['Yolked control pause of ', num2str(time2use), ' to match a ',whichMatch, ' trial'])
+                % pause for yolked time and record it
+                disp(['Yoked control pause of ', num2str(time2use), ' to match a ',whichMatch, ' trial'])
+                yoked_trialType{triali} = whichMatch;
+                yoked_trialTime(triali) = time2use;
                 pause(time2use);
 
                 % replace used time with a nan so it is not re-used later
@@ -437,16 +440,12 @@ for triali = 1:numTrials
     else
         delay_duration_manipulate(triali) = delay_duration_master(triali); % this one will change            
     end
-
-
 end 
 
-    % get amount of time past since session start
-    c = clock;
-    session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
-    session_time = session_time_update-session_start;
-
-
+% get amount of time past since session start
+c = clock;
+session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
+session_time = session_time_update-session_start;
 
 % compute accuracy array
 accuracy = [];
