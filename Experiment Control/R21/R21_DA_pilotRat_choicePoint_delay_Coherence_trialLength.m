@@ -58,13 +58,14 @@ amountOfData = 0.25;
 % 3) high coherence, short duration
 % 4) high coherence, long duration
 % 5) no coherence, matched duration
-numTrials = 40;
+numTrials  = 20;
+permTrials = 120;
 
-low_short  = repmat({'LS'},[numTrials/4 1]);
+low_short  = repmat({'LS'},[permTrials/4 1]);
 %low_long   = repmat({'LL'},[numTrials/4 1]);
-high_short = repmat({'HS'},[numTrials/4 1]);
+high_short = repmat({'HS'},[permTrials/4 1]);
 %high_long  = repmat({'HL'},[numTrials/4 1]);
-control    = repmat({'NO'}, [numTrials/2 1]);
+control    = repmat({'NO'}, [permTrials/2 1]);
 
 %all  = [low_short; low_long; high_short; high_long];% control];
 all  = [low_short; high_short; control];
@@ -460,7 +461,11 @@ for triali = 1:length(trajectory_text)-1
     end
 end
 
+%% ending noise - a fitting song to end the session
+load handel.mat;
+sound(y, 2*Fs);
 
+%% save data
 % save data
 c = clock;
 c_save = strcat(num2str(c(2)),'_',num2str(c(3)),'_',num2str(c(1)),'_','EndTime',num2str(c(4)),num2str(c(5)));
