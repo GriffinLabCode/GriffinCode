@@ -1,6 +1,4 @@
 %% get theta coherence in moving window
-clear starter ender
-
 % get data
 %data1 = cleaned_lfp_hpc_stem2gz{triali};
 %data2 = cleaned_lfp_pfc_stem2gz{triali};
@@ -23,8 +21,8 @@ for i = 1:winLength
 
         % get data        
         data_temp1 = []; data_temp2 = [];
-        data_temp1 = data1(starter:srate*winSizeTime);
-        data_temp2 = data2(starter:srate*winSizeTime);
+        data_temp1 = data1(starter(i):ender(i));
+        data_temp2 = data2(starter(i):ender(i));
         
         % coherence
         C = coherencyc(data_temp1,data_temp2,params);
@@ -45,8 +43,8 @@ for i = 1:winLength
         
         % get data
         data_temp1 = []; data_temp2 = [];
-        data_temp1 = data1(starter(i)+1:starter(i)+(srate*winSizeTime));
-        data_temp2 = data2(starter(i)+1:starter(i)+(srate*winSizeTime));        
+        data_temp1 = data1(starter(i):ender(i));
+        data_temp2 = data2(starter(i):ender(i));        
            
         % coherence
         C = coherencyc(data_temp1,data_temp2,params);
@@ -57,3 +55,5 @@ for i = 1:winLength
     end
 
 end
+
+
