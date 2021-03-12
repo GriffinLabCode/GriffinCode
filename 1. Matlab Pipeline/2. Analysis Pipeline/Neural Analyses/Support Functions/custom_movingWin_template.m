@@ -1,9 +1,25 @@
 %% get theta coherence in moving window
+% this code performs a moving window method nearly identical to chronux
+% methods. It was tested using coherencyc, and compared against
+% cohgramc
+%
+% -- INPUTS -- %
+% data1: lfp data
+% data2: lfp data
+% params: parameters for your stuff
+%
+% -- OUTPUTS -- %
+% you define them
+%
+% written by John Stout
+%
+clear starter ender
+
 % get data
 %data1 = cleaned_lfp_hpc_stem2gz{triali};
 %data2 = cleaned_lfp_pfc_stem2gz{triali};
     
-function [coh_theta] = coherencyc_theta_movWinCustom(data1,data2,params)
+function [varargout] = coherencyc_theta_movWinCustom(data1,data2,params)
 
 % first for stem lfp
 winStep   = params.movingwin(2); % 250ms
@@ -24,11 +40,7 @@ for i = 1:winLength
         data_temp1 = data1(starter(i):ender(i));
         data_temp2 = data2(starter(i):ender(i));
         
-        % coherence
-        C = coherencyc(data_temp1,data_temp2,params);
-        
-        % average across frequencies
-        coh_theta(i) = mean(C);
+		% -- enter your code here and save per each loop -- %
         
     else
         starter(i) = starter(i-1)+(numSamples2Move);
@@ -46,14 +58,8 @@ for i = 1:winLength
         data_temp1 = data1(starter(i):ender(i));
         data_temp2 = data2(starter(i):ender(i));        
            
-        % coherence
-        C = coherencyc(data_temp1,data_temp2,params);
-
-        % average across frequencies
-        coh_theta(i) = mean(C);
+		% -- enter your code here and save per each loop -- %
         
     end
 
 end
-
-

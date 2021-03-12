@@ -84,6 +84,5 @@ for i = 2:size(Int,1)-2
         errorCorrectError(i-1) = 0;
     end
 end
-errorCorrectError = sum(errorCorrectError);%/numel(errorCorrectError);
-
-
+eCe_possibilities = length(2:2:numTrials)-1;
+errorCorrectError = sum(errorCorrectError)/eCe_possibilities; % n-1 bc going by twos
