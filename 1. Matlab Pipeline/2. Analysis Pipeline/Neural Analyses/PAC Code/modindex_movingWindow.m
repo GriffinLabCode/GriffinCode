@@ -17,7 +17,7 @@
 %data1 = cleaned_lfp_hpc_stem2gz{triali};
 %data2 = cleaned_lfp_pfc_stem2gz{triali};
     
-function [ModIdx] = modindex_movingWindow(data1,data2,times,params)
+function [ModIdx] = modindex_movingWindow(phaseLFP,ampLFP,times,params)
 
 % define srate
 srate = params.Fs;
@@ -25,7 +25,7 @@ srate = params.Fs;
 % first for stem lfp
 winStep   = params.movingwin(2); % 250ms
 winSizeTime = params.movingwin(1); % in sec
-winLength = floor((length(data1)/(srate*winSizeTime))/(winStep));
+winLength = floor((length(phaseLFP)/(srate*winSizeTime))/(winStep));
    
 for i = 1:winLength
     % get how many samples to move
@@ -38,8 +38,8 @@ for i = 1:winLength
 
         % get data        
         data_temp1 = []; data_temp2 = []; times_temp = [];
-        data_temp1 = data1(starter(i):ender(i));
-        data_temp2 = data2(starter(i):ender(i));
+        data_temp1 = phaseLFP(starter(i):ender(i));
+        data_temp2 = ampLFP(starter(i):ender(i));
         times_temp = times(starter(i):ender(i));
         
 		% -- enter your code here and save per each loop -- %
@@ -70,7 +70,7 @@ for i = 1:winLength
         ender(i)   = starter(i)+floor(srate*winSizeTime);
 
         % in the case where you've run out of data, break out of the loop
-        if ender(i) > length(data1)
+        if ender(i) > length(phaseLFP)
             starter(i) = [];
             ender(i)   = [];
             break
@@ -78,8 +78,8 @@ for i = 1:winLength
         
         % get data        
         data_temp1 = []; data_temp2 = []; times_temp = [];
-        data_temp1 = data1(starter(i):ender(i));
-        data_temp2 = data2(starter(i):ender(i));
+        data_temp1 = phaseLFP(starter(i):ender(i));
+        data_temp2 = ampLFP(starter(i):ender(i));
         times_temp = times(starter(i):ender(i));
         
 		% -- enter your code here and save per each loop -- %
