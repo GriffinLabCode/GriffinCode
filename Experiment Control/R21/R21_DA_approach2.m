@@ -67,7 +67,7 @@ permTrials = 120;
 
 low     = repmat({'LOW'},[permTrials/4 1]);
 high    = repmat({'HIGH'},[permTrials/4 1]);
-control = repmat({'CONT'}, [permTrials/2 1]);
+control = repmat({'CONT'}, [permTrials/6 1]);
 
 %all  = [low_short; low_long; high_short; high_long];% control];
 all  = [low; high; control];
