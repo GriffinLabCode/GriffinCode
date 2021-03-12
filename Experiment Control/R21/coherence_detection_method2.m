@@ -5,7 +5,7 @@
 % delay_length
 % amountOfData
 
-function [coh,timeConv] = coherence_detection(LFP1name,LFP2name,delay_length,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart)
+function [coh,timeConv] = coherence_detection_method2(LFP1name,LFP2name,delay_length,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart)
 
 % delay
 disp(['Brief pause for ',num2str(delay_length),' secs'])
@@ -31,12 +31,16 @@ for i = 1:looper
         % clear the stream
         clearStream(LFP1name,LFP2name);
 
-        % get data
-        pause(.5); % grab one sec of data if this is the first loop
         try
+            % get data
+            pause(.5); % grab one sec of data if this is the first loop            
             [succeeded, dataArray, timeStampArray, channelNumberArray, samplingFreqArray, ...
             numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
         catch
+            % get data
+            pause(.5); % grab one sec of data if this is the first loop            
+            [succeeded, dataArray, timeStampArray, channelNumberArray, samplingFreqArray, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);              
         end  
 
         % calculate og coherence

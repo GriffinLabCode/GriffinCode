@@ -41,6 +41,11 @@ timeout_len  = 60*15;
 % define a looping time - this is in minutes
 amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
 
+% chronux parameters
+params = getCustomParams;
+params.fpass  = [4 12];
+params.tapers = [2 3]; % blunted to account for low time
+
 %% prep 3 - connect with cheetah
 % set up function
 [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);
@@ -365,21 +370,21 @@ for triali = 1:numTrials
 
         % pause
         disp('Initial delay pause = 10s')
-        pause(10); % 10 second pause
+        pause(10); % no pause - start it immediately
 
         % use tic toc to store timing for yoked control
         tStart = tic;
 
-        % low coherence, short duration
+        % coherence manipulation
         disp(['Trial type is ',trial_type{triali},'.'])
 
         if contains(trial_type{triali},low{1})
             
-            [coh_trial{triali},timeConv{triali}] = lowCoherenceShortDuration(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
+            [coh_trial{triali},timeConv{triali}] = coherence_detection(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
         
         elseif contains(trial_type{triali},high{1})
             
-            [coh_trial{triali},timeConv{triali}] = highCoherenceShortDuration(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
+            [coh_trial{triali},timeConv{triali}] = coherence_detection(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
         
         elseif contains(trial_type{triali},control{1})
 

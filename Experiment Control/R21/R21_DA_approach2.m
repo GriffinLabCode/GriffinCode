@@ -41,6 +41,11 @@ timeout_len  = 60*15;
 % define a looping time - this is in minutes
 amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
 
+% chronux parameters
+params = getCustomParams;
+params.fpass  = [4 12];
+params.tapers = [2 3]; % blunted to account for low time
+
 %% prep 3 - connect with cheetah
 % set up function
 [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);
@@ -365,9 +370,10 @@ for triali = 1:numTrials
 
         % pause
         disp('Initial delay pause = 10s')
-        pause(10); % 10 second pause
+        pause(10); % no pause - start it immediately
 
         % use tic toc to store timing for yoked control
+        tStart = [];
         tStart = tic;
 
         % coherence manipulation
@@ -375,11 +381,21 @@ for triali = 1:numTrials
 
         if contains(trial_type{triali},low{1})
             
-            [coh_trial{triali},timeConv{triali}] = coherence_detection(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
+            % define the type of threshold and the actual threshold            
+            threshold_type = low{1};
+            coherence_threshold = threshold.low_coherence_magnitude;
+            
+            % run coherence detection
+            [coh_trial{triali},coherence_met(triali),timeConv{triali}] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s);
         
         elseif contains(trial_type{triali},high{1})
             
-            [coh_trial{triali},timeConv{triali}] = coherence_detection(LFP1name,LFP2name,0,looper,amountOfData,s,doorFuns,params,srate,threshold,tStart);
+            % define the type of threshold and the actual threshold
+            threshold_type = high{1};
+            coherence_threshold = threshold.high_coherence_magnitude;  
+            
+            % run coherence detection
+            [coh_trial{triali},coherence_met(triali),timeConv{triali}] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s);
         
         elseif contains(trial_type{triali},control{1})
 
@@ -400,11 +416,13 @@ for triali = 1:numTrials
 
                 % replace used time with a nan so it is not re-used later
                 delay_duration_manipulate(idx_temp(1)) = NaN;
+                coherence_met(triali) = NaN; % do no coherence req.
             catch
                 % if no other conditions are met, then just wait for 30
                 % seconds
                 disp('No yolked controls to delay-match - pause for 10 sec. to make a total of 30s delay')
-                pause(10);    
+                coherence_met(triali) = NaN; % do no coherence req.                
+                pause(20);    
             end
         end
     end
@@ -417,7 +435,7 @@ for triali = 1:numTrials
     % for yolked controls. When the trial is a control, it will be NaN
     % so that the algorithm can detect non-nans. THe master duration
     % variable will house all time delays
-    if contains(trial_type{triali},'NO')
+    if contains(trial_type{triali},control{1})
         delay_duration_manipulate(triali) = NaN;
     else
         delay_duration_manipulate(triali) = delay_duration_master(triali); % this one will change            
