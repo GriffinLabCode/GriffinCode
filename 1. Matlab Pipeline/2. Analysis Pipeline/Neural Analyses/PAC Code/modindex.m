@@ -67,6 +67,7 @@ else
             % amplitudes that are within the designated phase bins 
             Bin(k).amp = mean(data.Xg_env(index));
     end
+end
 
 S = sum([Bin.amp]);
 
