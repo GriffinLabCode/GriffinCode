@@ -24,9 +24,6 @@ function [M] = modindex(data,disp,N)
 %                   plot
 %   M.phase:        Phase with highest amplitude value (preferred phase)
 
-% hlh wrote? Unclear who og author is.
-% JS modified and wrote shuffled amplitude procedure
-
 %%
 
 if nargin < 3
@@ -37,26 +34,26 @@ PhaseBins = 0 : 360/N : 360-(360/N);
 
 if contains(shuffle,'y') 
     for k = 1:N
-        % define temporary variables
-        phase_temp = data.Xt_phase;
-        amp_temp   = data.Xg_env;
-        data_temp  = data.Xt_phase;
+         
+            % define temporary variables
+            phase_temp = data.Xt_phase;
+            amp_temp   = data.Xg_env;
+            data_temp  = data.Xt_phase;
+            
+            % remove nan phases
+            phase_temp(isnan(data_temp))=[];
+            amp_temp(isnan(data_temp))=[];
+            
+            % Finds all real points where phase falls within a given bin    
+            index_real = find (data.Xt_phase >= PhaseBins(k) & data.Xt_phase < PhaseBins(k)+(360/N));
+              
+            % perform a shuffling procedure and pull data 1000 times
+            numSamples2Pull = length(index_real); % make sure you pull the same number of samples that would actually be pulled
+            for n = 1:1000
+                index_shuff = randsample(phase_temp,numSamples2Pull
 
-        % remove nan phases
-        phase_temp(isnan(data_temp))=[];
-        amp_temp(isnan(data_temp))=[];
-
-        % Finds all real points where phase falls within a given bin    
-        index_real = find (data.Xt_phase >= PhaseBins(k) & data.Xt_phase < PhaseBins(k)+(360/N));
-
-        % perform a shuffling procedure and pull data 1000 times
-        numSamples2Pull = length(index_real); % make sure you pull the same number of samples that would actually be pulled
-        for n = 1:1000
-            shuff_amp(n) = mean(randsample(amp_temp,numSamples2Pull));
-        end
-        
-        % take the average of all shuffled amplitudes
-        Bin(k).amp = mean(shuff_amp);        
+            % amplitudes that are within the designated phase bins 
+            Bin(k).amp = mean(data.Xg_env(index));
     end    
 else
     for k = 1:N
