@@ -17,7 +17,7 @@
 %data1 = cleaned_lfp_hpc_stem2gz{triali};
 %data2 = cleaned_lfp_pfc_stem2gz{triali};
     
-function [ModIdx] = modindex_movingWindow(phaseLFP,ampLFP,times,params)
+function [ModIdx] = modindex_movingWindow(phaseLFP,ampLFP,times,shuffle,params)
 
 % define srate
 srate = params.Fs;
@@ -60,7 +60,7 @@ for i = 1:winLength
         
         % compute MI
         M = [];
-        M = modindex(datafile,'n');   
+        M = modindex(datafile,shuffle,'n');   
         
         % cache
         ModIdx(i) = M.MI;
@@ -100,7 +100,7 @@ for i = 1:winLength
         
         % compute MI
         M = [];
-        M = modindex(datafile,'n');   
+        M = modindex(datafile,shuffle,'n');   
         
         % cache
         ModIdx(i) = M.MI;
