@@ -25,7 +25,7 @@ end
 
 for i = 1:length(ci)
     % get full range of values
-    rangeVal = ci(1,i):ci(2,i);
+    rangeVal = linspace(ci(1,i),ci(2,i),100);
     % identify if 0 is included
     belowZero = find(rangeVal <= 0);
     aboveZero = find(rangeVal >= 0);
