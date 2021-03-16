@@ -34,7 +34,7 @@ if nargin < 4
 end
 
 % number of samples for normalizing
-numSamples = length(data.Xg_env);
+totalTime = length(data.Xg_env)/data.srate;
 
 % phase bins for theta
 PhaseBins = 0 : 360/N : 360-(360/N);
@@ -91,7 +91,7 @@ M.amp = [Bin.amp];
 M.NormAmp = P;
 M.PhaseAxis = 360/N/2 : 360/N : 360-(360/N/2);
 M.phase = PhaseBins(I);         %Theta phase with highest gamma amplitude
-M.normMI = M.MI/numSamples; % JS update 3-16
+M.normMI = M.MI/totalTime; % JS update 3-16
 
 %Generate plot of normalized gamma amplitude as a function of phase (two full cycles)
 
