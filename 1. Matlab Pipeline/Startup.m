@@ -1,4 +1,4 @@
-  %% startup
+%% startup
 % Run this first
 %
 % last edit 8/3/20 - JS
@@ -97,7 +97,34 @@ for nn = 3:size(folder_names,1)
             % analyses are
             addpath([add_inside_dir,funFolder_in_chronux])
             
-            disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])        
+            disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])  
+            
+            % add the hybrid funs
+            funFolder_in_chronux = '\spectral_analysis\hybrid';
+            
+            % addpath to the continuous folder - this is where the lfp
+            % analyses are
+            addpath([add_inside_dir,funFolder_in_chronux])
+            
+            disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])            
+            
+            % add pointbins
+            funFolder_in_chronux = '\spectral_analysis\pointbinned';
+            
+            % addpath to the continuous folder - this is where the lfp
+            % analyses are
+            addpath([add_inside_dir,funFolder_in_chronux])
+            
+            disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])                  
+
+            % add pointtimes
+            funFolder_in_chronux = '\spectral_analysis\pointtimes';
+            
+            % addpath to the continuous folder - this is where the lfp
+            % analyses are
+            addpath([add_inside_dir,funFolder_in_chronux])
+            
+            disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path']) 
             
         else
             
