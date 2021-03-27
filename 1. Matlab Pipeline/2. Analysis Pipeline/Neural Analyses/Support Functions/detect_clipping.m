@@ -9,15 +9,16 @@
 %       However, this code could be used on any kind of continuous data
 %       where you want to remove clipped artifacts
 %
-% IMPORTANT: While it does find clipping events, it may also remove short
-% time scale changes in LFP that are repeats. This is on a timescale that
-% shouldn't matter too much. This code should not be an alternative to you
-% looking at your data, but a method to prevent you from having to toss out
-% trials
+% -- OUTPUTS -- %
+% clip_saturation: percent of the signal saturated by clippings. Visually,
+%					1% seems like a good threshold for trial exclusion.
+% clip_idx: location of clipping artifacts in signal
+% numClippings: number of clipping events
+% data_new: clippings removed from data, not sure when this would be useful.
 %
-% written by John Stout. Last edit 3/23/2020
+% written by John Stout
 
-function [data_new,clip_idx,numClippings] = detect_clipping(data)
+function [clip_saturation,clip_idx,numClippings,data_new] = detect_clipping(data)
     
     % define output variable
     data_new = data;
@@ -61,5 +62,8 @@ function [data_new,clip_idx,numClippings] = detect_clipping(data)
         clip_idx = NaN;
         
     end
+	
+	% percent of signal saturated
+	clip_saturation = (numClippings/length(data))*100;
     
 end
