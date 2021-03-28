@@ -43,14 +43,6 @@ function [clip_saturation,clip_idx,numClippings,data_new] = detect_clipping(data
     
     if isempty(clip_idx) == 0 && numClippings > 1
         
-        %{
-        % create an index to remove a 10th of a second before and after the
-        % clipping events
-        remove_idx = (clip_idx(1)-(Fs/100)):(clip_idx(end)+(Fs/100));
-        
-        % remove data
-        data_new(remove_idx)=[];
-        %}
         
         % remove data
         data_new(clip_idx)=[];
