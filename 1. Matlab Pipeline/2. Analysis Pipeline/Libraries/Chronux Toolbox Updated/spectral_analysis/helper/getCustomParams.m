@@ -20,7 +20,7 @@ params.tapers = [3 5];
 params.pad = 0;
 params.Fs = [];
 params.fpass = [0 100];
-params.err = 0;
+params.err = [2 .05];
 params.trialave = 0;
 
 disp('Remember to define params.Fs as your sampling rate')

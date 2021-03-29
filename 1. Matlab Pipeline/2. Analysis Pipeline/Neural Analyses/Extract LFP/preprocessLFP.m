@@ -19,6 +19,7 @@ lfp_data  = change_row_to_column(lfp_data); % chronux
 lfp_det   = polyDetrend(lfp_data); % henry function
 
 % clean your data
-lfp_clean = rmlinesc(lfp_det,params); % chronux
+lfp_clean = cleaningscript(lfp_det,params); %There was mention of using both
+%lfp_clean = rmlinesc(lfp_det,params); % chronux
 
 end
