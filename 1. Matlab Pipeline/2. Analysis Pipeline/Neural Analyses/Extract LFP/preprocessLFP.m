@@ -9,17 +9,41 @@
 % detrended average of 0. this is what you want because you dont want your
 % average to be much greater than 0. moreover, by detrending the entire
 % dataset, you control for any influence of detrending on your effects.
+%
+% I found no evidence that using the polynomial method or the loess method
+% made much of a difference. That doesn't mean it doesn't. However, a paper
+% that discussed all the toolboxes (find URL) suggested the same. I've messed
+% with different approaches, but have decided to stick with the chronux way for
+% purposes of reproducibility.
+%
+% This code is probably redundant as its calling 'cleaningscript'
 
 function [lfp_clean,lfp_det,lfp_data] = preprocessLFP(lfp_data,params)
+
+%{
+
+% detrend your data
+%lfp_det   = polyDetrend(lfp_data); % henry function
+
+% clean your data
+lfp_clean = cleaningscript(lfp_data,params); %There was mention of using both
+%lfp_clean = rmlinesc(lfp_det,params); % chronux
+%}
+
+if exist('params') == 0
+	disp('Pulling default parameters')
+	params = getCustomParams;
+end
 
 % ensure correct formatting
 lfp_data  = change_row_to_column(lfp_data); % chronux
 
-% detrend your data
-lfp_det   = polyDetrend(lfp_data); % henry function
+% loess detrend
+deteeg = locdetrend(eeg,params.Fs,[1 0.5]);
 
-% clean your data
-lfp_clean = cleaningscript(lfp_det,params); %There was mention of using both
-%lfp_clean = rmlinesc(lfp_det,params); % chronux
+% scrub of 60hz
+[cleaneeg, datafit] = rmlinesmovingwinc(deteeg,[1 0.5],10,params,'n');
+cleaneeg = cleaneeg';
+
 
 end
