@@ -1,0 +1,8 @@
+entrainment_fun: use this method to calculate spike-LFP entrainment
+
+spk_triggered_avg: the influence of spikes on LFP. This is the first step for spike-field coherence
+			Spike field coherence will be added soon (4-2-21).
+_____________________
+Experimental:
+
+entrainment_shuffle: a method I (JS) messed with to shuffle spike-phase relationship.
