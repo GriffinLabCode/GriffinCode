@@ -1,4 +1,4 @@
-function [spk_triggered_plot, spk_triggered_sem] = spk_triggered_avg(Samples, Timestamps, spk, srate, edges, plot)
+function [spk_triggered_plot, spk_triggered_sem, spk_triggered] = spk_triggered_avg(Samples, Timestamps, spk, srate, edges, plot)
 %%
 
 %   This function plots the spike-triggered LFP average between a spike-LFP
