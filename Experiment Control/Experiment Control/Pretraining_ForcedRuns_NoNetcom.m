@@ -38,7 +38,7 @@ irBreakNames = irBreakLabels;
 % for arduino
 if exist("a") == 0
     % connect arduino
-    a = arduino('COM10','Uno','Libraries','Adafruit\MotorShieldV2');
+    a = arduino('COM5','Uno','Libraries','Adafruit\MotorShieldV2');
 end
 
 irArduino.Treadmill = 'D9';
