@@ -15,11 +15,12 @@ params.Fs        = []; %data1.SampleFrequencies(1);
 params.cleanFreq = [58 62];
 %}
 
-params.tapers = [5 9];
+% use 3 and 5 for tapers - it really seems like the best middle ground
+params.tapers = [3 5];
 params.pad = 0;
 params.Fs = [];
 params.fpass = [0 100];
-params.err = 0;
+params.err = [2 .05];
 params.trialave = 0;
 
 disp('Remember to define params.Fs as your sampling rate')

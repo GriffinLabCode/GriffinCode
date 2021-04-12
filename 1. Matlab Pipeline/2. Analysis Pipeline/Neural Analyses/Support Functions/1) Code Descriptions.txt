@@ -1,0 +1,30 @@
+Preprocessing things:
+
+detect_clipping: a method to identify clipping artifacts. Recommend to use single trials and not entire signal.
+
+find_downsample_rate: used as first step to downsample your lfp data
+
+skaggs_filter_var: filter lfp 
+
+phase_freq_detect: interpolation method to get theta phases (M. Brandon code)
+
+_________________________
+Analysis stuff:
+
+custom_movingWin_template : a template for customizable moving window analyses
+
+get_bestFrequency: identifies the dominating frequency of interest (ie if hpc theta is strongest at 7hz, the best freq. will be 7hz)
+
+Theta_Delta_Ratio: Used to compute theta:delta ratio
+
+TDratioEpochs: I forget**
+
+rat_location_time2pos: tells you where the rat is on maze in the time domain. Not super useful
+
+___________________________
+Other detrending/denoising:
+**** It is recommended to use preprocessLFP in the 'Extract LFP' folder ****
+
+polyDetrend: a detrending method using polynomial fitting and subtraction. Works equally well as loess detrending (could be better)
+
+DetrendDenoise: a method for detrending and denoising

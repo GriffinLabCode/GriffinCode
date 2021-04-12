@@ -1,0 +1,13 @@
+makedatafile: used to make a format for PAC analysis
+
+makedatafile_morlet: used to make a format for PAC using morlet wavelets
+
+modindex: after using 'makedatafile', use this to compute PAC
+
+modindex_movingWindow: a moving window estimation of PAC
+
+morlet_spectrogram: a spectrogram for gamma amplitude X theta phase
+
+pac_spectrogram: a spectrogram of PAC estimates
+
+phase_comodgram: another spectrogram of PAC estimates

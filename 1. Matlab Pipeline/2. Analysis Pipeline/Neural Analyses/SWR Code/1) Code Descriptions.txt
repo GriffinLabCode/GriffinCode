@@ -1,0 +1,24 @@
+IMPORTANT: This code is highly specific to Griffin lab methods and requires an "Int" file
+______________________________
+
+get_swrParams: a function to extract parameters needed for SWR code
+
+preSWRfun: Use this before moving forward. This code sets up your data for extrac_SWR
+
+extract_SWR: extracts SWRs using a combination of methods from Jadhav and Buzsaki lab
+
+extract_cleaned_swrs: extracts SWRs and filteres for things like running speed and potential false positives
+
+getFalsePositiveSWRs: uses another electrode wire that should not have SWRs to detect false-positive events. False positives
+			could be eating events or high freq. gamma/ noise between wires
+
+______________________________
+
+Highly specific plotting scripts - these are probably not very generalizable, but could be used
+				    for your own coding.
+
+SCRIPT_plot_example_swr
+
+SCRIPT_swr_plot
+
+SCRIPT_swr_speed_sanityCheck

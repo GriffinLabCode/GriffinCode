@@ -1,0 +1,22 @@
+get_thetaPhase: extracts theta phase
+
+get_thetaFeatures: Cycle-by-cycle analysis. Can be used to calculate two methods of
+			theta asymmetry, extracts theta cycle periodicity, and cycle amplitudes
+
+get_thetaCycleTimes: used to extract time-stamps in each theta cycle. This could be generalized to 
+			extract spikes in theta cycles.
+
+get_thetaCycleGammaPower: An experimental code to compute high gamma to low gamma ratio within theta-cycles
+
+thetaDeltaRatio_cycleXcycle: Code that computes a theta:delta ratio per each theta cycle in consideration
+
+______________________________
+
+Recommended:
+	get_thetaCycleTimes is probably the most generalizable code
+
+IMPORTANT: 
+	This code is largely new and experimental. Extensive confirmations were performed, however, you should
+	know this codes in-and-outs before running
+
+
