@@ -83,12 +83,15 @@ trajectory = cellstr(both_shuffled);
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
 
+% update the numTrials variable
+numTrials = length(trajectory);
+
 %% trials
 open_t  = [doorFuns.tLeftOpen doorFuns.tRightOpen];
 close_t = [doorFuns.tLeftClose doorFuns.tRightClose];
 maze_prep = [doorFuns.gzLeftOpen doorFuns.gzRightOpen];
 
-for triali = 1:numTrials
+for triali = 1:numTrials-1
     
     % set central door timeout value
     maze.Timeout = timeout_len; % 5 minutes before matlab stops looking for an IR break    
