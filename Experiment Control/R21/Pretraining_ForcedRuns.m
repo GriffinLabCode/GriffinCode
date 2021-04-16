@@ -35,6 +35,7 @@ end
 
 irArduino.Treadmill = 'D9';
 
+% arduino IR tester
 %{
 for i = 1:10000000
     readDigitalPin(a,irArduino.Treadmill)
