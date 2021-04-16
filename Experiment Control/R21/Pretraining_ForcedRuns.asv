@@ -159,7 +159,6 @@ for triali = 1:numTrials
                writeline(maze,rewFuns.left);
             end
             %}
-            %{
             if contains(trajectory{triali+1},'L')
                 writeline(maze,rewFuns.left);
             elseif contains(trajectory{triali+1},'R')
@@ -167,7 +166,7 @@ for triali = 1:numTrials
             elseif contains(trajectory{triali+1},'E')
                 disp('Session ending')
             end                
-            %}
+
             % break while loop
             next = 1;
             
@@ -188,15 +187,13 @@ for triali = 1:numTrials
                 writeline(maze,rewFuns.right); 
             end             
             %}
-            %{
             if contains(trajectory{triali+1},'L')
                 writeline(maze,rewFuns.left);
             elseif contains(trajectory{triali+1},'R')
                 writeline(maze,rewFuns.right);
             elseif contains(trajectory{triali+1},'E')
                 disp('Session ending')
-            end        
-            %}
+            end                    
             
             % break out of while loop
             next = 1;
@@ -321,17 +318,7 @@ for triali = 1:numTrials
             
             next = 1;
         end 
-    end  
-    
-    % fill reward for next trial
-    if contains(trajectory{triali+1},'L')
-        writeline(maze,rewFuns.left);
-    elseif contains(trajectory{triali+1},'R')
-        writeline(maze,rewFuns.right);
-    elseif contains(trajectory{triali+1},'E')
-        disp('Session end')
-    end     
-    pause(2); % give the reward wells some time to fill
+    end      
 end
 
 % save data
