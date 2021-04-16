@@ -35,6 +35,12 @@ end
 
 irArduino.Treadmill = 'D9';
 
+%{
+for i = 1:10000000
+    readDigitalPin(a,irArduino.Treadmill)
+end
+%}
+
 %% some parameters set by the user
 %numTrials    = 12;
 pellet_count = 1;
