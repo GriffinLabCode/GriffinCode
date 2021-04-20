@@ -12,9 +12,9 @@
 % -- OUTPUTS -- %
 % b: box plot figure
 %
-% written by John Stout and Allison George
+% written by John Stout
 
-function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
+function [b] = multiBarPlot(data,xLabels,yLabel,jitter)
 
     % check that data is a cell array, if not, convert it. This happens if
     % you input a vector or matrix
@@ -37,31 +37,16 @@ function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
     end
 
     % make figure
-    figure('color','w'); hold on;     
+    figure('color','w'); hold on;
     for i = 1:length(data)
-        bar(i,nanmean(data{i}),'FaceColor',[0 0.5 1]);
-        disp(data{i})
-        errorbar(i,nanmean(data{i}),stderr(data{i},1),'Color','k');
+        bar(i,mean(data{i}),'FaceColor',[0 0.5 1]);
+        errorbar(i,mean(data{i}),stderr(data{i},1),'Color','k');
         if exist('jitter')
             if jitter == 1 | contains(jitter,'y')
-                %{
-                c = [1 1 0; 1 0 1; 0 1 1; 1 0 0; 0 1 0; 0 0 1;
-                  0.2 1 0.6; 0.2 0.6 1; 1 0.2 0.6; 1 0.6 0.2; 0.6 1 0.2; 0.6 0.2 1;
-                  0.5 0.5 0.5; 0.8 0 0.3; 0.9 0.7 0.3; 0.9 0.3 0.1; 0 0.1 0.3]
-                %}
-                % define the color variable - once defined, it will not be
-                % rewritten, so colors match between plots
-                if exist('c')==0 
-                    numIn = size(data{i});
-                    c = rand(3,numIn(1))';
-                elseif size(c)~=size(data{i})
-                    numIn = size(data{i});
-                    c = rand(3,numIn(1))';                     
-                end                    
                 x_axes               = ones(size(data{i})).*(i+((rand(size(data{i}))-0.5)/10));               
-                scat                 = scatter(x_axes,data{i},[],c,'filled'); % multiply by i to follow the bar graph x axes 
-               % scat.MarkerEdgeColor = 'k';
-               % scat.MarkerFaceColor = [.5 .5 0];  
+                scat                 = scatter(x_axes,data{i}); % multiply by i to follow the bar graph x axes 
+                scat.MarkerEdgeColor = 'k';
+                scat.MarkerFaceColor = [.5 .5 .5];  
             end
         end
     end
