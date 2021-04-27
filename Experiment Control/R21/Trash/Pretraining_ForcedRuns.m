@@ -140,7 +140,6 @@ for triali = 1:numTrials-1
     
     % central t beam
     % while loop so that we continuously read the IR beam breaks
-    %{
     irTemp = [];
     next = 0;
     while next == 0
@@ -153,7 +152,6 @@ for triali = 1:numTrials-1
             next = 0;
         end
     end    
-    %}
     
     % t-beam
     % check which direction the rat turns at the T-junction
@@ -163,11 +161,8 @@ for triali = 1:numTrials-1
         irTemp = read(maze,4,"uint8");         
         if irTemp == irBreakNames.tRight            
             % close opposite door
-            writeline(maze,[doorFuns.tRightClose]) 
-            %writeline(maze,doorFuns.centralClose) % close the door behind the rat  
-            pause(.25);
-            writeline(maze,doorFuns.centralClose);            
-            
+            writeline(maze,doorFuns.tRightClose) 
+                    
             % open sb door
             pause(0.25)
             writeline(maze,doorFuns.sbRightOpen)
@@ -195,10 +190,8 @@ for triali = 1:numTrials-1
             trajectory_text{triali} = 'L';          
             
             % close door
-            writeline(maze,[doorFuns.tLeftClose])
-            pause(.25);
-            writeline(maze,doorFuns.centralClose);
-            
+            writeline(maze,doorFuns.tLeftClose)
+           
             % open sb door
             pause(0.25)            
             writeline(maze,doorFuns.sbLeftOpen)
