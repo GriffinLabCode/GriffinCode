@@ -39,11 +39,11 @@ end
 lfp_data  = change_row_to_column(lfp_data); % chronux
 
 % loess detrend
-deteeg = locdetrend(eeg,params.Fs,[1 0.5]);
+lfp_det = locdetrend(lfp_data,params.Fs,[1 0.5]);
 
 % scrub of 60hz
-[cleaneeg, datafit] = rmlinesmovingwinc(deteeg,[1 0.5],10,params,'n');
-cleaneeg = cleaneeg';
+[lfp_clean, datafit] = rmlinesmovingwinc(lfp_det,[1 0.5],10,params,'n');
+lfp_clean = lfp_clean';
 
 
 end
