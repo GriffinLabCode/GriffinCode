@@ -1,8 +1,17 @@
 % DA task that incorporates coherence detection
 % must have the matlab pipeline Startup run and startup_experimentControl
 
+
+%% add path to rat place - note that things are blinded, so don't open code
+addpath('X:\01.Experiments\R21\Experimenter Blinding - SUHYEONG ONLY')
+cd('X:\01.Experiments\R21\Experimenter Blinding - SUHYEONG ONLY');
+
 %% IF TROUBLESHOOTING
 % load in the model_thresholds, and don't load in thresholds that is below
+
+% pause
+disp('WARNING!!!!! Have you added the correct name of your rat on line 366? ')
+pause();
 
 %% prep 1 - clear history, workspace, get working directory
 % _____________________________________________________
@@ -357,71 +366,16 @@ for triali = 1:numTrials
         % coherence manipulation
         disp(['Trial type is ',trial_type{triali},'.'])
 
-        [coh_trial{triali},coherence_met(triali),timeConv{triali}] = fun_ratxx(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s);
+        %% CHANGE ME
         
+        [coh_trial{triali},coherence_met(triali),timeConv{triali}] = rat21_5(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s);
         
-        
-        if contains(trial_type{triali},low{1})
-            
-            % define the type of threshold and the actual threshold            
-            threshold_type = low{1};
-            coherence_threshold = threshold.low_coherence_magnitude;
-            
-            % run coherence detection
-            [coh_trial{triali},coherence_met(triali),timeConv{triali}] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s);
-        
-        elseif contains(trial_type{triali},high{1})
-            
-            % define the type of threshold and the actual threshold
-            threshold_type = high{1};
-            coherence_threshold = threshold.high_coherence_magnitude;  
-            
-            % run coherence detection
-            [coh_trial{triali},coherence_met(triali),timeConv{triali}] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s);
-        
-        elseif contains(trial_type{triali},control{1})
 
-            % if there are no yolked controls to delay-match, then
-            % just pause for the extra 10sec for a total of 30sec
-            % delay
-            try 
-                % find instances where there are no nans
-                idx_temp = find(isnan(delay_duration_manipulate)==0);
-                time2use = delay_duration_manipulate(idx_temp(1)); % use the very first value thats not a nan
-                whichMatch = trial_type{idx_temp(1)};
-
-                % pause for yolked time and record it
-                disp(['Yoked control pause of ', num2str(time2use), ' to match a ',whichMatch, ' trial'])
-                yoked_trialType{triali} = whichMatch;
-                yoked_trialTime(triali) = time2use;
-                pause(time2use);
-
-                % replace used time with a nan so it is not re-used later
-                delay_duration_manipulate(idx_temp(1)) = NaN;
-                coherence_met(triali) = NaN; % do no coherence req.
-            catch
-                % if no other conditions are met, then just wait for 30
-                % seconds
-                disp('No yolked controls to delay-match - pause for 10 sec. to make a total of 30s delay')
-                coherence_met(triali) = NaN; % do no coherence req.                
-                pause(20);    
-            end
-        end
     end
 
     % out time
     delay_duration_master(triali) = toc(tStart);
 
-    % use this variable to have yolked controls. Here, we define a
-    % delay_duration_manipulate variable. This variable will be used
-    % for yolked controls. When the trial is a control, it will be NaN
-    % so that the algorithm can detect non-nans. THe master duration
-    % variable will house all time delays
-    if contains(trial_type{triali},control{1})
-        delay_duration_manipulate(triali) = NaN;
-    else
-        delay_duration_manipulate(triali) = delay_duration_master(triali); % this one will change            
-    end
 end 
 
 % get amount of time past since session start

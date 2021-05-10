@@ -5,7 +5,7 @@
 % delay_length
 % amountOfData
 
-function [coh,coh_met,timings] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s)
+function [coh,coh_met,timings,data_out,times_out] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s)
 
 % initialize some variables
 timeStamps = []; timeConv  = [];
@@ -14,10 +14,10 @@ dur_met    = []; dur_sum   = [];
 coh_temp   = []; 
 
 % VERY IMPORTANT
-coh = []; timings = []; timeStamps = [];
+coh = []; timings = []; timeStamps = []; data_out = []; times_out = [];
 
 % total delay
-total_elapsed = 35;
+total_elapsed = 40;
 
 % define srate
 srate = params.Fs;
@@ -57,18 +57,22 @@ if contains(threshold_type,'HIGH')
             end
         end
         
-        % clean data
+        % detrend data - did not clean to improve processing speed
         data_det = [];
         data_det(1,:) = locdetrend(dataArray(1,:),params.Fs); 
         data_det(2,:) = locdetrend(dataArray(2,:),params.Fs); 
-
+        
+        % store data for later
+        data_out  = [data_out data_det];
+        times_out = [times_out timeStampArray];
+        
         % calculate coherence - chronux toolbox is way faster. Like sub 0.01
         % seconds sometimes, while wcoherence is around 0.05 sec.
         %[coh(i+1),phase,~,~,~,freq] = coherencyc(dataArray(1,:),dataArray(2,:),params);
         coh_temp = [];
         coh_temp = coherencyc(data_det(1,:),data_det(2,:),params);    
         coh      = [coh nanmean(coh_temp)];
-        disp(['Coherence detected at ' num2str(num2str(nanmean(coh_temp)))]);
+        %disp(['Coherence detected at ' num2str(num2str(nanmean(coh_temp)))]);
 
         % amount of data in consideration
         timings = [timings length(dataArray)/srate];
@@ -82,7 +86,7 @@ if contains(threshold_type,'HIGH')
         % first, if coherence magnitude is met, do whats below
         if isempty(find(coh > coherence_threshold))==0 % < bc this is low coh
 
-            disp('High Coherence Threshold Met')
+            %disp('High Coherence Threshold Met')
 
             % open the door
             writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
@@ -143,6 +147,10 @@ elseif contains(threshold_type,'LOW')
         data_det = [];
         data_det(1,:) = locdetrend(dataArray(1,:),params.Fs); 
         data_det(2,:) = locdetrend(dataArray(2,:),params.Fs); 
+        
+        % store data for later
+        data_out  = [data_out data_det];
+        times_out = [times_out timeStampArray];
 
         % calculate coherence - chronux toolbox is way faster. Like sub 0.01
         % seconds sometimes, while wcoherence is around 0.05 sec.
@@ -150,7 +158,7 @@ elseif contains(threshold_type,'LOW')
         coh_temp = [];
         coh_temp = coherencyc(data_det(1,:),data_det(2,:),params);    
         coh      = [coh nanmean(coh_temp)];
-        disp(['Coherence detected at ' num2str(nanmean(coh_temp))]);
+        %disp(['Coherence detected at ' num2str(nanmean(coh_temp))]);
 
         % amount of data in consideration
         timings = [timings length(dataArray)/srate];
@@ -164,7 +172,7 @@ elseif contains(threshold_type,'LOW')
         % first, if coherence magnitude is met, do whats below
         if isempty(find(coh < coherence_threshold))==0 % < bc this is low coh
 
-            disp('Low Coherence Threshold Met')
+            %disp('Low Coherence Threshold Met')
 
             % open the door
             writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
