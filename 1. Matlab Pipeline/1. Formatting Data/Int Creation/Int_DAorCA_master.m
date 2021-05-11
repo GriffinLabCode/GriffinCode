@@ -14,7 +14,7 @@ cd(datafolder);
 clearvars -except datafolder datafolderNew
 
 % get video tracking data
-missing_data = 'exclude'; % this could be 'exclude' or 'ignore'
+missing_data = 'ignore'; % this could be 'exclude' or 'ignore'
 vt_name = 'VT1.mat';
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
@@ -62,8 +62,12 @@ answer   = input(question,'s');
 
 if contains(answer,'Y') | contains(answer,'y')
     checkInt;
+    
+    % remove data selected by user
+    Int(remData,:)=[];
+    
 else
-    disp('It is recommended that you check your int file');
+    disp('IT IS RECOMMENDED that you check your int file as missing data will be stored as a non-existing trial');
 end
 
 % save data

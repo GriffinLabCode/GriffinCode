@@ -26,10 +26,22 @@ for i = 1:numTrials
             plot(Int_x,Int_y,'r','Marker','*','MarkerSize',12)
         end
     end
-    disp('Press any key to continue...')
-    pause;
+    disp('Keep? ')
+
+    % correct any issues
+    question = 'Keep trial? [Y/N] / [y/n] ';
+    answer   = input(question,'s');
+    
+    if contains(answer,[{'N'} {'n'}])
+        remData(i) = 1;
+    else
+        remData(i) = 0;
+    end
+
+    %pause;
     close;
 end 
 
+remData = logical(remData);
 
 

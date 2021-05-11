@@ -3,17 +3,19 @@
 % Must define datafolder as a string variable containing the directory to
 % your session of interest
 %
-% JS modified and consolidated this on 8/7/2020
+% this script was not written by me
+clear; clc
 
-% datafolder directory
-datafolder = 'C:\Users\jstout\Documents\GitHub\GriffinCode\1. Matlab Pipeline\Sample Data\Baby Groot 9-12 Sample data'; 
+% datafolder directory - stopped on baseline 1 need to do baseline 2 -
+% 9-2-2020 at 2:19
+datafolder = pwd;
 datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
 
 % get video tracking data
-missing_data = 'interp'; % this could be 'exclude' or 'ignore'
-vt_name      = 'VT1.mat';
+missing_data = 'ignore'; % this could be 'exclude' or 'ignore'
+vt_name = 'VT1.mat';
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
 % define some old school variables
@@ -38,12 +40,12 @@ Int         = Int(1:endtrials,:);
 % Populate column 4 of the Int variable 
 % 0 = Correct, 1 = Incorrect
 numtrials = size(Int,1);
-choice_trials = 2:2:numtrials;
-for i = 1:size(choice_trials,2)
-        if  Int(choice_trials(i),3)== Int(choice_trials(i)-1,3)
-            Int(choice_trials(i),4)= 1;
-            Int(choice_trials(i)-1,4) = 1;
-        end
+for i = 1:numtrials-1
+    if Int(i,3) == 1 && Int(i+1,3) == 0 || Int(i,3) == 0 && Int(i+1,3) == 1
+        Int(i+1,4) = 0;
+    else
+        Int(i+1,4) = 1;
+    end
 end
 percentCorrect = (((numtrials/2)-(sum(Int(:,4))/2))/(numtrials/2))*100;
 
@@ -60,8 +62,12 @@ answer   = input(question,'s');
 
 if contains(answer,'Y') | contains(answer,'y')
     checkInt;
+    
+    % remove data selected by user
+    Int(remData,:)=[];
+    
 else
-    disp('It is recommended that you check your int file - especially for DNMP');
+    disp('IT IS RECOMMENDED that you check your int file as missing data will be described as a non-existing trial');
 end
 
 % save data
@@ -78,7 +84,3 @@ if contains(answer,'Y') | contains(answer,'y')
     % save
     save(IntFileName,'Int');
 end
-
-% save data
-cd(datafolder)
-save('Int_DNMP.mat','Int');

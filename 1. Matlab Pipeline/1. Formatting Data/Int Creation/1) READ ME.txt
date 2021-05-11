@@ -1,0 +1,17 @@
+To get started:
+
+1) view_VT_data 
+	Make sure that the square spaces capture startbox, stem, 
+	choice-point, and goal-zones
+
+2) Run Int_DAorCA_master OR Int_DNMP_master
+	Make sure you have the file 'Int_information' stored in your
+	datafolder of interest prior to using
+
+
+*** IMPORTANT ***
+
+CHECK YOUR INT FILE!!!
+
+In the Int_** code, it will ask if you want to check your data.
+Absolutely do this! Sometimes, an extra trial will be logged.

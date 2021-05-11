@@ -23,6 +23,118 @@ load('Int_information')
 
 n=length(pos_x);
 
+% -- STEM -- %
+
+% temporary polygon variable
+xv=[STM_fld(1);STM_fld(1);STM_fld(1)+STM_fld(3);STM_fld(1)+STM_fld(3);STM_fld(1)];
+yv=[STM_fld(2);STM_fld(2)+STM_fld(4);STM_fld(2)+STM_fld(4);STM_fld(2);STM_fld(2)];
+
+% test if data is within or on the edges
+[in_stem,on_stem] = inpolygon(pos_x,pos_y,xv,yv);
+
+% -- CP -- %
+
+% temporary polygon variable
+xv=[CP_fld(1);CP_fld(1);CP_fld(1)+CP_fld(3);CP_fld(1)+CP_fld(3);CP_fld(1)];
+yv=[CP_fld(2);CP_fld(2)+CP_fld(4);CP_fld(2)+CP_fld(4);CP_fld(2);CP_fld(2)];
+
+% test if data is within or on the edges
+[in_cp,on_cp] = inpolygon(pos_x,pos_y,xv,yv);
+
+% -- GZ L -- %
+
+% temporary polygon variable
+xv=[lRW_fld(1);lRW_fld(1);lRW_fld(1)+lRW_fld(3);lRW_fld(1)+lRW_fld(3);lRW_fld(1)];
+yv=[lRW_fld(2);lRW_fld(2)+lRW_fld(4);lRW_fld(2)+lRW_fld(4);lRW_fld(2);lRW_fld(2)];
+
+% test if data is within or on the edges
+[in_lRW,on_lRW] = inpolygon(pos_x,pos_y,xv,yv);
+
+% -- GZ R -- %
+
+% temporary polygon variable
+xv=[rRW_fld(1);rRW_fld(1);rRW_fld(1)+rRW_fld(3);rRW_fld(1)+rRW_fld(3);rRW_fld(1)];
+yv=[rRW_fld(2);rRW_fld(2)+rRW_fld(4);rRW_fld(2)+rRW_fld(4);rRW_fld(2);rRW_fld(2)];
+
+% test if data is within or on the edges
+[in_rRW,on_rRW] = inpolygon(pos_x,pos_y,xv,yv);
+
+
+% -- pedestal -- %
+
+% temporary polygon variable
+xv=[PED_fld(1);PED_fld(1);PED_fld(1)+PED_fld(3);PED_fld(1)+PED_fld(3);PED_fld(1)];
+yv=[PED_fld(2);PED_fld(2)+PED_fld(4);PED_fld(2)+PED_fld(4);PED_fld(2);PED_fld(2)];
+
+% test if data is within or on the edges
+[in_PED,on_PED] = inpolygon(pos_x,pos_y,xv,yv);
+
+
+%%
+
+% find points in which the rats enter the stem, was not previously in
+% delay, and remains in stem
+idxIn = find(in_stem == 1);
+
+stemEnter = [];
+stemExit  = [];
+for i = 1:length(idxIn)
+    
+    % was the previous value in the stem?
+    prevIn = in_stem(idxIn(i)-1);
+    
+    % is the next value in the stem?
+    nextIn = in_stem(idxIn(i)+1);
+    
+    % if the rat did not used to be in stem, but is in the stem afterwards,
+    % he just entered
+    if prevIn == 0 && nextIn == 1
+        stemEnter_temp = [];
+        stemEnter_temp = pos_t(idxIn(i));
+        stemEnter      = [stemEnter stemEnter_temp];
+        
+    % if the rat used to be in stem, but is not in stem anymore, its the
+    % exit point
+    elseif prevIn == 1 && nextIn == 0
+        stemExit_temp = [];
+        stemExit_temp = pos_t(idxIn(i));
+        stemExit      = [stemExit stemExit_temp];  
+        
+    end
+end
+
+
+
+
+% find point in which the rats enter the stem, but then enter the cp
+
+
+
+
+% was in the stem, but now is in the choice-point, but was not in the goal
+% arm
+
+
+
+
+minY = 65; addY = 35;
+minX = 270; addX = abs(270-315);
+rRW_fld = [minX minY addX addY];
+
+for i = 1:n
+    % stem
+    if pos_x(i) > STM_fld(1) & pos_x(i) < STM_fld(3) & pos_y(i) > STM_fld(2) & pos_y(i) < STM_fld(4)
+        Int(1,i) = pos_t(i);
+
+        
+        
+        r = rectangle('position',STM_fld)
+        [in,on] = inpolygon(xq,yq,xv,yv) 
+        
+    % choice point
+    elseif pos_x(i) > STM_fld(1) & pos_x(i) < STM_fld(3) & pos_y(i) > STM_fld(2) & pos_y(i) < STM_fld(4)
+
+
 %% dont' change:
 
 A_start_x = rRW_fld(1,1); A_end_x =(rRW_fld(1,1)+rRW_fld(1,3));A_start_y =rRW_fld(1,2); A_end_y =(rRW_fld(1,2)+rRW_fld(1,4)); 
@@ -51,7 +163,7 @@ inside_E = 0; has_been_to_E = 0;
 
 was_inside_A=0; was_inside_B=0; was_inside_D=0; 
 
-for i=1:n
+for i=1:n;
     
     %Where was the rat?
     was_inside_A=inside_A;
@@ -89,12 +201,6 @@ for i=1:n
     if (was_inside_E ~=0) && (inside_E==0)
         E_end_t = pos_t(1,i);
     end
-    
-    %{
-    if num_Int == 8
-        break
-    end
-    %}
     
     %If he was coming from E, he is choosing a reward zone.
     if (was_inside_A==0) && (inside_A ~=0) && (has_been_to_E ~=0) 
