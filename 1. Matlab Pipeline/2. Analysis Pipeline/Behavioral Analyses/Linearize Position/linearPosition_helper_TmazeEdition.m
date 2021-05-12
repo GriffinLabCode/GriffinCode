@@ -30,7 +30,7 @@ idealTraj = linearStruct.idealTraj;
 % define measurements and bin_size variables   
 try   
     measurements = linearStruct.data.measurements;
-    bin_size = linearStruct.data.bin_size;
+    bin_size = linearStruct.bin_size;
 catch
     measurements = linearStruct.measurements;
     bin_size = linearStruct.bin_size;    
@@ -38,7 +38,7 @@ end
 
 % calculate converted distance in cm. This tells you how far the rat ran
 conv_distance = round(measurements.total_distance*bin_size);
-total_dist = conv_distance;
+total_dist = conv_distance/bin_size;
 
 % define which measurements to use
 meas2use = [measurements.stem measurements.goalArm];
