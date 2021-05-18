@@ -14,6 +14,7 @@ cd(datafolder)
 % 3. If you want CSCs 1:16: numCSC = 1:16;
 %numCSC = [1,3,6,8,10,11]; % ** If your CSC are numbered, do this and comment below
 strCSC = [{'PFC_red'} {'PFC_blue'} {'HPC_red'} {'HPC_clear'} {'HPC_blue'} {'HPC_black'}]; % if your csc are strings, do this and comment above
+%strCSC = [{'PFC_white'} {'PFC_blue'} {'HPC_white'} {'HPC_clear'} {'HPC_blue'} {'HPC_green'}]; % if your csc are strings, do this and comment above
 
 %% Timestamps and events
 
@@ -28,7 +29,7 @@ end
 
 % load & convert Events data
 try
-    [TimeStamps, EventStrings] = Nlx2MatEV(strcat(datafolder,'\events.nev'), [1 0 0 0 1], 0, 1, [] );
+    [TimeStamps, EventIDs, TTLs, Extras, EventStrings] = Nlx2MatEV(strcat(datafolder,'\events.nev'), [1 1 1 1 1], 0, 1, [] );
     save(strcat(datafolder,'\Events.mat'));
     clearvars -except datafolder numCSC strCSC
 catch

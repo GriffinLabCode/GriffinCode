@@ -1,10 +1,6 @@
 %% preparation
 clear;
 
-% user enter trials
-prompt    = 'Enter the number of trials ';
-numTrials = str2num(input(prompt,'s'));
-
 % prep stuff for maze
 rng shuffle
 
@@ -41,6 +37,14 @@ for i = 1:10000000
     readDigitalPin(a,irArduino.Treadmill)
 end
 %}
+%% Connect to netcom
+prompt = 'Are you recording this session? [Y/y N/n] ';
+answer = input(prompt,'s');
+if contains(answer,[{'Y'} {'y'}])
+    pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
+    serverName = '192.168.3.100';
+    connect2netcom(pathName,serverName)
+end
 
 %% some parameters set by the user
 %numTrials    = 12;
@@ -68,6 +72,10 @@ for rewardi = 1:pellet_count
     pause(4)
 end
 %}
+
+%% user enter trials
+prompt    = 'Enter the number of trials ';
+numTrials = str2num(input(prompt,'s'));
 
 %% create a random organization of forced run trajectories
 left  = repmat('L',[numTrials/2 1]);
@@ -127,6 +135,8 @@ for triali = 1:numTrials-1
                 % close startbox door
                 pause(.25);                    
                 writeline(maze,doorFuns.centralOpen)
+                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "centralOpen" 100 2');    
+                
                 % tell the loop to move on
                 next = 1; 
             else
@@ -136,24 +146,26 @@ for triali = 1:numTrials-1
     else 
         pause(5); % a brief pause between trials
         writeline(maze,doorFuns.centralOpen)    
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "centralOpen" 100 2');         
     end
     
     % central t beam
     % while loop so that we continuously read the IR beam breaks
-    %{
     irTemp = [];
     next = 0;
     while next == 0
         irTemp = read(maze,4,"uint8");            % look for IR beam breaks
-        if irTemp == irBreakNames.central         % if central beam is broken           
+        if irTemp == irBreakNames.central         % if central beam is broken    
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "centralBeam" 102 2');       
+
             % close door
-            writeline(maze,doorFuns.centralClose) % close the door behind the rat  
+            %writeline(maze,doorFuns.centralClose) % close the door behind the rat  
             next = 1;
         else
             next = 0;
         end
     end    
-    %}
+    
     
     % t-beam
     % check which direction the rat turns at the T-junction
@@ -161,7 +173,9 @@ for triali = 1:numTrials-1
     while next == 0
         irTemp = [];
         irTemp = read(maze,4,"uint8");         
-        if irTemp == irBreakNames.tRight            
+        if irTemp == irBreakNames.tRight      
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tRightBeam" 222 2');                                    
+            
             % close opposite door
             writeline(maze,[doorFuns.tRightClose]) 
             %writeline(maze,doorFuns.centralClose) % close the door behind the rat  
@@ -190,6 +204,7 @@ for triali = 1:numTrials-1
             next = 1;
             
         elseif irTemp == irBreakNames.tLeft
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tLeftBeam" 212 2');
      
             % track the trajectory_text
             trajectory_text{triali} = 'L';          
@@ -237,6 +252,7 @@ for triali = 1:numTrials-1
         
         if irTemp == irBreakNames.gzRight
             % send neuralynx command for timestamp
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzRightBeam" 422 2');             
 
             % close both for audio symmetry
             writeline(maze,doorFuns.gzLeftClose)
@@ -250,6 +266,7 @@ for triali = 1:numTrials-1
             next = 1;                          
         elseif irTemp == irBreakNames.gzLeft
             % send neuralynx command for timestamp
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzLeftBeam" 412 2');
             
             % close both for audio symmetry
             writeline(maze,doorFuns.gzLeftClose)
@@ -270,6 +287,7 @@ for triali = 1:numTrials-1
         maze.Timeout = timeout_len;
         irTemp = read(maze,4,"uint8");         
         if irTemp == irBreakNames.sbRight
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbRightBeam" 522 2');             
             % track animals traversal onto the treadmill
             next_tread = 0; % hardcode next as 0 - this value gets updated when criteria is met
             while next_tread == 0 
@@ -282,7 +300,7 @@ for triali = 1:numTrials-1
                 % entered the center of the startbox zone. This ensures
                 % that the rat is in fact in the startbox
                 if readDigitalPin(a,irArduino.Treadmill) == 0
-
+                    [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TreadmillBeam" 602 2');
                     % close startbox door
                     pause(.25);                    
                     writeline(maze,doorFuns.sbRightClose)
@@ -291,6 +309,7 @@ for triali = 1:numTrials-1
                     next_tread = 1;
                 elseif isempty(irTemp) == 0
                     if irTemp == irBreakNames.sbLeft
+                        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbLeftBeam - after Right" 512 3'); 
                 
                         % close startbox door
                         pause(0.25)
@@ -306,6 +325,8 @@ for triali = 1:numTrials-1
             
             next = 1;
         elseif irTemp == irBreakNames.sbLeft 
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbLeftBeam" 512 2');                         
+            
             % track animals traversal onto the treadmill
             next_tread = 0; % hardcode next as 0 - this value gets updated when criteria is met
             while next_tread == 0 
@@ -318,6 +339,8 @@ for triali = 1:numTrials-1
                 % entered the center of the startbox zone. This ensures
                 % that the rat is in fact in the startbox
                 if readDigitalPin(a,irArduino.Treadmill) == 0
+                    [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TreadmillBeam" 602 2');
+                    
                     % close startbox door
                     pause(.25);                    
                     writeline(maze,doorFuns.sbLeftClose)
@@ -326,6 +349,8 @@ for triali = 1:numTrials-1
                     next_tread = 1;
                 elseif isempty(irTemp) == 0
                     if irTemp == irBreakNames.sbRight
+                        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbRightBeam - after Left" 522 3');                         
+                        
   
                         % close startbox door
                         pause(0.25)
