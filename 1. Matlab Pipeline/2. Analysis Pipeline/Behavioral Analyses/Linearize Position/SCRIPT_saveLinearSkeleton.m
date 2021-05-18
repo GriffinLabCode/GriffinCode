@@ -1,13 +1,14 @@
 %% Script meant for actively linearizing position data
 clear; clc;
-saveName     = 'linearSkeleton_test'; % rename per round 
+saveName     = 'linearSkeleton_master'; % rename per round 
 %datafolder  = '';
 datafolder   = pwd;
-int_name     = 'Int_JS_fixed'; % was Int_JS_fixed
+int_name     = 'Int_file'; % was Int_JS_fixed
 vt_name      = 'VT1.mat';
 missing_data = 'interp';
 vt_srate     = 30; % 30 samples/sec
 
+%{
 clear measurements
 bin_size              = 1; % in cm
 measurements.stem     = round(112/bin_size); % in cm was 137
@@ -15,10 +16,20 @@ measurements.goalArm  = round(56/bin_size);  % was 50
 measurements.goalZone = round(29.21/bin_size); %round(42/bin_size);  % was 37
 %measurements.goalExit = round(12.7/bin_size);
 measurements.retArm   = round(116.84/bin_size); % was 130
+%}
+
+clear measurements
+bin_size              = 10; % in cm
+measurements.stem     = round(127/bin_size); % in cm was 137
+measurements.goalArm  = round(50/bin_size);  % was 50
+measurements.goalZone = round(37/bin_size); %round(42/bin_size);  % was 37
+%measurements.goalExit = round(12.7/bin_size);
+measurements.retArm   = round(130/bin_size); % was 130
+
 
 % updated linear position code
-Int_indicator.left  = 1;
-Int_indicator.right = 0;
+Int_indicator.left  = 1; % coded to 1 for identification
+Int_indicator.right = 0; % coded to 0 for identification
 [data] = get_linearSkeleton(datafolder,int_name,vt_name,missing_data,measurements,Int_indicator);
 
 load(int_name);
@@ -88,6 +99,6 @@ answer = input(prompt,'s');
 % save data
 if contains(answer,'Y') | contains(answer,'y')
     cd(datafolder);
-    save(saveName,'idealTraj', 'data', 'bin_size');
+    save(saveName,'idealTraj', 'data', 'bin_size','measurements');
     disp('linear position data saved to datafolder')
 end
