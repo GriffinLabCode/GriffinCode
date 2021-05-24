@@ -154,14 +154,7 @@ if contains(threshold_type,'HIGH')
             %disp('High Coherence Threshold Met')
 
             % sustained coherence
-            %{
             if coh(end) > coherence_threshold && coh(end-1) > coherence_threshold
-                % open the door
-                writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
-                coh_met  = 1;
-                openDoor = 1;      
-            end
-            %}
             
             % open the door
             writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
@@ -215,7 +208,6 @@ elseif contains(threshold_type,'LOW')
 
                 attempt = 1;
             catch
-                coh = [coh NaN];
             end
         end
         
@@ -268,16 +260,6 @@ elseif contains(threshold_type,'LOW')
 
             %disp('Low Coherence Threshold Met')
 
-            % sustained coherence
-            %{
-            if coh(end) < coherence_threshold && coh(end-1) < coherence_threshold
-                % open the door
-                writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
-                coh_met  = 1;
-                openDoor = 1;      
-            end
-            %}            
-            
             % open the door
             writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
             coh_met  = 1;            

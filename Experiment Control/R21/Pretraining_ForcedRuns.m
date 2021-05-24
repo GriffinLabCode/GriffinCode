@@ -51,6 +51,7 @@ end
 pellet_count = 1;
 timeout_len  = 60*10;
 treadmill    = 0; % set this to 1 if you want to use
+delay_length = 0;
 
 %% clean the stored data just in case IR beams were broken
  
@@ -367,6 +368,17 @@ for triali = 1:numTrials-1
             next = 1;
         end 
     end  
+    
+    if delay_length > 1
+
+        % pause
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayStart" 810 2');                            
+        pause(delay_length); % no pause - start it immediately
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEnd" 810 2');                            
+    else
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayStart" 810 2');                            
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEnd" 810 2');                                    
+    end    
     
     % fill reward for next trial
     if contains(trajectory{triali+1},'L')
