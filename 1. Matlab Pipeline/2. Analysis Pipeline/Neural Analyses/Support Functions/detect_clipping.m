@@ -18,10 +18,13 @@
 %
 % written by John Stout
 
-function [clip_saturation,clip_idx,numClippings,data_new] = detect_clipping(data)
+function [clip_saturation] = detect_clipping(data)
     
     % define output variable
     data_new = data;
+    
+    % Need to round to handle large numbers
+    data_new = round(data);
     
     % find repeating elements
     repeats   = find(diff(data_new)==0);
@@ -30,13 +33,14 @@ function [clip_saturation,clip_idx,numClippings,data_new] = detect_clipping(data
     % occuring, so to remove the constant repeating events, find repeating
     % elements withint repeating elements variable.
     clippings = find(diff(repeats)==1); 
-    
+   
     % use the clippings variable to find the location of the clipping
     % events
     clip_idx  = repeats(clippings);
 
     % how many clipping events?
     numClippings = length(clip_idx);
+    %numRepeats = length(repeats);
     
     % plot data
     % figure(); hold on; plot(data,'b'); plot(clip_idx,data(clip_idx),'.r');
@@ -54,8 +58,10 @@ function [clip_saturation,clip_idx,numClippings,data_new] = detect_clipping(data
         clip_idx = NaN;
         
     end
+    
 	
 	% percent of signal saturated
-	clip_saturation = (numClippings/length(data))*100;
+	clip_saturation = (numClippings/(length(data)-1))*100;
+    %clip_saturation  = (numRepeats/(length(data)-1))*100;
     
 end

@@ -44,4 +44,17 @@ end
 
 remData = logical(remData);
 
+% update int file accuracy
 
+% Populate column 4 of the Int variable 
+% 0 = Correct, 1 = Incorrect
+Int(:,4) = 0;
+numtrials = size(Int,1);
+for i = 1:numtrials-1
+    if Int(i,3) == 1 && Int(i+1,3) == 0 || Int(i,3) == 0 && Int(i+1,3) == 1
+        Int(i+1,4) = 0;
+    else
+        Int(i+1,4) = 1;
+    end
+end
+percentCorrect = (((numtrials/2)-(sum(Int(:,4))/2))/(numtrials/2))*100;

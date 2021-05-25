@@ -13,8 +13,38 @@ datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
 
+% load in events
+load('Events')
+
+%% get sequence of events
+
+% get trial onset
+trialOnset = contains(EventStrings,'centralOpen');
+
+% get CP entry
+CPentry = contains(EventStrings,'centralBeam');
+
+% get gz entry
+CPexit = contains(EventStrings,[{'tRightBeam'} {'tLeftBeam'}]);
+
+% get gz exit
+GZexit = contains(EventStrings,[{'gzRightBeam'} {'gzLeftBeam'}]);
+
+% get sb entry -
+SBstart = contains(EventStrings,[{'DelayStart'}]);
+
+%% use sequence of events to piece together the int file
+numTrials = length(find(trialOnset == 1));
+
+for triali = 1:numTrials
+    
+    % -- FINISH -- %
+
+end
+
+%{
 % get video tracking data
-missing_data = 'ignore'; % this could be 'exclude' or 'ignore'
+missing_data = 'interp'; % this could be 'exclude' or 'ignore'
 vt_name = 'VT1.mat';
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
@@ -65,9 +95,26 @@ if contains(answer,'Y') | contains(answer,'y')
     
     % remove data selected by user
     Int(remData,:)=[];
-    
+
+    numtrials = size(Int,1);
+    for i = 1:numtrials-1
+        if Int(i,3) == 1 && Int(i+1,3) == 0 || Int(i,3) == 0 && Int(i+1,3) == 1
+            Int(i+1,4) = 0;
+        else
+            Int(i+1,4) = 1;
+        end
+    end
+    percentCorrect = (((numtrials/2)-(sum(Int(:,4))/2))/(numtrials/2))*100;
+
+    % display progress
+    C = [];
+    C = strsplit(datafolder,'\');
+    X = [];
+    X = [C{end},' behavioral accuracy = ',num2str(percentCorrect),'%'];
+    disp(X);
+
 else
-    disp('IT IS RECOMMENDED that you check your int file as missing data will be described as a non-existing trial');
+    disp('IT IS RECOMMENDED that you check your int file as missing data will be stored as a non-existing trial');
 end
 
 % save data
@@ -84,3 +131,4 @@ if contains(answer,'Y') | contains(answer,'y')
     % save
     save(IntFileName,'Int');
 end
+%}

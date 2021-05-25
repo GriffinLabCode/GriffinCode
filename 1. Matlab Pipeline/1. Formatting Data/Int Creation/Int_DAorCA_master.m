@@ -14,7 +14,7 @@ cd(datafolder);
 clearvars -except datafolder datafolderNew
 
 % get video tracking data
-missing_data = 'ignore'; % this could be 'exclude' or 'ignore'
+missing_data = 'interp'; % this could be 'exclude' or 'ignore'
 vt_name = 'VT1.mat';
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
@@ -65,7 +65,24 @@ if contains(answer,'Y') | contains(answer,'y')
     
     % remove data selected by user
     Int(remData,:)=[];
-    
+
+    numtrials = size(Int,1);
+    for i = 1:numtrials-1
+        if Int(i,3) == 1 && Int(i+1,3) == 0 || Int(i,3) == 0 && Int(i+1,3) == 1
+            Int(i+1,4) = 0;
+        else
+            Int(i+1,4) = 1;
+        end
+    end
+    percentCorrect = (((numtrials/2)-(sum(Int(:,4))/2))/(numtrials/2))*100;
+
+    % display progress
+    C = [];
+    C = strsplit(datafolder,'\');
+    X = [];
+    X = [C{end},' behavioral accuracy = ',num2str(percentCorrect),'%'];
+    disp(X);
+
 else
     disp('IT IS RECOMMENDED that you check your int file as missing data will be stored as a non-existing trial');
 end

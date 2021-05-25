@@ -1,24 +1,9 @@
 NetCom Log File Opened - File Name:  MatlabNetComLogfile.txt
-Time Opened: (mm/dd/yyyy): 03/16/2021 At Time: 10:41:05
+Time Opened: (mm/dd/yyyy): 05/24/2021 At Time: 08:19:44
 NetCom Version 3.1.0
 
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 10:41:10 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26200.
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 10:41:10 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 10:41:15 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26201.
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 10:41:16 - NodeConnectionClient::AddStreamObject - Object CSC6 has been added to our stream list. Stream Type: CSC
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 10:41:16 - NodeConnectionClient::AddStreamObject - Object CSC10 has been added to our stream list. Stream Type: CSC
--*  ERROR  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::WaitOnConnection - Error receiving data, error code: WSAEWOULDBLOCK - The virtual circuit was reset by the remote side executing a hard or abortive close. For UPD sockets, the remote host was unable to deliver a previously sent UDP datagram and responded with a 'Port Unreachable' ICMP packet. The application should close the socket as it is no longer usable. Stream Type: Stereotrode
--*  ERROR  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::WaitOnConnection - Error receiving data, error code: WSAEWOULDBLOCK - The virtual circuit was reset by the remote side executing a hard or abortive close. For UPD sockets, the remote host was unable to deliver a previously sent UDP datagram and responded with a 'Port Unreachable' ICMP packet. The application should close the socket as it is no longer usable. Stream Type: Tetrode
--*  ERROR  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::WaitOnConnection - Error receiving data, error code: WSAEWOULDBLOCK - The virtual circuit was reset by the remote side executing a hard or abortive close. For UPD sockets, the remote host was unable to deliver a previously sent UDP datagram and responded with a 'Port Unreachable' ICMP packet. The application should close the socket as it is no longer usable. Stream Type: SingleElectrode
--*  ERROR  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::WaitOnConnection - Error receiving data, error code: WSAEWOULDBLOCK - The virtual circuit was reset by the remote side executing a hard or abortive close. For UPD sockets, the remote host was unable to deliver a previously sent UDP datagram and responded with a 'Port Unreachable' ICMP packet. The application should close the socket as it is no longer usable. Stream Type: Event
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for SingleElectrode stream processing thread. Stream Type: SingleElectrode
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Stereotrode stream processing thread. Stream Type: Stereotrode
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Tetrode stream processing thread. Stream Type: Tetrode
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for CSC stream processing thread. Stream Type: CSC
--*  ERROR  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::WaitOnConnection - Error receiving data, error code: WSAECONNABORTED - The virtual circuit was terminated due to a time-out or other failure. The application should close the socket as it is no longer usable. Stream Type: Video
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Video stream processing thread. Stream Type: Video
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Event stream processing thread. Stream Type: Event
--* NOTICE  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
--*  ERROR  *- (mm/dd/yyyy): 03/16/2021 At Time: 11:45:45 - NodeConnectionClient::WaitOnConnection - Error receiving data, error code: WSAEWOULDBLOCK - The virtual circuit was reset by the remote side executing a hard or abortive close. For UPD sockets, the remote host was unable to deliver a previously sent UDP datagram and responded with a 'Port Unreachable' ICMP packet. The application should close the socket as it is no longer usable. Stream Type: CSC
-Log File Closed - End of File
-
+-* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:49 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26200.
+-* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:49 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
+-* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:54 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26201.
+-* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:58 - NodeConnectionClient::AddStreamObject - Object HPC_CLEAR has been added to our stream list. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:58 - NodeConnectionClient::AddStreamObject - Object PFC_BLUE has been added to our stream list. Stream Type: CSC
