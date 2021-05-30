@@ -15,7 +15,7 @@
 % spks: spike times for entire session
 % times: a cell array of timestamps (must be in same unit as spks)
 % linearPosition: a cell array linear position for the time epoch of interest
-% vt_srate: video tracking sampling rate
+% numBins: number of bins
 % resolution_pos: resolution for firing rate smoothing (for linearizing
 %                   position, try 2 for 2 cm)
 %
@@ -28,7 +28,7 @@
 % instSpk: spikes across time
 % instTime: time
 
-function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR_acrossTrials(spks_session,times,linearPosition,total_dist,resolution_pos)
+function [smoothFR,FR,numSpks,sumTime,instSpk,instTime,instFR,smoothInstFR] = linearizedFR_acrossTrials(spks_session,times,linearPosition,numBins,resolution_pos)
 
     % define numTrials
     numTrials = length(times);
@@ -40,6 +40,8 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR_acrossTri
     smoothFR = cell([1 numTrials]);
     instTime = cell([1 numTrials]);
     instSpk  = cell([1 numTrials]);
+    instFR   = cell([1 numTrials]);
+    smoothInstFR  = cell([1 numTrials]);    
         
     % get data per trial
     for triali = 1:numTrials
@@ -64,12 +66,17 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR_acrossTri
             instSpk{triali}(spkSearch(i)) = instSpk{triali}(spkSearch(i))+1;
         end
 
+        % inst fr
+        instFR{triali} = instSpk{triali}./instTime{triali};
+        
         % now bin the spikes according to linear position 
         %total_dist = max(linearPosition); % total distance the rat ran
-        binSpks = cell([1 total_dist]); binTime = cell([1 total_dist]); % initialize
-        for i = 1:total_dist % loop across the number of bins
-            binSpks{i} = instSpk{triali}(find(linearPosition{triali} == i));
-            binTime{i} = instTime{triali}(find(linearPosition{triali} == i));
+        binSpks = cell([1 numBins]); binTime = cell([1 numBins]); % initialize
+        for i = 1:numBins % loop across the number of bins
+            % rounded to ensure that if you entered a smoothed linear
+            % position variable, it will be handled appropriately
+            binSpks{i} = instSpk{triali}(find(round(linearPosition{triali}) == i));
+            binTime{i} = instTime{triali}(find(round(linearPosition{triali}) == i));         
         end
 
         % calculate firing rate per bin
@@ -84,6 +91,7 @@ function [smoothFR,FR,numSpks,sumTime,instSpk,instTime] = linearizedFR_acrossTri
 
         % smooth firing rate
         pos_smooth = resolution_pos;
-        smoothFR{triali} = smoothdata(FR{triali},'gaussian',pos_smooth);    
+        smoothFR{triali} = smoothdata(FR{triali},'gaussian',pos_smooth);  
+        smoothInstFR{triali} = smoothdata(instFR{triali},'gaussian',30);
     end
 end
