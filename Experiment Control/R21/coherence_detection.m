@@ -154,20 +154,24 @@ if contains(threshold_type,'HIGH')
             %disp('High Coherence Threshold Met')
 
             % sustained coherence
-            %{
-            if coh(end) > coherence_threshold && coh(end-1) > coherence_threshold
-                % open the door
-                writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
-                coh_met  = 1;
-                openDoor = 1;      
+            if length(coh) > 1
+                if isnan(coh(end)) == 0 && isnan(coh(end-1)) == 0
+                    if coh(end) > coherence_threshold && coh(end-1) > coherence_threshold
+                        % open the door
+                        writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
+                        coh_met  = 1;
+                        openDoor = 1;      
+                    end
+                end
             end
-            %}
             
+            %{
             % open the door
             writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
             coh_met  = 1;
             openDoor = 1;
-
+            %}
+            
             % if your timer has elapsed > some preset time, open the startbox door
             if toc(tStart) > total_elapsed && openDoor == 0
                 writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen])
@@ -268,21 +272,24 @@ elseif contains(threshold_type,'LOW')
 
             %disp('Low Coherence Threshold Met')
 
-            % sustained coherence
+            % sustained coherence\
+            if length(coh) > 1
+                if isnan(coh(end)) == 0 && isnan(coh(end-1)) == 0 % if both coh of interest are real
+                    if coh(end) < coherence_threshold && coh(end-1) < coherence_threshold
+                        % open the door
+                        writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
+                        coh_met  = 1;
+                        openDoor = 1;      
+                    end
+                end
+            end         
             %{
-            if coh(end) < coherence_threshold && coh(end-1) < coherence_threshold
-                % open the door
-                writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
-                coh_met  = 1;
-                openDoor = 1;      
-            end
-            %}            
-            
             % open the door
             writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
             coh_met  = 1;            
             openDoor = 1;
-
+            %}
+            
             % if your timer has elapsed > some preset time, open the startbox door
             if toc(tStart) > total_elapsed && openDoor == 0
                 writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen])

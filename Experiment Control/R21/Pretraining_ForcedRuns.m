@@ -77,6 +77,7 @@ end
 %% user enter trials
 prompt    = 'Enter the number of trials ';
 numTrials = str2num(input(prompt,'s'));
+pause(5)
 
 %% create a random organization of forced run trajectories
 left  = repmat('L',[numTrials/2 1]);

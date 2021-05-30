@@ -1,9 +1,9 @@
 NetCom Log File Opened - File Name:  MatlabNetComLogfile.txt
-Time Opened: (mm/dd/yyyy): 05/24/2021 At Time: 08:19:44
+Time Opened: (mm/dd/yyyy): 05/27/2021 At Time: 15:02:26
 NetCom Version 3.1.0
 
--* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:49 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26200.
--* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:49 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
--* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:54 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26201.
--* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:58 - NodeConnectionClient::AddStreamObject - Object HPC_CLEAR has been added to our stream list. Stream Type: CSC
--* NOTICE  *- (mm/dd/yyyy): 05/24/2021 At Time: 08:19:58 - NodeConnectionClient::AddStreamObject - Object PFC_BLUE has been added to our stream list. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 05/27/2021 At Time: 15:02:31 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26200.
+-* NOTICE  *- (mm/dd/yyyy): 05/27/2021 At Time: 15:02:31 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
+-* NOTICE  *- (mm/dd/yyyy): 05/27/2021 At Time: 15:02:35 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26201.
+Log File Closed - End of File
+

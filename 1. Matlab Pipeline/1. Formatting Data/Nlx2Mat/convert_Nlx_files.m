@@ -13,6 +13,7 @@ cd(datafolder)
 % define which CSCs to convert. Maybe you only want to convert CSCs 1 and
 % 3. If you want CSCs 1:16: numCSC = 1:16;
 %numCSC = [1,3,6,8,10,11]; % ** If your CSC are numbered, do this and comment below
+%strCSC = [{'PFC_11'} {'PFC_10'} {'HPC_43'} {'HPC_41'} {'HPC_33'} {'HPC_31'}]; % if your csc are strings, do this and comment above
 strCSC = [{'PFC_red'} {'PFC_blue'} {'HPC_red'} {'HPC_clear'} {'HPC_blue'} {'HPC_black'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_white'} {'PFC_blue'} {'HPC_white'} {'HPC_clear'} {'HPC_blue'} {'HPC_green'}]; % if your csc are strings, do this and comment above
 
