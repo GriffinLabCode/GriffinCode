@@ -77,23 +77,22 @@ if contains(threshold_type,'HIGH')
         data_out  = [data_out data_det];
         times_out = [times_out timeStampArray];
         
+        %{
         % test for artifact
         zArtifact = [];
         zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
         zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-
-        %{
-        figure; 
-        subplot 211;
-        plot(zArtifact(1,:))
-        subplot 212;
-        plot(zArtifact(2,:))
-        %}
         
         % using a standard deviation threshold of 5 after looking over the
         % data
         noiseThreshold = 4;
         idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+        %}
+        
+        % detect artifacts
+        [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);
+        
+        % calculate coherence based on whether artifacts are present
         if isempty(idxNoise) ~= 1
             coh = [coh NaN]; % add nan to know this was ignored
             continue
@@ -102,6 +101,7 @@ if contains(threshold_type,'HIGH')
             % calculate coherence - chronux toolbox is way faster. Like sub 0.01
             % seconds sometimes, while wcoherence is around 0.05 sec.
             %[coh(i+1),phase,~,~,~,freq] = coherencyc(dataArray(1,:),dataArray(2,:),params);
+            
             
             coh_temp = [];
             %coh_temp = coherencyc(data_det(1,:),data_det(2,:),params); 
@@ -232,6 +232,7 @@ elseif contains(threshold_type,'LOW')
         data_out  = [data_out data_det];
         times_out = [times_out timeStampArray];
 
+        %{
         % test for artifact
         zArtifact = [];
         zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
@@ -241,6 +242,12 @@ elseif contains(threshold_type,'LOW')
         % data
         noiseThreshold = 4;
         idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+        %}
+        
+        % detect artifacts
+        [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);
+        
+        % calculate coherence based on whether artifacts are present
         if isempty(idxNoise) ~= 1
             coh = [coh NaN]; % add nan to know this was ignored
             continue
