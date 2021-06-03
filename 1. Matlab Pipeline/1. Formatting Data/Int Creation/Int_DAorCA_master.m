@@ -61,7 +61,7 @@ question = 'Would you like to confirm your int file is correct? [Y/N] ';
 answer   = input(question,'s');
 
 if contains(answer,'Y') | contains(answer,'y')
-    checkInt;
+    [remData] = checkInt(Int,x,y,t);
     
     % remove data selected by user
     Int(remData,:)=[];

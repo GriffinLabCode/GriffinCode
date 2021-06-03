@@ -50,14 +50,15 @@
 %
 % written by John Stout with extreme help from the old Int method
 
-%% user parameters -- CHANGE ME --
-% MAKE SURE THAT YOUR CURRENT FOLDER IS THE DATAFOLDER YOU WANT TO WORK
-% WITH
-datafolder   = pwd;
-missing_data = 'exclude';
-vt_name      = 'VT1.mat';
-taskType     = 'DA';
+function [Int_old,Int_new] = Int_v2(datafolder,missing_data,vt_name,taskType,Int_information)
+
+%{
 load('Int_information')
+datafolder = pwd;
+missing_data = 'exclude';
+vt_name = 'VT1.mat';
+taskType = 'DA';
+%}
 
 %% pull in video tracking data
 % meat
@@ -357,50 +358,5 @@ Int_new = table(trajNumber,stemEntry,cpEntry,gaEntry,gzEntry,retEntry,sbEntry,tr
 
 
 
-%% CHECK YOUR DATA!!!
 
-% check Int for timing-position accuracy
-question = 'Would you like to confirm your int file is correct? [Y/N] ';
-answer   = input(question,'s');
 
-if contains(answer,'Y') | contains(answer,'y')
-    [remData] = checkInt(Int_old,x,y,t);
-    
-    % remove data selected by user
-    Int_old(remData,:)=[];
-
-    numtrials = size(Int_old,1);
-    for i = 1:numtrials-1
-        if Int_old(i,3) == 1 && Int_old(i+1,3) == 0 || Int_old(i,3) == 0 && Int_old(i+1,3) == 1
-            Int_old(i+1,4) = 0;
-        else
-            Int_old(i+1,4) = 1;
-        end
-    end
-    percentCorrect = (((numtrials/2)-(sum(Int_old(:,4))/2))/(numtrials/2))*100;
-
-    % display progress
-    C = [];
-    C = strsplit(datafolder,'\');
-    X = [];
-    X = [C{end},' behavioral accuracy = ',num2str(percentCorrect),'%'];
-    disp(X);
-
-else
-    disp('IT IS RECOMMENDED that you check your int file as missing data will be stored as a non-existing trial');
-end
-
-% save data
-question = 'Are you satisfied with the Int file and ready to save? [Y/N] ';
-answer   = input(question,'s');
-
-if contains(answer,'Y') | contains(answer,'y')
-    cd(datafolder);
-    
-    % have user define a name
-    question    = 'Please enter an Int file name: ';
-    IntFileName = input(question,'s');
-    
-    % save
-    save(IntFileName,'Int_old','Int_new');
-end

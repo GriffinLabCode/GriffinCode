@@ -5,13 +5,8 @@
 % Int: Int file in old formatting
 % pos_x: x position data
 % pos_y: y position data
-% pos_t: timestamps from video camera
+% pos_t: timestamps from 
 %
-% -- OUTPUTS -- %
-% remData: according to the user, remove these trials
-%
-% written by John Stout
-
 function [remData] = checkInt(Int,pos_x,pos_y,pos_t)
 
 % number of trials
