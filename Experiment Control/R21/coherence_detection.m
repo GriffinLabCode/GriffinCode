@@ -90,6 +90,7 @@ if contains(threshold_type,'HIGH')
         %}
         
         % detect artifacts
+        idxNoise = []; zArtifact = [];
         [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);
         
         % calculate coherence based on whether artifacts are present
@@ -245,6 +246,7 @@ elseif contains(threshold_type,'LOW')
         %}
         
         % detect artifacts
+        idxNoise = []; zArtifact = [];        
         [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);
         
         % calculate coherence based on whether artifacts are present

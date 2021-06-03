@@ -445,6 +445,9 @@ while toc(sStart)/60 < session_length || sessEnd == 0
 
             % do an if statement where some trials are high, some low, some
             % no
+            
+            % if ____
+            
             coherence_threshold = [];
             threshold_type      = [];
             [coh,coh_met,timings,data_out,times_out] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s,baselineMean,baselineSTD);
