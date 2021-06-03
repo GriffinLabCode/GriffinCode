@@ -34,13 +34,13 @@ vt_name = 'VT1.mat';
 %% Create boxes around locations of interest for int creation
 
 % right reward zone (sideways room, R)
-minY = 65; addY = 35;
-minX = 270; addX = abs(270-315);
+minY = 0;  addY  = 110-minY;
+minX = 200; addX = 375-minX;
 rRW_fld = [minX minY addX addY];
 
 % left reward zone (sideways room, R)
-minY = 305; addY = 35;
-minX = 270; addX = abs(270-315);
+minY = 300; addY = 400-minY;
+minX = 200; addX = 375-minX;
 lRW_fld = [minX minY addX addY];
 
 % central stem (sideways room, R)

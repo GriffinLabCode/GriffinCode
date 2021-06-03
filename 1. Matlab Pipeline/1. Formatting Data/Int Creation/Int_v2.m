@@ -53,6 +53,7 @@
 %% user parameters -- CHANGE ME --
 % MAKE SURE THAT YOUR CURRENT FOLDER IS THE DATAFOLDER YOU WANT TO WORK
 % WITH
+clear;
 datafolder   = pwd;
 missing_data = 'exclude';
 vt_name      = 'VT1.mat';
@@ -196,7 +197,8 @@ if contains(taskType,[{'DA'} {'DNMP'} {'CD'} {'CDWM'}])
         end     
 
     end
-elseif contains(taskType,['CA'])
+elseif contains(taskType,'CA')
+    error('CODE NOT SUPPORTED YET - IN PROGRESS ')
     for i = 2:numSamples-1
 
         % start with stem
@@ -262,7 +264,7 @@ elseif contains(taskType,['CA'])
         end     
 
     end
-    
+    startBox_entry = zeros([size(stem_entry)]);
 end
 
 % create a method for CA - ie without the startbox
@@ -354,8 +356,6 @@ accBinary = Int_old(:,4);
 
 % create the table
 Int_new = table(trajNumber,stemEntry,cpEntry,gaEntry,gzEntry,retEntry,sbEntry,trajectory,accuracy,trajBinary,accBinary);
-
-
 
 %% CHECK YOUR DATA!!!
 

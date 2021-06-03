@@ -1,0 +1,46 @@
+% SHOULD WORK FOR OLD LEFT ROOM
+
+% right reward zone (sideways room, R)
+minY = 310; addY = 100;
+minX = 480; addX = 75;
+rRW_fld = [minX minY addX addY];
+
+% left reward zone (sideways room, R)
+minY = 310; addY = 100;
+minX = 150; addX = 77;
+lRW_fld = [minX minY addX addY];
+ 
+% central stem (sideways room, R)
+minY = 135; addY = 225;
+minX = 335; addX = 37;
+STM_fld = [minX minY addX addY]; 
+
+% delay pedestal (sideways room, R)
+minY = 35; addY = 100;
+minX = 280;  addX = 150;
+PED_fld = [minX minY addX addY];
+
+% choice point/T-junction (sideways room, R)
+minY = 360; addY = 65;
+minX = 335; addX = 37;
+CP_fld = [minX minY addX addY]; %[260 150 30 270];
+
+
+
+________________________________________________________
+
+RM 153 LSRF WITH STARTBOX
+
+
+
+
+_________________________________________________________
+RM 153 LSRF CA NO STARTBOX
+
+
+
+
+
+________________________________________________________
+
+AUTOMAZE RM 154 LSRF - 2021

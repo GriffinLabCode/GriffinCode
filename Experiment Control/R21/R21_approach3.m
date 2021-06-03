@@ -5,6 +5,14 @@
 
 %______________________________________________________
 
+%% BUG
+% sometimes if the session is not exceeding the time limit of 30 minutes,
+% then the code will continue performing trials, but not save the data.
+% Cheetah will save the tracking tho
+
+%%
+
+
 % clear/clc
 clear; clc
 
@@ -31,7 +39,6 @@ place2store = getCurrentPath();
 addpath(place2store)
 
 %% baseline
-
 try
     % location of data
     dataStored = ['C:\Users\jstout\Desktop\Data 2 Move\' targetRat];
@@ -48,7 +55,7 @@ catch
     % location of data
     dataStored = ['C:\Users\jstout\Desktop\Data 2 Move\' targetRat];
     cd(dataStored)
-    save('baselineData_21_9','baselineMean','baselineSTD')
+    save(dataLoad,'baselineMean','baselineSTD')
 end
 
 
@@ -168,6 +175,31 @@ for rewardi = 1:pellet_count
     writeline(s,rewFuns.left)
     pause(4)
 end
+
+%% treadmill testing
+
+% load treadmill functions and settings
+[treadFuns,treadSpeeds] = TreadMillFuns;
+set_speed    = treadSpeeds.ten; % seven meters per minute
+
+% start treadmill
+pause(0.25)
+write(s,treadFuns.start,'uint8');
+
+% short pause before sending the machine the speed data
+pause(0.25)
+
+% set treadmill speed
+write(s,uint8(set_speed'),'uint8');
+write(s,uint8(set_speed'),'uint8'); % add a second command in case the machine missed the first one
+
+% delay
+pause(delay_length);
+
+% stop treadmill
+pause(0.25)                
+write(s,treadFuns.stop,'uint8');
+
 
 
 %% start recording - make a noise when recording begins
