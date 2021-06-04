@@ -124,11 +124,14 @@ if exist("a") == 0
     a = arduino('COM5','Uno','Libraries','Adafruit\MotorShieldV2');
 end
 
+% digital ports for reverse maze
 irArduino.Treadmill = 'D9';
+irArduino.rGoal     = 'D10';
+irArduino.lGoal     = 'D11';
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.Treadmill)
+    readDigitalPin(a,irArduino.lGoal)
 end
 %}
 
