@@ -637,9 +637,8 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                         else
                             error('Something is wrong...')
                         end
-
+                        coherence_met(triali) = coh_met;
                     end
-                    
                 elseif contains(trialType(triali),{'C'}) % control high/ control low
                     disp('Yoking Up... lol')
                     % define your control trials
@@ -659,8 +658,6 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                     pause(delay_duration_manipulate(trialMatch))
                     
                 end
-                % logger
-                coherence_met(triali) = coh_met;
                 % stop treadmill
                 pause(0.25)
                 write(s,treadFuns.stop,'uint8');
