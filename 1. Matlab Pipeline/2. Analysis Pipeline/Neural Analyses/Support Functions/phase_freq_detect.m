@@ -29,8 +29,8 @@ MaxFreq = highpass;
 fs = srate;
 MPD = 1/MaxFreq*fs;
 
-[~, peaks] = findpeaks(signal_filtered, 'MINPEAKDISTANCE', round(MPD));
-[~, troughs] = findpeaks(signal_filtered.*-1, 'MINPEAKDISTANCE', round(MPD));
+[~, peaks] = findpeaks_MATLAB(signal_filtered, 'MINPEAKDISTANCE', round(MPD));
+[~, troughs] = findpeaks_MATLAB(signal_filtered.*-1, 'MINPEAKDISTANCE', round(MPD));
 
 Test = 0;
 PerCycleFreq = [];

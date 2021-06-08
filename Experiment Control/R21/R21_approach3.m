@@ -97,7 +97,77 @@ params.tapers = [3 5]; % bset to [3 5] as default
 %% experiment design prep.
 
 % define number of trials
-numTrials  = 19;
+numTrials  = 21;
+
+% randomize trials such that first 12 are high/low and second 12 are yoked
+% controls
+redo = 1;
+while redo == 1
+    high  = repmat('H',[(numTrials-1)/4 1]);
+    low   = repmat('L',[(numTrials-1)/4 1]);
+    both  = [high; low];
+    both_shuffled = both;
+    for i = 1:1000
+        % notice how it rewrites the both_shuffled variable
+        both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
+    end
+    trialType_exp = cellstr(both_shuffled);
+
+    % no more than 3 turns in one direction
+    idxH = double(contains(trialType_exp,'H'));
+    idxL = double(contains(trialType_exp,'L'));
+
+    for i = 1:length(trialType_exp)-3
+        if idxH(i) == 1 && idxH(i+1) == 1 && idxH(i+2) == 1 && idxH(i+3)==1
+            redo = 1;
+            break        
+        elseif idxL(i) == 1 && idxL(i+1) == 1 && idxL(i+2) == 1 && idxL(i+3)==1
+            redo = 1;
+            break        
+        else
+            redo = 0;
+        end
+    end
+end
+
+% do the same for control trials
+%{
+redo = 1;
+while redo == 1
+    high  = repmat('CH',[(numTrials-1)/4 1]);
+    low   = repmat('CL',[(numTrials-1)/4 1]);
+    both  = [high; low];
+    both_shuffled = both;
+    for i = 1:1000
+        % notice how it rewrites the both_shuffled variable
+        both_shuffled = both_shuffled(randperm(size(both_shuffled,1)),:);
+    end
+    trialType_con = cellstr(both_shuffled);
+
+    % no more than 3 turns in one direction
+    idxH = double(contains(trialType_con,'CH'));
+    idxL = double(contains(trialType_con,'CL'));
+
+    for i = 1:length(trialType_con)-3
+        if idxH(i) == 1 && idxH(i+1) == 1 && idxH(i+2) == 1 && idxH(i+3)==1
+            redo = 1;
+            break        
+        elseif idxL(i) == 1 && idxL(i+1) == 1 && idxL(i+2) == 1 && idxL(i+3)==1
+            redo = 1;
+            break        
+        else
+            redo = 0;
+        end
+    end
+end
+%}
+
+% control trials
+control  = cellstr(repmat('C',[(numTrials-1)/2 1]));
+
+% define the first 12 as experimental, second 12 as control
+trialType = [];
+trialType = [trialType_exp;control];
 
 %% auto maze prep.
 
@@ -134,6 +204,14 @@ for i = 1:10000000
     readDigitalPin(a,irArduino.lGoal)
 end
 %}
+
+% get treadmill
+[treadFuns,treadSpeed] = TreadMillFuns;
+
+% load treadmill functions and settings
+[treadFuns,treadSpeeds] = TreadMillFuns;
+targetSpeed = 8;
+speedVector = 4:2:targetSpeed;
 
 %% coherence detection prep.
 
@@ -181,28 +259,13 @@ end
 
 %% treadmill testing
 
-% load treadmill functions and settings
-[treadFuns,treadSpeeds] = TreadMillFuns;
-set_speed    = treadSpeeds.ten; % seven meters per minute
-
-% start treadmill
-pause(0.25)
-write(s,treadFuns.start,'uint8');
-
-% short pause before sending the machine the speed data
-pause(0.25)
-
-% set treadmill speed
-write(s,uint8(set_speed'),'uint8');
-write(s,uint8(set_speed'),'uint8'); % add a second command in case the machine missed the first one
-
-% delay
-pause(delay_length);
-
-% stop treadmill
-pause(0.25)                
-write(s,treadFuns.stop,'uint8');
-
+%{
+% belt length = 31.25inch = 79.375
+beltLength = 79; % cm
+numRev = 14; % set to speed of 10
+timeRev = 1; % 1 second
+convTreadSpeed = beltLength*numRev/timeRev
+%}
 
 
 %% start recording - make a noise when recording begins
@@ -214,8 +277,9 @@ pause(5)
 %% trials
 open_t  = [doorFuns.tLeftOpen doorFuns.tRightOpen];
 close_t = [doorFuns.tLeftClose doorFuns.tRightClose];
-maze_prep = [doorFuns.tLeftOpen doorFuns.tRightOpen ...
-    doorFuns.gzLeftOpen doorFuns.gzRightOpen];
+maze_prep = [doorFuns.sbLeftOpen doorFuns.sbRightOpen ...
+    doorFuns.tRightClose doorFuns.tLeftClose doorFuns.centralOpen ...
+    doorFuns.gzLeftClose doorFuns.gzRightClose];
 
 % mark session start
 sStart = [];
@@ -226,6 +290,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
     session_start = str2num(strcat(num2str(c(4)),num2str(c(5))));
     session_time  = session_start-session_start; % quick definitio of this so it starts the while loop
     for triali = 1:numTrials
+        
+        % start out with this as a way to make sure you don't exceed 30
+        % minutes of the session
+        if triali == numTrials || toc(sStart)/60 > session_length
+            writeline(s,doorFuns.closeAll)
+            sessEnd = 1;            
+            break % break out of for loop
+        end        
 
         % set central door timeout value
         s.Timeout = timeout_len; % 5 minutes before matlab stops looking for an IR break    
@@ -233,14 +305,15 @@ while toc(sStart)/60 < session_length || sessEnd == 0
         % first trial - set up the maze doors appropriately
         pause(0.25);
         writeline(s,maze_prep)
-
-        % open central door to let rat off of treadmill
-        pause(0.25);
-        writeline(s,doorFuns.centralOpen)
-
-        % send a neuralynx command to track the trial
-        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "centralOpen" 100 2');    
-
+        
+        % if not the first trial, track how long the delay was
+        if triali > 1 && isempty(tStart)==0
+            delay_duration_master(triali) = toc(tStart);
+            if contains(trialType(triali),[{'H'} {'L'}])
+                delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+            end
+        end
+        
         % set irTemp to empty matrix
         irTemp = []; 
 
@@ -248,12 +321,12 @@ while toc(sStart)/60 < session_length || sessEnd == 0
         % while loop so that we continuously read the IR beam breaks
         next = 0;
         while next == 0
-            irTemp = read(s,4,"uint8");            % look for IR beam breaks
-            if irTemp == irBreakNames.central      % if central beam is broken
+            %irTemp = read(s,4,"uint8");                    % look for IR beam breaks
+            if readDigitalPin(a,irArduino.Treadmill) == 0   % if central beam is broken
                 % neuralynx timestamp command
 
                 % neuralynx timestamp command
-                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "centralBeam" 102 2');       
+                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "choicePoint" 102 2');       
 
                 % close door
                 %writeline(s,doorFuns.centralClose) % close the door behind the rat
@@ -267,7 +340,7 @@ while toc(sStart)/60 < session_length || sessEnd == 0
         while next == 0
             irTemp = [];
             irTemp = read(s,4,"uint8");         
-            if irTemp == irBreakNames.tRight  
+            if irTemp == irBreakNames.sbRight  
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tRightBeam" 222 2');                                    
 
                 % track the trajectory_text
@@ -275,92 +348,69 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                 trajectory(triali)      = 0;
 
                 % close opposite door
-                writeline(s,[doorFuns.tRightClose]) 
+                writeline(s,[doorFuns.sbRightClose]) 
                 pause(.25)
-                writeline(s,doorFuns.tLeftClose);
+                writeline(s,doorFuns.sbLeftClose);
 
-                %writeline(maze,doorFuns.centralClose) % close the door behind the rat  
-                pause(.25);
-                writeline(s,doorFuns.centralClose);     
-                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "centralClose" 101 2'); 
-
-                % open sb door
-                pause(0.25)
-                writeline(s,doorFuns.sbRightOpen)
-
-                if triali > 1 && trajectory_text{triali} == 'R' && trajectory_text{triali-1} == 'L'
-                    % reward dispensers need about 3 seconds to release pellets
-                    for rewardi = 1:pellet_count
-                        writeline(s,rewFuns.left)
-                        pause(3)
-                    end
+                if readDigitalPin(a,irArduino.rGoal)==0
+                    pause(0.25)
+                    writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen]);
+                    pause(0.25)
+                    writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen]);
                 end
 
                 % break while loop
                 next = 1;
 
-            elseif irTemp == irBreakNames.tLeft
+            elseif irTemp == irBreakNames.sbLeft
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tLeftBeam" 212 2');
 
                 % track the trajectory_text
                 trajectory_text{triali} = 'L';
                 trajectory(triali)      = 1;            
 
-                % close door
-                writeline(s,[doorFuns.tRightClose]);
+                % close opposite door
+                writeline(s,[doorFuns.sbRightClose]) 
                 pause(.25)
-                writeline(s,doorFuns.tLeftClose);
+                writeline(s,doorFuns.sbLeftClose);
 
-                pause(.25);
-                writeline(s,doorFuns.centralClose);
-
-                % open sb door
-                pause(0.25)            
-                writeline(s,doorFuns.sbLeftOpen)
-
-                if triali > 1 && trajectory_text{triali} == 'L' && trajectory_text{triali-1} == 'R'
-                    % reward dispensers need about 3 seconds to release pellets
-                    for rewardi = 1:pellet_count
-                        writeline(s,rewFuns.right)
-                        pause(3)
-                    end
-                end             
+                if readDigitalPin(a,irArduino.lGoal)==0
+                    pause(0.25)
+                    writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen]);
+                    pause(0.25)
+                    writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen]);
+                end
 
                 % break out of while loop
                 next = 1;
             end
-        end    
-
-        % Reward zone and eating
-        % send to netcom 
-
-
+        end      
+                
         % return arm
         next = 0;
         while next == 0
             irTemp = read(s,4,"uint8");         
-            if irTemp == irBreakNames.gzRight 
+            if irTemp == irBreakNames.tRight 
                 % send neuralynx command for timestamp
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzRightBeam" 422 2');             
 
                 % close both for audio symmetry
+                pause(0.25)
                 writeline(s,doorFuns.gzLeftClose)
                 pause(0.25)
                 writeline(s,doorFuns.gzRightClose)
-                pause(0.25)
-                writeline(s,doorFuns.tRightClose)
-
+                
                 next = 1;                          
-            elseif irTemp == irBreakNames.gzLeft
+            elseif irTemp == irBreakNames.tLeft
                 % send neuralynx command for timestamp
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzLeftBeam" 412 2');
 
                 % close both for audio symmetry
+                pause(0.25)
                 writeline(s,doorFuns.gzLeftClose)
                 pause(0.25)
                 writeline(s,doorFuns.gzRightClose)
                 pause(0.25)
-                writeline(s,doorFuns.tLeftClose)            
 
                 next = 1;
             end
@@ -370,129 +420,230 @@ while toc(sStart)/60 < session_length || sessEnd == 0
         next = 0;
         while next == 0
             s.Timeout = timeout_len;
-            irTemp = read(s,4,"uint8");         
-            if irTemp == irBreakNames.sbRight 
-                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbRightBeam" 522 2');             
-
-                % track animals traversal onto the treadmill
-                next_tread = 0; % hardcode next as 0 - this value gets updated when criteria is met
-                while next_tread == 0 
-                    % try to see if the rat goes and checks out the other doors
-                    % IR beam
-                    s.Timeout = 0.1;
-                    irTemp = read(s,4,"uint8");
-                    % if rat enters the startbox, only close the door behind
-                    % him if he has either checked out the opposing door or
-                    % entered the center of the startbox zone. This ensures
-                    % that the rat is in fact in the startbox
-                    if readDigitalPin(a,irArduino.Treadmill) == 0
-                        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TreadmillBeam" 602 2');
-
-                        % close startbox door
-                        pause(.25);                    
-                        writeline(s,doorFuns.sbRightClose)
-                        % tell the loop to move on
-                        next_tread = 1;
-                    elseif isempty(irTemp) == 0
-                        if irTemp == irBreakNames.sbLeft
-                            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbLeftBeam - after Right" 512 3'); 
-
-                            % close startbox door
-                            pause(0.25)
-                            writeline(s,doorFuns.sbRightClose)
-                            % tell the loop to move on
-                            next_tread = 1;
-                        end
-                    elseif isempty(irTemp)==1 && readDigitalPin(a,irArduino.Treadmill) == 1
-                        next_tread = 0;
-                    end
-                end
-
+            irTemp = read(s,4,"uint8");  
+            if irTemp == irBreakNames.central
                 next = 1;
-            elseif irTemp == irBreakNames.sbLeft 
-                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbLeftBeam" 512 2');                         
-                % track animals traversal onto the treadmill
-                next_tread = 0; % hardcode next as 0 - this value gets updated when criteria is met
-                while next_tread == 0 
-                    % try to see if the rat goes and checks out the other doors
-                    % IR beam
-                    s.Timeout = 0.1;
-                    irTemp = read(s,4,"uint8");
-                    % if rat enters the startbox, only close the door behind
-                    % him if he has either checked out the opposing door or
-                    % entered the center of the startbox zone. This ensures
-                    % that the rat is in fact in the startbox
-                    if readDigitalPin(a,irArduino.Treadmill) == 0
-                        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TreadmillBeam" 602 2');
-
-                        % close startbox door
-                        pause(.25);                    
-                        writeline(s,doorFuns.sbLeftClose)
-                        %[succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbLeftClose" 511 2');                    
-
-                        % tell the loop to move on
-                        next_tread = 1;
-                    elseif isempty(irTemp) == 0
-                        if irTemp == irBreakNames.sbRight
-                            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "sbRightBeam - after Left" 522 3');                         
-
-                            % close startbox door
-                            pause(0.25)
-                            writeline(s,doorFuns.sbLeftClose)
-                            % tell the loop to move on
-                            next_tread = 1;
-                        end
-                    elseif isempty(irTemp)==1 && readDigitalPin(a,irArduino.Treadmill) == 1
-                        next_tread = 0;
+            end
+        end
+        
+        next = 0;
+        while next == 0
+            if readDigitalPin(a,irArduino.Treadmill)==0
+                writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
+                pause(0.25)
+                writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
+                
+                % Reward zone and eating
+                % send to netcom 
+                if triali > 1 && trajectory_text{triali} == 'R' && trajectory_text{triali-1} == 'L'
+                    % reward dispensers need about 3 seconds to release pellets
+                    for rewardi = 1:pellet_count
+                        writeline(s,rewFuns.left)
+                        pause(3)
                     end
+                elseif triali > 1 && trajectory_text{triali} == 'L' && trajectory_text{triali-1} == 'R'
+                    % reward dispensers need about 3 seconds to release pellets
+                    for rewardi = 1:pellet_count
+                        writeline(s,rewFuns.right)
+                        pause(3)
+                    end
+                end    
+
+                % begin treadmill
+                write(maze,treadFuns.start,'uint8');
+
+                % increase tread speed gradually
+                for i = speedVector
+                    % set treadmill speed
+                    write(maze,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one
+                end                
+
+                % coherence detection
+                total_window = 10; % total amount of time allowed for coherence to be detected
+                tStart = [];
+                tStart = tic; % required for timing the coherence detection
+
+                % ---- COHERENCE METHODS START HERE ---- %
+                if contains(trialType(triali),[{'H'} {'L'}])
+                    disp('Estimating Coherence...')                    
+                    while (toc(tStart) < total_elapsed) && openDoor == 0
+
+                        % if a total seconds have passed, open up doors
+                        if toc(tStart) > total_elapsed && openDoor == 0
+                            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
+                            coh_met  = 0;
+                            openDoor = 1;
+                        end
+
+                        % sometimes, we error out (a sampling issue on neuralynx's end)
+                        attempt = 0;
+                        while attempt == 0
+                            try
+
+                                % clear stream   
+                                clearStream(LFP1name,LFP2name);
+
+                                % pause 0.5 sec
+                                pause(0.5);
+
+                                % pull data
+                                [~, dataArray, timeStampArray, ~, ~, ...
+                                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                                attempt = 1;
+                            catch
+                                % store this for later
+                                coh = [coh NaN];
+                            end
+                        end
+
+                        % detrend data - did not clean to improve processing speed
+                        data_det = [];
+                        data_det(1,:) = locdetrend(dataArray(1,:),params.Fs); 
+                        data_det(2,:) = locdetrend(dataArray(2,:),params.Fs); 
+
+                        % store data for later
+                        data_out  = [data_out data_det];
+                        times_out = [times_out timeStampArray];
+
+                        % detect artifacts
+                        idxNoise = []; zArtifact = [];
+                        [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);
+
+                        % calculate coherence based on whether artifacts are present
+                        if isempty(idxNoise) ~= 1
+                            coh = [coh NaN]; % add nan to know this was ignored
+                            continue
+                            disp('scratch detected - coherence not calculated')
+                        else     
+                            coh_temp = [];
+                            %coh_temp = coherencyc(data_det(1,:),data_det(2,:),params); 
+                            [coh_temp,~,~,S1,S2,f] = coherencyc(data_det(1,:),data_det(2,:),params); 
+                            coh = [coh nanmean(coh_temp)]; % add nan to know this was ignored
+
+                        end
+
+                        % amount of data in consideration
+                        timings = [timings length(dataArray)/srate];
+
+                        % store timestamp array to check later
+                        timeStamps = [timeStamps size(timeStampArray,2)]; % size(x,2) bc we want columns (tells you how many samples occured per sample)
+
+                        % convert time
+                        %timeConv = [timeCov timeStamps*.5];
+
+                        % first, if coherence magnitude is met, do whats below
+                        if contains(threshold_type,'HIGH')
+                            if isempty(find(coh > coherence_threshold))==0 % < bc this is low coh
+
+                                %disp('High Coherence Threshold Met')
+
+                                % sustained coherence
+                                if length(coh) > 1
+                                    if isnan(coh(end)) == 0 && isnan(coh(end-1)) == 0
+                                        if coh(end) > coherence_threshold && coh(end-1) > coherence_threshold
+                                            % open the door
+                                            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
+                                            coh_met  = 1;
+                                            openDoor = 1;      
+                                        end
+                                    end
+                                end
+
+                                % if your timer has elapsed > some preset time, open the startbox door
+                                if toc(tStart) > total_elapsed && openDoor == 0
+                                    writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
+                                    coh_met  = 0;
+                                    openDoor = 1;            
+                                end
+
+                            % otherwise, erase these variables, resetting the coherence
+                            % magnitude and duration counters
+                            else
+
+                                % if your timer has elapsed > some preset time, open the startbox door
+                                if toc(tStart) > total_elapsed && openDoor == 0
+                                    writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
+                                    coh_met  = 0;                
+                                    openDoor = 1;            
+                                end
+
+                            end
+                        elseif contains(threshold_type,'LOW')
+                            % first, if coherence magnitude is met, do whats below
+                            if isempty(find(coh < coherence_threshold))==0 % < bc this is low coh
+
+                                %disp('Low Coherence Threshold Met')
+
+                                % sustained coherence\
+                                if length(coh) > 1
+                                    if isnan(coh(end)) == 0 && isnan(coh(end-1)) == 0 % if both coh of interest are real
+                                        if coh(end) < coherence_threshold && coh(end-1) < coherence_threshold
+                                            % open the door
+                                            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
+                                            coh_met  = 1;
+                                            openDoor = 1;      
+                                        end
+                                    end
+                                end         
+                                %{
+                                % open the door
+                                writeline(s,[doorFuns.centralOpen doorFuns.tLeftOpen doorFuns.tRightOpen]);
+                                coh_met  = 1;            
+                                openDoor = 1;
+                                %}
+
+                                % if your timer has elapsed > some preset time, open the startbox door
+                                if toc(tStart) > total_elapsed && openDoor == 0
+                                    writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
+                                    coh_met  = 0;                
+                                    openDoor = 1;
+                                end
+
+                            % otherwise, erase these variables, resetting the coherence
+                            % magnitude and duration counters
+                            else
+
+                                % if your timer has elapsed > some preset time, open the startbox door
+                                if toc(tStart) > total_elapsed && openDoor == 0
+                                    writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
+                                    coh_met  = 0;                
+                                    openDoor = 1;                
+                                end
+
+                            end 
+                        else
+                            error('Something is wrong...')
+                        end
+
+                    end
+                elseif contains(trialType(triali),{'C'}) % control high/ control low
+                    disp('Yoking Up... lol')
+                    % define your control trials
+                    conTrials = ((numTrials-1)/2)+1:numTrials;
+
+                    % randomly select one of any non-nan values
+                    nonNanVals = [];
+                    nonNanVals = find(isnan(delay_duration_manipulate)==0);
+                    
+                    % pause for the corresponding duration and mark the
+                    % trial according to whether its a yoked high or yoked
+                    % low
+                    trialMatch = randsample(nonNanVals,1);
+                    yokedContr(triali) = [trialType{triali} trialType{trialMatch}];
+                    
+                    % pause
+                    pause(delay_duration_manipulate(trialMatch))
+                    
                 end
+                % stop treadmill
+                pause(0.25)
+                writeline(s,treadFuns.stop)
 
+                % break out of while loop and continue maze
                 next = 1;
-            end 
+            end
         end
-
-        % reset timeout
-        s.Timeout = timeout_len;
-
-        % initialize some variables
-        timeStamps = []; timeConv  = [];
-        coh_met    = []; coh_store = [];
-        dur_met    = []; dur_sum   = [];    
-        % only during delayed alternations will you start the treadmill
-        if delay_length > 1
-
-            % pause
-            disp('Initial delay pause = 20s')
-            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayStart" 810 2');                            
-            pause(20); % no pause - start it immediately
-            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEnd" 810 2');                            
-
-            % use tic toc to store timing for yoked control
-            tStart = [];
-            tStart = tic;
-
-            % coherence manipulation
-            %disp(['Trial type is ',trial_type{triali},'.'])
-
-            %% CHANGE ME
-            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CoherenceDetectionStart" 911 2');    
-            %[coh_trial{triali},coherence_met(triali),timeConv{triali},lfp_trial{triali},times_trial{triali}] = rat21_9(LFP1name,LFP2name,threshold,params,tStart,doorFuns,s,baselineMean,baselineSTD);
-
-            % do an if statement where some trials are high, some low, some
-            % no
-            
-            % if ____
-            
-            coherence_threshold = [];
-            threshold_type      = [];
-            [coh,coh_met,timings,data_out,times_out] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s,baselineMean,baselineSTD);
-            
-            
-
-        end
-
-         % out time
-        delay_duration_master(triali) = toc(tStart);
 
         if triali == numTrials || toc(sStart)/60 > session_length
             writeline(s,doorFuns.closeAll)

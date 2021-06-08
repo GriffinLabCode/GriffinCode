@@ -40,7 +40,10 @@
 %               col6: cp exit (goal arm entry)
 %               col2: goal zone entry (goal arm exit)
 %               col7: goal zone exit (return arm entry)
-%               col8: startbox entry (return arm exit)
+%               col8: startbox entry (return arm exit) OR T-maze base
+%                       junction if using CA task (ie the point where the
+%                       return arms and stem meet at the base of the maze
+%                       opposite to the T-junction choice-point)
 %               col3: trajectory, 0 is left, 1 is right. May need to check
 %                      this as sometimes cameras flip the maze orientation
 %               col4: choice accuracy, 0 is correct, 1 is incorrect
@@ -55,9 +58,9 @@
 % WITH
 clear;
 datafolder   = pwd;
-missing_data = 'exclude';
+missing_data = 'interp';
 vt_name      = 'VT1.mat';
-taskType     = 'DA';
+taskType     = 'CA';
 load('Int_information')
 
 %% pull in video tracking data
@@ -119,152 +122,83 @@ trajectory     = [];
 
 whereWasRat = [];
 
-if contains(taskType,[{'DA'} {'DNMP'} {'CD'} {'CDWM'}])
-    for i = 2:numSamples-1
+for i = 2:numSamples-1
 
-        % start with startbox
-        if in_sb(i) == 1 && isempty(whereWasRat)
-            %was_in_sb = 1;
-            whereWasRat = 'sb';
-        end
-
-        % when should was_in_sb_now_in_stem be reset? Once the task sequence is
-        % accomplished. In other words, once he was in the return arm, but is
-        % now in the startbox. note that the isempty line is placed to track
-        % the first sample as he couldn't have been in the ret arm and then in
-        % sb
-        if in_sb(i) == 0 && in_sb(i-1) == 1 && (in_stem(i) == 1 || on_stem(i) == 1) && contains(whereWasRat,'sb')
-            % this is the entry timestamp
-            stem_entry = [stem_entry t(i)];
-            % re-assign startbox as he now was in stem
-            whereWasRat = 'stem';
-        end
-
-        % if he is not on the stem, but he was previously on the stem, and he
-        % is now in the choice point or on the edge of the choice point
-        % boundary, and he used to be in the stem, then he's in the choice
-        % point
-        if in_stem(i) == 0 && in_stem(i-1) == 1 && (in_cp(i) == 1 || on_cp(i) == 1) && contains(whereWasRat,'stem')
-            % this is the entry timestamp
-            cp_entry = [cp_entry t(i)];
-            % re-assign startbox as he now was in stem
-            whereWasRat = 'cp';
-        end
-
-        % if the rat is not in the cp, is not in the stem, is not in the goal
-        % fields, is not in the startbox, but his last position was in the
-        % choice point
-        if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
-                in_sb(i) == 0 && (in_cp(i-1) == 1 || on_cp(i-1) == 1) && contains(whereWasRat,'cp')
-            % store timestamp
-            goalArm_entry = [goalArm_entry t(i)];
-            % tracker
-            whereWasRat = 'goalArm';
-        end  
-
-        % if the rat is in the left reward field or on it, but didn't used to
-        % be in the field nor on it, but his next coordinate is in it
-        if (in_lr(i) == 1 || on_lr(i) == 1) && (in_lr(i-1) == 0 && on_lr(i-1) == 0) && (in_lr(i+1) == 1 || on_lr(i+1) == 1) && contains(whereWasRat,'goalArm')
-            goalZone_entry = [goalZone_entry t(i)];
-            trajectory = [trajectory;'L'];
-            % tracker
-            whereWasRat = 'goalZone';
-        elseif (in_rr(i) == 1 || on_rr(i) == 1) && (in_rr(i-1) == 0 && on_rr(i-1) == 0) && (in_rr(i+1) == 1 || on_rr(i+1) == 1) && contains(whereWasRat,'goalArm')
-            goalZone_entry = [goalZone_entry t(i)];
-            trajectory = [trajectory;'R'];
-            % tracker
-            whereWasRat = 'goalZone';
-        end 
-
-        % if the rat is not in the cp, is not in the stem, is not in the goal
-        % fields, is not in the startbox, but his last position was in either
-        % the left or the right goal fields, and his next coordinate is in no
-        % location previously covered, then hes in the return arms
-        if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
-                in_sb(i) == 0 && ((in_lr(i-1) == 1 || on_lr(i-1) == 1) || (in_rr(i-1) == 1 || on_rr(i-1) == 1)) ...
-                && in_stem(i+1) == 0 && in_cp(i+1) == 0 && in_lr(i+1) == 0 && in_rr(i+1) == 0 ...
-                && in_sb(i+1) == 0 && contains(whereWasRat,'goalZone')
-            retArm_entry = [retArm_entry t(i)];
-            % tracker
-            whereWasRat = 'retArm';
-        end      
-
-        % if the rat is not in the stem
-        if (in_sb(i) == 1 || on_sb(i) == 1) && in_sb(i-1) == 0 && in_sb(i+1) == 1 && contains(whereWasRat,'retArm')
-            startBox_entry = [startBox_entry t(i)];
-            % tracker
-            whereWasRat = 'sb';
-        end     
-
+    % start with startbox
+    if in_sb(i) == 1 && isempty(whereWasRat)
+        %was_in_sb = 1;
+        whereWasRat = 'sb';
     end
-elseif contains(taskType,'CA')
-    error('CODE NOT SUPPORTED YET - IN PROGRESS ')
-    for i = 2:numSamples-1
 
-        % start with stem
-        if in_stem(i) == 1 && isempty(whereWasRat)
-            %was_in_sb = 1;
-            whereWasRat = 'stem';
-        end
-
-        % if he is not on the stem, but he was previously on the stem, and he
-        % is now in the choice point or on the edge of the choice point
-        % boundary, and he used to be in the stem, then he's in the choice
-        % point
-        if in_stem(i) == 0 && in_stem(i-1) == 1 && (in_cp(i) == 1 || on_cp(i) == 1) && contains(whereWasRat,'stem')
-            % this is the entry timestamp
-            cp_entry = [cp_entry t(i)];
-            % re-assign startbox as he now was in stem
-            whereWasRat = 'cp';
-        end
-
-        % if the rat is not in the cp, is not in the stem, is not in the goal
-        % fields, is not in the startbox, but his last position was in the
-        % choice point
-        if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
-                in_sb(i) == 0 && (in_cp(i-1) == 1 || on_cp(i-1) == 1) && contains(whereWasRat,'cp')
-            % store timestamp
-            goalArm_entry = [goalArm_entry t(i)];
-            % tracker
-            whereWasRat = 'goalArm';
-        end  
-
-        % if the rat is in the left reward field or on it, but didn't used to
-        % be in the field nor on it, but his next coordinate is in it
-        if (in_lr(i) == 1 || on_lr(i) == 1) && (in_lr(i-1) == 0 && on_lr(i-1) == 0) && (in_lr(i+1) == 1 || on_lr(i+1) == 1) && contains(whereWasRat,'goalArm')
-            goalZone_entry = [goalZone_entry t(i)];
-            trajectory = [trajectory;'L'];
-            % tracker
-            whereWasRat = 'goalZone';
-        elseif (in_rr(i) == 1 || on_rr(i) == 1) && (in_rr(i-1) == 0 && on_rr(i-1) == 0) && (in_rr(i+1) == 1 || on_rr(i+1) == 1) && contains(whereWasRat,'goalArm')
-            goalZone_entry = [goalZone_entry t(i)];
-            trajectory = [trajectory;'R'];
-            % tracker
-            whereWasRat = 'goalZone';
-        end 
-
-        % if the rat is not in the cp, is not in the stem, is not in the goal
-        % fields, is not in the startbox, but his last position was in either
-        % the left or the right goal fields, and his next coordinate is in no
-        % location previously covered, then hes in the return arms
-        if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
-                in_sb(i) == 0 && ((in_lr(i-1) == 1 || on_lr(i-1) == 1) || (in_rr(i-1) == 1 || on_rr(i-1) == 1)) ...
-                && in_stem(i+1) == 0 && in_cp(i+1) == 0 && in_lr(i+1) == 0 && in_rr(i+1) == 0 ...
-                && in_sb(i+1) == 0 && contains(whereWasRat,'goalZone')
-            retArm_entry = [retArm_entry t(i)];
-            % tracker
-            whereWasRat = 'retArm';
-        end      
-
-        % if the rat is not in the stem
-        if (in_stem(i) == 1 || on_stem(i) == 1) && in_stem(i-1) == 0 && in_stem(i+1) == 1 && contains(whereWasRat,'retArm')
-            stem_entry = [stem_entry t(i)];
-            % tracker
-            whereWasRat = 'stem';
-        end     
-
+    % when should was_in_sb_now_in_stem be reset? Once the task sequence is
+    % accomplished. In other words, once he was in the return arm, but is
+    % now in the startbox. note that the isempty line is placed to track
+    % the first sample as he couldn't have been in the ret arm and then in
+    % sb
+    if in_sb(i) == 0 && in_sb(i-1) == 1 && (in_stem(i) == 1 || on_stem(i) == 1) && contains(whereWasRat,'sb')
+        % this is the entry timestamp
+        stem_entry = [stem_entry t(i)];
+        % re-assign startbox as he now was in stem
+        whereWasRat = 'stem';
     end
-    startBox_entry = zeros([size(stem_entry)]);
+
+    % if he is not on the stem, but he was previously on the stem, and he
+    % is now in the choice point or on the edge of the choice point
+    % boundary, and he used to be in the stem, then he's in the choice
+    % point
+    if in_stem(i) == 0 && in_stem(i-1) == 1 && (in_cp(i) == 1 || on_cp(i) == 1) && contains(whereWasRat,'stem')
+        % this is the entry timestamp
+        cp_entry = [cp_entry t(i)];
+        % re-assign startbox as he now was in stem
+        whereWasRat = 'cp';
+    end
+
+    % if the rat is not in the cp, is not in the stem, is not in the goal
+    % fields, is not in the startbox, but his last position was in the
+    % choice point
+    if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
+            in_sb(i) == 0 && (in_cp(i-1) == 1 || on_cp(i-1) == 1) && contains(whereWasRat,'cp')
+        % store timestamp
+        goalArm_entry = [goalArm_entry t(i)];
+        % tracker
+        whereWasRat = 'goalArm';
+    end  
+
+    % if the rat is in the left reward field or on it, but didn't used to
+    % be in the field nor on it, but his next coordinate is in it
+    if (in_lr(i) == 1 || on_lr(i) == 1) && (in_lr(i-1) == 0 && on_lr(i-1) == 0) && (in_lr(i+1) == 1 || on_lr(i+1) == 1) && contains(whereWasRat,'goalArm')
+        goalZone_entry = [goalZone_entry t(i)];
+        trajectory = [trajectory;'L'];
+        % tracker
+        whereWasRat = 'goalZone';
+    elseif (in_rr(i) == 1 || on_rr(i) == 1) && (in_rr(i-1) == 0 && on_rr(i-1) == 0) && (in_rr(i+1) == 1 || on_rr(i+1) == 1) && contains(whereWasRat,'goalArm')
+        goalZone_entry = [goalZone_entry t(i)];
+        trajectory = [trajectory;'R'];
+        % tracker
+        whereWasRat = 'goalZone';
+    end 
+
+    % if the rat is not in the cp, is not in the stem, is not in the goal
+    % fields, is not in the startbox, but his last position was in either
+    % the left or the right goal fields, and his next coordinate is in no
+    % location previously covered, then hes in the return arms
+    %idxWayOut = 
+    if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
+            in_sb(i) == 0 && ((in_lr(i-1) == 1 || on_lr(i-1) == 1) || (in_rr(i-1) == 1 || on_rr(i-1) == 1)) ...
+            && in_stem(i+1) == 0 && in_cp(i+1) == 0 && in_lr(i+1) == 0 && in_rr(i+1) == 0 ...
+            && in_sb(i+1) == 0 && contains(whereWasRat,'goalZone')
+        retArm_entry = [retArm_entry t(i)];
+        % tracker
+        whereWasRat = 'retArm';
+    end      
+
+    % if the rat is not in the stem
+    if (in_sb(i) == 1 || on_sb(i) == 1) && in_sb(i-1) == 0 && in_sb(i+1) == 1 && contains(whereWasRat,'retArm')
+        startBox_entry = [startBox_entry t(i)];
+        % tracker
+        whereWasRat = 'sb';
+    end     
+
 end
 
 % create a method for CA - ie without the startbox
@@ -364,7 +298,7 @@ question = 'Would you like to confirm your int file is correct? [Y/N] ';
 answer   = input(question,'s');
 
 if contains(answer,'Y') | contains(answer,'y')
-    [remData] = checkInt(Int_old,x,y,t);
+    [remData] = checkInt(Int_old,x,y,t,taskType);
     
     % remove data selected by user
     Int_old(remData,:)=[];

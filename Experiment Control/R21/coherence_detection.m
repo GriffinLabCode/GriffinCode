@@ -5,7 +5,7 @@
 % delay_length
 % amountOfData
 
-function [coh,coh_met,timings,data_out,times_out] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s,baselineMean,baselineSTD)
+function [coh,coh_met,timings,data_out,times_out] = coherence_detection(LFP1name,LFP2name,coherence_threshold,threshold_type,params,tStart,doorFuns,s,baselineMean,baselineSTD,total_elapsed)
 
 % ---- %
 % hard coded as a life-savor
@@ -26,7 +26,10 @@ coh_temp   = [];
 coh = []; timings = []; timeStamps = []; data_out = []; times_out = [];
 
 % total delay
-total_elapsed = 40;
+if exist('total_elapsed')==0
+    total_elapsed = 40;
+    disp('total delay window defaulted to 40s')
+end
 
 % define srate
 srate = params.Fs;
