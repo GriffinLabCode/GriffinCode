@@ -49,7 +49,7 @@ minX = 225; addX = 500-minX;
 STM_fld = [minX minY addX addY]; 
 
 % delay pedestal (sideways room, R) OR T-maze base junction
-minY = 200; addY = 280-200;
+minY = 200; addY = 280-minY;
 minX = 100; addX = 225-minX;
 PED_fld = [minX minY addX addY];
 

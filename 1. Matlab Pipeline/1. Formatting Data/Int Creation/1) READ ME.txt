@@ -2,7 +2,13 @@ To get started:
 
 1) view_VT_data 
 	Make sure that the square spaces capture startbox, stem, 
-	choice-point, and goal-zones
+	choice-point, and goal-zones.
+	
+	**If you are getting missing data type tracking errors, 
+	you probably need to make the square spaces larger in area.
+	Also, you probably have a lot of tracking errors. You can 
+	try missing_data = 'interp', however, it will not be better than
+	fixing your video tracking
 
 2) Run Int_DAorCA_master OR Int_DNMP_master
 	Make sure you have the file 'Int_information' stored in your

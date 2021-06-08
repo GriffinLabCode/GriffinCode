@@ -677,7 +677,6 @@ load handel.mat;
 sound(y, 2*Fs);
 writeline(s,[doorFuns.centralClose])
 
-
 %% save data
 % save data
 c = clock;

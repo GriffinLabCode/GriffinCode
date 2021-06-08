@@ -1,0 +1,7 @@
+dxdt_griffinLab: Code provided by David Redish for calculating dx/dt - a moving window velocity estimation method. It was
+			modified to fit griffin lab formatting
+
+IdPhi_RedishFun: Another function provided by David Redish. This function calculates IdPhi
+
+get_session_IdPhi: a function written to assist in session specific calculation of IdPhi for eventual zIdPhi or zlnIdPhi 
+			transformation

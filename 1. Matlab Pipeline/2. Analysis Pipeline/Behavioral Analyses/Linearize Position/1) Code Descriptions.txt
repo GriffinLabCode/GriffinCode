@@ -1,0 +1,30 @@
+getVTdata: This function was written to provide user-friendly access to video tracking data recorded from your experiment.
+
+		Note, you must have already converted your data:
+			- go to ...\GitHub\GriffinCode\1. Matlab Pipeline\1. Formatting Data\Int Creation and follow the 
+				protocol written there
+
+Pixels2Measurement: A function that allows the user to convert pixel data to the measurement of their choosing. For example,
+			if you wanted to calculate velocity and you are using your VT data, the data in its raw form is in 
+			pixels, and therefore velocity = pixels/sec. However, you might want to convert your pixel data to 
+			cm or m or inches, so that velocity calculation is then in cm/sec m/sec or inch/sec.
+
+__________________________________________
+
+SUPPORT FUNCTIONS:
+
+correct_tracking_errors: An attempt to correct non-zero tracking errors
+interp_missing_VTdata: Interpolates missing data (zero valued tracking errors). This is the most common kind of tracking error.
+exclude_missing_VTdata: Detects any missing data (zero valued tracking data errors) and removes them
+ignore_missing_VTdata: does not perform a function to VT data
+
+___________________________________________
+
+**Note that all of these functions format the data in a manner that allows for smooth access to most old data. For example, over 
+the years, name changes occurred, making it difficult to apply newly created code to old data without changing names. These methods
+allow for use of old data without worrying about their names.
+
+***IF NAME BASED ERROR OCCURS ***
+If there is data where the name requested by matlab is different from what the data were named (e.g. you expect the data
+to be named ExtractedX, but it is named ExtractedX_VT_data), then you will need to include the name variability to the current
+code.
