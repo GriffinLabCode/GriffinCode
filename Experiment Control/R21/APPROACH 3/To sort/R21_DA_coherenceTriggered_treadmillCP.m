@@ -93,7 +93,7 @@ params.tapers = [3 5]; % bset to [3 5] as default
 %% experiment design prep.
 
 % define number of trials
-numTrials  = 9;
+numTrials  = 21;
 
 % randomize trials such that first 12 are high/low and second 12 are yoked
 % controls
@@ -445,6 +445,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                             pause(0.25)
                             write(s,treadFuns.stop,'uint8'); 
 
+                            % if not the first trial, track how long the delay was
+                            if triali > 1 && isempty(tStart)==0
+                                delay_duration_master(triali-1) = toc(tStart);
+                                if contains(trialType(triali),[{'H'} {'L'}])
+                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                end
+                            end                            
+
                             % assign to 0 for not met, and open the
                             % door by setting openDoor to 1
                             coh_met  = 0;
@@ -535,6 +543,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                             pause(0.25)
                                             write(s,treadFuns.stop,'uint8');
                                             
+                                            % if not the first trial, track how long the delay was
+                                            if triali > 1 && isempty(tStart)==0
+                                                delay_duration_master(triali-1) = toc(tStart);
+                                                if contains(trialType(triali),[{'H'} {'L'}])
+                                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                                end
+                                            end                                            
+
                                             % assign these variables to 1
                                             coh_met  = 1;
                                             openDoor = 1;      
@@ -551,6 +567,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
                                     write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
                                     
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1
@@ -571,6 +595,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
                                     write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
                                     
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1
@@ -604,6 +636,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                             pause(0.25)
                                             write(s,treadFuns.stop,'uint8'); 
 
+                                            % if not the first trial, track how long the delay was
+                                            if triali > 1 && isempty(tStart)==0
+                                                delay_duration_master(triali-1) = toc(tStart);
+                                                if contains(trialType(triali),[{'H'} {'L'}])
+                                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                                end
+                                            end                                            
+
                                             % assign to 0 for not met, and open the
                                             % door by setting openDoor to 1
                                             coh_met  = 1;
@@ -627,6 +667,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
                                     write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
 
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1
@@ -647,6 +695,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
                                     write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
 
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1
@@ -685,8 +741,10 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                     % pause
                     pause(delay_duration_manipulate(trialMatch))
                     
+                    % then set to NaN so it can't be re-used
+                    delay_duration_manipulatie(trialMatch) = NaN;
+                    
                 end
-                
                 
                 % stop treadmill
                 pause(0.25)
