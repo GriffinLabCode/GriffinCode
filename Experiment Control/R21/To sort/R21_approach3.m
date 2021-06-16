@@ -35,7 +35,7 @@ cd('X:\01.Experiments\R21\Experimenter Blinding - SUHYEONG ONLY');
 place2store = getCurrentPath();
 addpath(place2store)
 
-%% baseline
+%% Load in rat-specific threshold and data
 try
     % location of data
     dataStored = ['C:\Users\jstout\Desktop\Data 2 Move\' targetRat];
@@ -54,7 +54,6 @@ catch
     cd(dataStored)
     save(dataLoad,'baselineMean','baselineSTD')
 end
-
 
 %% threshold definition
 threshLoad = ['CoherenceDistribution',targetRat];
@@ -127,38 +126,6 @@ while redo == 1
     end
 end
 
-% do the same for control trials
-%{
-redo = 1;
-while redo == 1
-    high  = repmat('CH',[(numTrials-1)/4 1]);
-    low   = repmat('CL',[(numTrials-1)/4 1]);
-    both  = [high; low];
-    both_shuffled = both;
-    for i = 1:1000
-        % notice how it rewrites the both_shuffled variable
-        both_shuffled = both_shuffled(randperm(size(both_shuffled,1)),:);
-    end
-    trialType_con = cellstr(both_shuffled);
-
-    % no more than 3 turns in one direction
-    idxH = double(contains(trialType_con,'CH'));
-    idxL = double(contains(trialType_con,'CL'));
-
-    for i = 1:length(trialType_con)-3
-        if idxH(i) == 1 && idxH(i+1) == 1 && idxH(i+2) == 1 && idxH(i+3)==1
-            redo = 1;
-            break        
-        elseif idxL(i) == 1 && idxL(i+1) == 1 && idxL(i+2) == 1 && idxL(i+3)==1
-            redo = 1;
-            break        
-        else
-            redo = 0;
-        end
-    end
-end
-%}
-
 % control trials
 control  = cellstr(repmat('C',[(numTrials-1)/2 1]));
 
@@ -202,6 +169,7 @@ for i = 1:10000000
 end
 %}
 
+%% treadmill setup
 % get treadmill
 [treadFuns,treadSpeed] = TreadMillFuns;
 
@@ -233,6 +201,9 @@ looper = ceil((amountOfTime*60/threshold.coh_duration)); %ceil((amountOfTime*60)
 % define total loop time
 total_loop_time = threshold.coh_duration*60; % in seconds
 
+% this is the total amount of time coherence detection will proceed for...
+total_window = 15; % total amount of time allowed for coherence to be detected
+
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
 next = 0; % set while loop variable
@@ -263,17 +234,6 @@ for rewardi = 1:pellet_count
     pause(4)
 end
 
-%% treadmill testing
-
-%{
-% belt length = 31.25inch = 79.375
-beltLength = 79; % cm
-numRev = 14; % set to speed of 10
-timeRev = 1; % 1 second
-convTreadSpeed = beltLength*numRev/timeRev
-%}
-
-
 %% start recording - make a noise when recording begins
 [succeeded, reply] = NlxSendCommand('-StartRecording');
 load gong.mat;
@@ -287,15 +247,9 @@ maze_prep = [doorFuns.sbLeftOpen doorFuns.sbRightOpen ...
     doorFuns.tRightClose doorFuns.tLeftClose doorFuns.centralOpen ...
     doorFuns.gzLeftClose doorFuns.gzRightClose];
 
-% initialize
-timeStamps = []; timeConv  = [];
-coh_met    = []; coh_store = [];
-dur_met    = []; dur_sum   = []; 
-coh_temp   = []; 
-
-% VERY IMPORTANT
-coh = []; timings = []; timeStamps = []; data_out = []; times_out = [];
-coherence_met = [];
+% storage variables
+coherence_met  = [];
+coherence_data = [];
 
 % mark session start
 sStart = [];
@@ -321,14 +275,6 @@ while toc(sStart)/60 < session_length || sessEnd == 0
         % first trial - set up the maze doors appropriately
         pause(0.25);
         writeline(s,maze_prep)
-        
-        % if not the first trial, track how long the delay was
-        if triali > 1 && isempty(tStart)==0
-            delay_duration_master(triali) = toc(tStart);
-            if contains(trialType(triali),[{'H'} {'L'}])
-                delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
-            end
-        end
         
         % set irTemp to empty matrix
         irTemp = []; 
@@ -459,25 +405,58 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                     pause(0.5)
                 end                
                 %write(s,treadFuns.stop,'uint8');
-
+                
                 % coherence detection
-                total_window = 15; % total amount of time allowed for coherence to be detected
                 tStart = [];
                 tStart = tic; % required for timing the coherence detection
-
+                
                 % ---- COHERENCE METHODS START HERE ---- %
+
+                %% FIX THESE VARIABLES _ MAKE SURE YOURE STORING THINGS CORRECTLY
+                % initialize
+                timeStamps = []; timeConv  = [];
+                coh_met    = []; coh_store = [];
+                dur_met    = []; dur_sum   = []; 
+                coh_temp   = []; 
+
+                % VERY IMPORTANT
+                coh = []; timings = []; timeStamps = []; data_out = []; times_out = [];                
+                
                 if contains(trialType(triali),[{'H'} {'L'}])
-                    disp('Estimating Coherence...')       
-                    openDoor = 0;
+                    
+                    % interface with user
+                    disp('Estimating Coherence...')   
+                    
+                    % set this to 0 for the while loop
+                    openDoor = 0; 
+                    
+                    % while you are within the alloted time window and so
+                    % long as the door is closed (openDoor = 0)
                     while (toc(tStart) < total_window) && openDoor == 0
 
                         % if a total seconds have passed, open up doors
                         if toc(tStart) > total_window && openDoor == 0
+                            
+                            % report for troubleshooting
+                            disp('Coherence Threshold Not Met')
+
+                            % stop treadmill
                             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                             pause(0.25)
-                            write(s,treadFuns.stop,'uint8');
+                            write(s,treadFuns.stop,'uint8'); 
+
+                            % if not the first trial, track how long the delay was
+                            if triali > 1 && isempty(tStart)==0
+                                delay_duration_master(triali-1) = toc(tStart);
+                                if contains(trialType(triali),[{'H'} {'L'}])
+                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                end
+                            end                            
+
+                            % assign to 0 for not met, and open the
+                            % door by setting openDoor to 1
                             coh_met  = 0;
-                            openDoor = 1;
+                            openDoor = 1; 
                         end
 
                         % sometimes, we error out (a sampling issue on neuralynx's end)
@@ -534,13 +513,18 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                         % store timestamp array to check later
                         timeStamps = [timeStamps size(timeStampArray,2)]; % size(x,2) bc we want columns (tells you how many samples occured per sample)
 
-                        % convert time
-                        %timeConv = [timeCov timeStamps*.5];
-
                         % first, if coherence magnitude is met, do whats below
                         if contains(trialType(triali),'H')
+                            
+                            % set coherence threshold to empty, then define
+                            % it to the high setting based on your rats
+                            % data
                             coherence_threshold = [];
                             coherence_threshold = threshold.high_coherence_magnitude;
+                            
+                            % if you are able to find instances where
+                            % coherence is greater than your threshold (ie
+                            % the variable is not empty)
                             if isempty(find(coh > coherence_threshold))==0 % < bc this is low coh
 
                                 %disp('High Coherence Threshold Met')
@@ -549,10 +533,25 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                 if length(coh) > 1
                                     if isnan(coh(end)) == 0 && isnan(coh(end-1)) == 0
                                         if coh(end) > coherence_threshold && coh(end-1) > coherence_threshold
-                                            % open the door
+                                            % report for troubleshooting
+                                            % purposes
+                                            disp('High Coherence Threshold Met')
+                                            
+                                            % open the door, then stop the
+                                            % treadmill
                                             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                             pause(0.25)
                                             write(s,treadFuns.stop,'uint8');
+                                            
+                                            % if not the first trial, track how long the delay was
+                                            if triali > 1 && isempty(tStart)==0
+                                                delay_duration_master(triali-1) = toc(tStart);
+                                                if contains(trialType(triali),[{'H'} {'L'}])
+                                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                                end
+                                            end                                            
+
+                                            % assign these variables to 1
                                             coh_met  = 1;
                                             openDoor = 1;      
                                         end
@@ -561,10 +560,24 @@ while toc(sStart)/60 < session_length || sessEnd == 0
 
                                 % if your timer has elapsed > some preset time, open the startbox door
                                 if toc(tStart) > total_window && openDoor == 0
+                                    % report for troubleshooting
+                                    disp('High Coherence Threshold Not Met')
+                                    
                                     % stop treadmill
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
-                                    write(s,treadFuns.stop,'uint8');                                     
+                                    write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
+                                    
+                                    % assign to 0 for not met, and open the
+                                    % door by setting openDoor to 1
                                     coh_met  = 0;
                                     openDoor = 1;            
                                 end
@@ -575,17 +588,37 @@ while toc(sStart)/60 < session_length || sessEnd == 0
 
                                 % if your timer has elapsed > some preset time, open the startbox door
                                 if toc(tStart) > total_window && openDoor == 0
+                                    % report for troubleshooting
+                                    disp('High Coherence Threshold Not Met')
+                                    
+                                    % stop treadmill
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
-                                    write(s,treadFuns.stop,'uint8');
-                                    coh_met  = 0;                
-                                    openDoor = 1;            
+                                    write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
+                                    
+                                    % assign to 0 for not met, and open the
+                                    % door by setting openDoor to 1
+                                    coh_met  = 0;
+                                    openDoor = 1;             
                                 end
 
                             end
-                        elseif contains(trialType(triali),'L')
+                            
+                        elseif contains(trialType(triali),'L') % if the trial is a low-coherence trial
+                            
+                            % again, set to empty to prevent any previous
+                            % rewrites, even though they won't happen
                             coherence_threshold = [];
-                            coherence_threshold = threshold.low_coherence_magnitude;                            
+                            coherence_threshold = threshold.low_coherence_magnitude;  
+                            
                             % first, if coherence magnitude is met, do whats below
                             if isempty(find(coh < coherence_threshold))==0 % < bc this is low coh
 
@@ -595,12 +628,26 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                 if length(coh) > 1
                                     if isnan(coh(end)) == 0 && isnan(coh(end-1)) == 0 % if both coh of interest are real
                                         if coh(end) < coherence_threshold && coh(end-1) < coherence_threshold
-                                            % open the door
+                                            % report for troubleshooting
+                                            disp('Low Coherence Threshold Met')
+
+                                            % stop treadmill
                                             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                             pause(0.25)
-                                            write(s,treadFuns.stop,'uint8');
+                                            write(s,treadFuns.stop,'uint8'); 
+
+                                            % if not the first trial, track how long the delay was
+                                            if triali > 1 && isempty(tStart)==0
+                                                delay_duration_master(triali-1) = toc(tStart);
+                                                if contains(trialType(triali),[{'H'} {'L'}])
+                                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                                end
+                                            end                                            
+
+                                            % assign to 0 for not met, and open the
+                                            % door by setting openDoor to 1
                                             coh_met  = 1;
-                                            openDoor = 1;      
+                                            openDoor = 1;       
                                         end
                                     end
                                 end         
@@ -613,10 +660,25 @@ while toc(sStart)/60 < session_length || sessEnd == 0
 
                                 % if your timer has elapsed > some preset time, open the startbox door
                                 if toc(tStart) > total_window && openDoor == 0
+                                    % report for troubleshooting
+                                    disp('Low Coherence Threshold Not Met')
+
+                                    % stop treadmill
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
-                                    write(s,treadFuns.stop,'uint8');
-                                    coh_met  = 0;                
+                                    write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
+
+                                    % assign to 0 for not met, and open the
+                                    % door by setting openDoor to 1
+                                    coh_met  = 0;
                                     openDoor = 1;
                                 end
 
@@ -626,11 +688,26 @@ while toc(sStart)/60 < session_length || sessEnd == 0
 
                                 % if your timer has elapsed > some preset time, open the startbox door
                                 if toc(tStart) > total_window && openDoor == 0
+                                    % report for troubleshooting
+                                    disp('Low Coherence Threshold Not Met')
+
+                                    % stop treadmill
                                     writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
                                     pause(0.25)
-                                    write(s,treadFuns.stop,'uint8');
-                                    coh_met  = 0;                
-                                    openDoor = 1;                
+                                    write(s,treadFuns.stop,'uint8'); 
+                                    
+                                    % if not the first trial, track how long the delay was
+                                    if triali > 1 && isempty(tStart)==0
+                                        delay_duration_master(triali-1) = toc(tStart);
+                                        if contains(trialType(triali),[{'H'} {'L'}])
+                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
+                                        end
+                                    end                                    
+
+                                    % assign to 0 for not met, and open the
+                                    % door by setting openDoor to 1
+                                    coh_met  = 0;
+                                    openDoor = 1;             
                                 end
 
                             end 
@@ -640,10 +717,16 @@ while toc(sStart)/60 < session_length || sessEnd == 0
 
                     end
                     
+                % logger
+                coherence_met(triali)  = coh_met;
+                coherence_data{triali} = coh;                    
+                    
                 elseif contains(trialType(triali),{'C'}) % control high/ control low
+                    
                     disp('Yoking Up... lol')
+                    
                     % define your control trials
-                    conTrials = ((numTrials-1)/2)+1:numTrials;
+                    conTrials = ((numTrials-1)/2)+1:numTrials-1;
 
                     % randomly select one of any non-nan values
                     nonNanVals = [];
@@ -653,14 +736,16 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                     % trial according to whether its a yoked high or yoked
                     % low
                     trialMatch = randsample(nonNanVals,1);
-                    yokedContr(triali) = [trialType{triali} trialType{trialMatch}];
+                    yokedContr{triali} = [trialType{triali} trialType{trialMatch}];
                     
                     % pause
                     pause(delay_duration_manipulate(trialMatch))
                     
+                    % then set to NaN so it can't be re-used
+                    delay_duration_manipulatie(trialMatch) = NaN;
+                    
                 end
-                % logger
-                coherence_met(triali) = coh_met;
+                
                 % stop treadmill
                 pause(0.25)
                 write(s,treadFuns.stop,'uint8');

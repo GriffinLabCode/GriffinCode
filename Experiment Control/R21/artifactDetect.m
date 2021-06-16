@@ -20,6 +20,11 @@
 % baselineMean: the output from baselineDetection, average LFP
 % baselineSTD: another output from baselineDetection, standard deviation
 %               LFP
+% noiseThreshold: Optional. In standard deviations. Preset to 4 standard
+%                   deviations, such that signals who's LFP exceeds 4
+%                   standard deviations from the mean are considered noise.
+%                   This was visually confirmed. You should try this
+%                   separately on your dataset before using the preset.
 %
 % -- OUTPUTS -- %
 % idxNoise: an index that tells you if you have any noise events. If empty,
@@ -28,7 +33,7 @@
 %
 % written by John Stout
 
-function [idxNoise,zArtifact] = artifactDetect(data,baselineMean,baselineSTD)
+function [idxNoise,zArtifact] = artifactDetect(data,baselineMean,baselineSTD,noiseThreshold)
 
 % zscore data against your defined mean and std
 zArtifact = [];
@@ -37,5 +42,10 @@ zArtifact(2,:) = ((data(2,:)-baselineMean(2))./baselineSTD(2));
 
 % using a std threshold of 4, detect instances of clipping or large
 % movement artifacts or other sources of noise like scratching
-noiseThreshold = 4;
+if exist('noiseThreshold')==0 || isempty(noiseThreshold)==1
+    noiseThreshold = 4;
+end
+% this is telling us that if there is a detected artifact in the positive
+% going voltage direction, or the negative going voltage direction, then
+% identify it
 idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
