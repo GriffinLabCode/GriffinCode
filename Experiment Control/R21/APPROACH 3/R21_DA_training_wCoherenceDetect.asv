@@ -235,9 +235,7 @@ session_start = str2num(strcat(num2str(c(4)),num2str(c(5))));
 session_time  = session_start-session_start; % quick definitio of this so it starts the while loop
 writeline(s,doorFuns.centralOpen);
 
-% data_dirty refers to artifactual data, while _clean refers to artifact
-% 'free' data
-data_dirty = []; times_dirty = []; data_clean = []; times_clean = []; coh = [];
+data_out = []; times_out = []; coh = [];
 for triali = 1:numTrials
 
     % start out with this as a way to make sure you don't exceed 30
@@ -320,27 +318,27 @@ for triali = 1:numTrials
     % send to netcom 
     if triali == 1 && trajectory_text{triali} == 'R'
         for rewardi = 1:pellet_count
-            %pause(0.25)
+            pause(0.25)
             writeline(s,rewFuns.right)
             %pause(3)
         end
     elseif triali == 1 && trajectory_text{triali} == 'L'
         for rewardi = 1:pellet_count
-           % pause(0.25)
+            pause(0.25)
             writeline(s,rewFuns.left)
             %pause(3)
         end        
     elseif triali > 1 && trajectory_text{triali} == 'R' && trajectory_text{triali-1} == 'L'
         % reward dispensers need about 3 seconds to release pellets
         for rewardi = 1:pellet_count
-            %pause(0.25)
+            pause(0.25)
             writeline(s,rewFuns.right)
             %pause(3)
         end
     elseif triali > 1 && trajectory_text{triali} == 'L' && trajectory_text{triali-1} == 'R'
         % reward dispensers need about 3 seconds to release pellets
         for rewardi = 1:pellet_count
-            %pause(0.25)
+            pause(0.25)
             writeline(s,rewFuns.left)
             %pause(3)
         end
@@ -443,10 +441,8 @@ for triali = 1:numTrials
             end 
             
             % start timer after treadmill started
-            disp('Coherence Detection')
             tStart = tic;
-            while (toc(tStart) < delay_durations(triali))
-                %disp('Coherence Detection Start')
+            while (toc(tStart) < delay_duration(triali))
                 % sometimes, we error out (a sampling issue on neuralynx's end)
                 attempt = 0;
                 while attempt == 0
@@ -474,26 +470,20 @@ for triali = 1:numTrials
                 data_det(1,:) = locdetrend(dataArray(1,:),params.Fs); 
                 data_det(2,:) = locdetrend(dataArray(2,:),params.Fs); 
 
+                % store data for later
+                data_out  = [data_out data_det];
+                times_out = [times_out timeStampArray];
+
                 % detect artifacts
                 idxNoise = []; zArtifact = [];
                 [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);
 
                 % calculate coherence based on whether artifacts are present
                 if isempty(idxNoise) ~= 1
-                    
-                    % store data for later
-                    data_dirty  = [data_dirty data_det];
-                    times_dirty = [times_dirty timeStampArray];
-                    
                     coh = [coh NaN]; % add nan to know this was ignored
                     continue
                     disp('scratch detected - coherence not calculated')
-                else 
-                    
-                    % store data for later
-                    data_clean  = [data_clean data_det];
-                    times_clean = [times_clean timeStampArray];
-                
+                else     
                     coh_temp = [];
                     %coh_temp = coherencyc(data_det(1,:),data_det(2,:),params); 
                     [coh_temp,~,~,S1,S2,f] = coherencyc(data_det(1,:),data_det(2,:),params); 
