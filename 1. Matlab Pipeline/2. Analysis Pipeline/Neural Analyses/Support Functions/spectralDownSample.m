@@ -12,10 +12,11 @@
 %        trial, where the spectral output is down sampled to match the
 %        lowest frequency resolution
 % fOut: same as above, but for frequency
+% sMat: a matrix of spectral outputs for easy averaging
 %
 % written by John Stout
 
-function [sOut,fOut] = spectralDownSample(S,f)
+function [sOut,fOut,sMat] = spectralDownSample(S,f)
 
 % get a size to down sample frequencies to
 downSize = min(cellfun(@length,f));
@@ -43,5 +44,8 @@ for i = 1:length(f)
     % continue, down sample your S variable
     sOut{i} = S{i}(fKeep);
 end
+
+sMat = horzcat(sOut{:});
+sMat = change_row_to_column(sMat);
 
 end

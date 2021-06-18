@@ -35,23 +35,72 @@ end
 prompt = ['What day of training is this? '];
 TrainingDay  = str2num(input(prompt,'s'));
 
+%% Load in rat-specific threshold and data
+try
+    % location of data
+    %dataStored = ['C:\Users\jstout\Desktop\Data 2 Move\' targetRat];
+    dataStored = 'C:\Users\jstout\Desktop\Data 2 Move\APPROACH 3\Rat Specific Inputs';
+    cd(dataStored)
+    % name of rat
+    ratID = strsplit(targetRat,'-');
+    dataLoad = ['baselineData_', ratID{1},'_',ratID{2}];
+    load(dataLoad)
+    disp(['Loaded baseline data for ' targetRat])
+catch
+    disp(['Getting baseline data for ' targetRat])
+    
+    % interface with user
+    prompt   = 'Enter LFP1 name (HPC) ';
+    LFP1name = input(prompt,'s');
+    prompt   = 'Enter LFP2 name (PFC) ';
+    LFP2name = input(prompt,'s'); 
+    
+    % this may not have to be run each day
+    [baselineMean,baselineSTD] = baselineDetection(LFP1name,LFP2name,srate,10);
+    % location of data
+    dataStored = 'C:\Users\jstout\Desktop\Data 2 Move\APPROACH 3\Rat Specific Inputs';
+    cd(dataStored)
+    save(dataLoad,'baselineMean','baselineSTD')
+end
+
+%% threshold definition
+threshLoad = ['CoherenceDistribution',targetRat];
+cd(dataStored)
+baselineCohData = load(threshLoad,'coh','LFP1name','LFP2name');
+threshold.high_coherence_magnitude = prctile(baselineCohData.coh,75);
+threshold.low_coherence_magnitude  = prctile(baselineCohData.coh,25);
+threshold.coh_duration             = 0.5; % this is not true
+
+%% LFP names
+
+LFP1name = baselineCohData.LFP1name;  % HPC
+LFP2name = baselineCohData.LFP2name; % PFC
+
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
 session_length = 35; % minutes
 
-delay_length = 30; % seconds
 pellet_count = 1;
 timeout_len  = 60*15;
 
 % define a looping time - this is in minutes
 amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
 
+% chronux parameters
+params = getCustomParams;
+params.fpass  = [4 12]; % needs to be 0 20 - note that coherence detection uses 4-12
+params.tapers = [3 5]; % bset to [3 5] as default
+
+%% prep 3 - connect with cheetah
+% set up function
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);
+
 %% experiment design prep.
 rng('shuffle') % set to random
 
 % define number of trials
-numTrials  = 17;
+numTrials  = 21;
 
 % randomize delay durations
 minDelay = 5;  % minimum delay duration set to 5 seconds
@@ -120,8 +169,26 @@ if TrainingDay == 1
 elseif TrainingDay == 2
     speedVector = [1 2 3 4 6];
 elseif TrainingDay == 3 || TrainingDay > 3
-    speedVector = [2 4 6 8];
+    speedVector = [1 3 5 7];
 end
+
+
+%% coherence detection prep.
+
+% define sampling rate
+params.Fs     = srate;
+
+% define number of samples that correspond to the amount of data in time
+numSamples2use = threshold.coh_duration*srate;
+
+% define for loop - 70 total sec
+looper = ceil((amountOfTime*60/threshold.coh_duration)); %ceil((amountOfTime*60)/threshold.coh_duration); % N minutes * 60sec/1min * (1 loop is about .250 ms of data)
+
+% define total loop time
+total_loop_time = threshold.coh_duration*60; % in seconds
+
+% this is the total amount of time coherence detection will proceed for...
+total_window = 15; % total amount of time allowed for coherence to be detected
 
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
@@ -146,6 +213,7 @@ pause(0.25)
 writeline(s,[doorFuns.gzLeftClose doorFuns.gzRightClose])
 
 %% start recording - make a noise when recording begins
+[succeeded, reply] = NlxSendCommand('-StartRecording');
 load gong.mat;
 sound(y);
 pause(5)
@@ -167,11 +235,12 @@ session_start = str2num(strcat(num2str(c(4)),num2str(c(5))));
 session_time  = session_start-session_start; % quick definitio of this so it starts the while loop
 writeline(s,doorFuns.centralOpen);
 
+data_out = []; times_out = []; coh = [];
 for triali = 1:numTrials
 
     % start out with this as a way to make sure you don't exceed 30
     % minutes of the session
-    if triali == numTrials || toc(sStart)/60 > session_length
+    if toc(sStart)/60 > session_length
         writeline(s,doorFuns.closeAll)
         %sessEnd = 1;            
         break % break out of for loop
@@ -184,6 +253,7 @@ for triali = 1:numTrials
     if triali == 1
         pause(0.25);
         writeline(s,maze_prep)
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPdoorOpen" 200 2');
     end
 
     % set irTemp to empty matrix
@@ -199,6 +269,8 @@ for triali = 1:numTrials
             % neuralynx timestamp command
 
             % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "choicePoint" 102 2');       
+
             % close door
             %writeline(s,doorFuns.centralClose) % close the door behind the rat
             next = 1;                          % break out of the loop
@@ -211,6 +283,7 @@ for triali = 1:numTrials
     next = 0;
     while next == 0       
         if readDigitalPin(a,irArduino.rGoalArm)==0
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tRightBeam" 222 2');                                    
 
             % track the trajectory_text
             trajectory_text{triali} = 'R';
@@ -225,6 +298,7 @@ for triali = 1:numTrials
             next = 1;
 
         elseif readDigitalPin(a,irArduino.lGoalArm)==0
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tLeftBeam" 212 2');
 
             % track the trajectory_text
             trajectory_text{triali} = 'L';
@@ -277,6 +351,7 @@ for triali = 1:numTrials
         irTemp = read(s,4,"uint8");         
         if irTemp == irBreakNames.tRight 
             % send neuralynx command for timestamp
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzRightBeam" 422 2');             
 
             % close both for audio symmetry
             pause(0.25)
@@ -287,6 +362,7 @@ for triali = 1:numTrials
             next = 1;                          
         elseif irTemp == irBreakNames.tLeft
             % send neuralynx command for timestamp
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzLeftBeam" 412 2');
 
             % close both for audio symmetry
             pause(0.25)
@@ -306,6 +382,7 @@ for triali = 1:numTrials
 
         if readDigitalPin(a,irArduino.lGoalZone)==0
             % send neuralynx command for timestamp
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzRightBeam" 422 2');             
 
             % close both for audio symmetry
             pause(0.25)
@@ -316,6 +393,7 @@ for triali = 1:numTrials
             next = 1;                          
         elseif readDigitalPin(a,irArduino.rGoalZone)==0
             % send neuralynx command for timestamp
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzLeftBeam" 412 2');
 
             % close both for audio symmetry
             pause(0.25)
@@ -355,20 +433,72 @@ for triali = 1:numTrials
             write(s,treadFuns.start,'uint8');
 
             % increase tread speed gradually
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayStart" 600 2');
             for i = speedVector
                 % set treadmill speed
                 write(s,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one
                 pause(0.25)
             end   
             
+            % sometimes, we error out (a sampling issue on neuralynx's end)
+            attempt = 0;
+            while attempt == 0
+                try
+
+                    % clear stream   
+                    clearStream(LFP1name,LFP2name);
+
+                    % pause 0.5 sec
+                    pause(0.5);
+
+                    % pull data
+                    [~, dataArray, timeStampArray, ~, ~, ...
+                    numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                    attempt = 1;
+                catch
+                    % store this for later
+                    coh = [coh NaN];
+                end
+            end
+
+            % detrend data - did not clean to improve processing speed
+            data_det = [];
+            data_det(1,:) = locdetrend(dataArray(1,:),params.Fs); 
+            data_det(2,:) = locdetrend(dataArray(2,:),params.Fs); 
+
+            % store data for later
+            data_out  = [data_out data_det];
+            times_out = [times_out timeStampArray];
+
+            % detect artifacts
+            idxNoise = []; zArtifact = [];
+            [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);
+
+            % calculate coherence based on whether artifacts are present
+            if isempty(idxNoise) ~= 1
+                coh = [coh NaN]; % add nan to know this was ignored
+                continue
+                disp('scratch detected - coherence not calculated')
+            else     
+                coh_temp = [];
+                %coh_temp = coherencyc(data_det(1,:),data_det(2,:),params); 
+                [coh_temp,~,~,S1,S2,f] = coherencyc(data_det(1,:),data_det(2,:),params); 
+                coh = [coh nanmean(coh_temp)]; % add nan to know this was ignored
+
+            end            
+
             % pause for random time interval during delay
             disp(['Pausing for delay of ',num2str(delay_durations(triali)) ' seconds'])
             pause(delay_durations(triali))
 
             % open doors and stop treadmill
             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen])
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPdoorOpen" 200 2');
+            disp('CP doors opened');
             pause(0.25)
             write(s,treadFuns.stop,'uint8'); 
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');                
 
             % break out of while loop and continue maze
             next = 1;
@@ -429,10 +559,21 @@ save(save_var);
 % close doors
 writeline(s,doorFuns.closeAll);
 
+% unplug rat
+next =0;
+while next == 0
+    prompt = ['Is the rat unplugged and wrapped up? '];
+    ratReady = input(prompt,'s');
+    if contains(ratReady,[{'Y'} {'y'}])
+        next = 1;
+    end
+end
+
 % begin treadmill
 write(s,treadFuns.start,'uint8');
 
 % increase tread speed gradually
+[succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayStart" 600 2');
 for i = speedVector
     % set treadmill speed
     write(s,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one

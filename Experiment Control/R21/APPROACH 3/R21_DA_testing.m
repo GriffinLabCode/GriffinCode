@@ -77,7 +77,7 @@ LFP2name = baselineCohData.LFP2name; % PFC
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 35; % minutes
 
 min_delay    = 5;
 pellet_count = 1;
@@ -96,47 +96,56 @@ params.tapers = [3 5]; % bset to [3 5] as default
 [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);
 
 %% experiment design prep.
+rng('shuffle') % set to random
 
 % define number of trials
-numTrials  = 21;
+numTrials  = 25;
 
-% randomize trials such that first 12 are high/low and second 12 are yoked
-% controls
-redo = 1;
-while redo == 1
-    high  = repmat('H',[(numTrials-1)/4 1]);
-    low   = repmat('L',[(numTrials-1)/4 1]);
-    both  = [high; low];
-    both_shuffled = both;
-    for i = 1:1000
-        % notice how it rewrites the both_shuffled variable
-        both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
-    end
-    trialType_exp = cellstr(both_shuffled);
+% block style randomization. This is to account for the case where rats are
+% getting tired on the second half, and therefore could perform worse.
+% first 4 trials are experimental randomized, second 4 are control. This
+% also allows for cases where the rat is having a bad day. We can try to
+% squeeze out 8 or 16 trials as it is better than having no data, or losing
+% the last control trials (last 10 - old method).
+trialType = [];
+for n = 1:3
+    redo = 1;
+    while redo == 1
+        high  = repmat('H',[(numTrials-1)/12 1]);
+        low   = repmat('L',[(numTrials-1)/12 1]);
+        both  = [high; low];
+        both_shuffled = both;
+        for i = 1:1000
+            % notice how it rewrites the both_shuffled variable
+            both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
+        end
+        trialType_exp = cellstr(both_shuffled);
 
-    % no more than 3 turns in one direction
-    idxH = double(contains(trialType_exp,'H'));
-    idxL = double(contains(trialType_exp,'L'));
+        % no more than 3 turns in one direction
+        idxH = double(contains(trialType_exp,'H'));
+        idxL = double(contains(trialType_exp,'L'));
 
-    for i = 1:length(trialType_exp)-3
-        if idxH(i) == 1 && idxH(i+1) == 1 && idxH(i+2) == 1 && idxH(i+3)==1
-            redo = 1;
-            break        
-        elseif idxL(i) == 1 && idxL(i+1) == 1 && idxL(i+2) == 1 && idxL(i+3)==1
-            redo = 1;
-            break        
-        else
-            redo = 0;
+        for i = 1:length(trialType_exp)-3
+            if idxH(i) == 1 && idxH(i+1) == 1 && idxH(i+2) == 1 && idxH(i+3)==1
+                redo = 1;
+                break        
+            elseif idxL(i) == 1 && idxL(i+1) == 1 && idxL(i+2) == 1 && idxL(i+3)==1
+                redo = 1;
+                break        
+            else
+                redo = 0;
+            end
         end
     end
+
+    % control trials
+    control  = cellstr(repmat('C',[(numTrials-1)/6 1]));
+
+    % define the first 12 as experimental, second 12 as control
+    %trialType{i} = [];
+    trialType{n} = [trialType_exp;control];
 end
-
-% control trials
-control  = cellstr(repmat('C',[(numTrials-1)/2 1]));
-
-% define the first 12 as experimental, second 12 as control
-trialType = [];
-trialType = [trialType_exp;control];
+trialType = vertcat(trialType{:});
 
 %% auto maze prep.
 
@@ -165,14 +174,17 @@ end
 
 % digital ports for reverse maze
 irArduino.Treadmill = 'D9';
-irArduino.rGoal     = 'D10';
-irArduino.lGoal     = 'D11';
+irArduino.rGoalArm  = 'D10';
+irArduino.lGoalArm  = 'D11';
+irArduino.rGoalZone = 'D7';
+irArduino.lGoalZone = 'D2';
 
 %{
 for i = 1:10000000
     readDigitalPin(a,irArduino.lGoal)
 end
 %}
+
 
 %% treadmill setup
 % get treadmill
@@ -191,6 +203,14 @@ speed_cell{1} = NaN;
 
 % make an array where its row index is the speed
 speed_cell(2:end) = struct2cell(treadSpeeds);
+
+if TrainingDay == 1
+    speedVector = [1 2 3 4];
+elseif TrainingDay == 2
+    speedVector = [1 2 3 4 6];
+elseif TrainingDay == 3 || TrainingDay > 3
+    speedVector = [1 3 5 7];
+end
 
 %% coherence detection prep.
 
@@ -263,11 +283,11 @@ while toc(sStart)/60 < session_length || sessEnd == 0
         
         % start out with this as a way to make sure you don't exceed 30
         % minutes of the session
-        if triali == numTrials || toc(sStart)/60 > session_length
+        if toc(sStart)/60 > session_length
             writeline(s,doorFuns.closeAll)
-            sessEnd = 1;            
+            %sessEnd = 1;            
             break % break out of for loop
-        end        
+        end      
 
         % set central door timeout value
         s.Timeout = timeout_len; % 5 minutes before matlab stops looking for an IR break    
@@ -304,7 +324,7 @@ while toc(sStart)/60 < session_length || sessEnd == 0
         % check which direction the rat turns at the T-junction
         next = 0;
         while next == 0       
-            if readDigitalPin(a,irArduino.rGoal)==0
+            if readDigitalPin(a,irArduino.rGoalArm)==0
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tRightBeam" 222 2');                                    
 
                 % track the trajectory_text
@@ -319,7 +339,7 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                 % break while loop
                 next = 1;
 
-            elseif readDigitalPin(a,irArduino.lGoal)==0
+            elseif readDigitalPin(a,irArduino.lGoalArm)==0
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "tLeftBeam" 212 2');
 
                 % track the trajectory_text
@@ -334,7 +354,7 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                 % break out of while loop
                 next = 1;
             end
-        end      
+        end    
     
         % Reward zone and eating
         % send to netcom 
@@ -364,13 +384,14 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                 writeline(s,rewFuns.left)
                 %pause(3)
             end
-        end     
+        end    
         
         % return arm
         next = 0;
         while next == 0
-            irTemp = read(s,4,"uint8");         
-            if irTemp == irBreakNames.tRight 
+            %irTemp = read(s,4,"uint8");  
+
+            if readDigitalPin(a,irArduino.lGoalZone)==0
                 % send neuralynx command for timestamp
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzRightBeam" 422 2');             
 
@@ -379,9 +400,9 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                 writeline(s,[doorFuns.gzLeftClose])
                 pause(0.25)
                 writeline(s,[doorFuns.gzRightClose])
-                
+
                 next = 1;                          
-            elseif irTemp == irBreakNames.tLeft
+            elseif readDigitalPin(a,irArduino.rGoalZone)==0
                 % send neuralynx command for timestamp
                 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "gzLeftBeam" 412 2');
 
@@ -393,6 +414,7 @@ while toc(sStart)/60 < session_length || sessEnd == 0
 
                 next = 1;
             end
+
         end      
 
         % startbox beam
@@ -412,7 +434,13 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                 writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
                 pause(0.25)
                 writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])    
-
+                
+                % session end
+                if triali == numTrials || toc(sStart)/60 > session_length
+                    next = 1;
+                    break
+                end
+            
                 % begin treadmill
                 write(s,treadFuns.start,'uint8');
                 
@@ -466,12 +494,10 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');          
 
                             % if not the first trial, track how long the delay was
-                            if triali > 1 && isempty(tStart)==0
-                                delay_duration_master(triali-1) = toc(tStart);
-                                if contains(trialType(triali),[{'H'} {'L'}])
-                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
-                                end
-                            end                            
+                            delay_duration_master(triali) = toc(tStart);
+                            if contains(trialType(triali),[{'H'} {'L'}])
+                                delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+                            end                          
 
                             % assign to 0 for not met, and open the
                             % door by setting openDoor to 1
@@ -566,12 +592,11 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');
                                             
                                             % if not the first trial, track how long the delay was
-                                            if triali > 1 && isempty(tStart)==0
-                                                delay_duration_master(triali-1) = toc(tStart);
-                                                if contains(trialType(triali),[{'H'} {'L'}])
-                                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
-                                                end
-                                            end                                            
+                                            delay_duration_master(triali) = toc(tStart);
+                                            if contains(trialType(triali),[{'H'} {'L'}])
+                                                delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+                                            end
+                                        
 
                                             % assign these variables to 1
                                             coh_met  = 1;
@@ -592,13 +617,11 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     write(s,treadFuns.stop,'uint8');
                                     [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');
                                     
-                                    % if not the first trial, track how long the delay was
-                                    if triali > 1 && isempty(tStart)==0
-                                        delay_duration_master(triali-1) = toc(tStart);
-                                        if contains(trialType(triali),[{'H'} {'L'}])
-                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
-                                        end
-                                    end                                    
+                                    % track how long the delay was
+                                    delay_duration_master(triali) = toc(tStart);
+                                    if contains(trialType(triali),[{'H'} {'L'}])
+                                        delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+                                    end                                
                                     
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1
@@ -622,13 +645,11 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     write(s,treadFuns.stop,'uint8'); 
                                     [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');
                                                                         
-                                    % if not the first trial, track how long the delay was
-                                    if triali > 1 && isempty(tStart)==0
-                                        delay_duration_master(triali-1) = toc(tStart);
-                                        if contains(trialType(triali),[{'H'} {'L'}])
-                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
-                                        end
-                                    end                                    
+                                    %track how long the delay was
+                                    delay_duration_master(triali) = toc(tStart);
+                                    if contains(trialType(triali),[{'H'} {'L'}])
+                                        delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+                                    end                                  
                                     
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1
@@ -664,13 +685,11 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                             write(s,treadFuns.stop,'uint8'); 
                                             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');
 
-                                            % if not the first trial, track how long the delay was
-                                            if triali > 1 && isempty(tStart)==0
-                                                delay_duration_master(triali-1) = toc(tStart);
-                                                if contains(trialType(triali),[{'H'} {'L'}])
-                                                    delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
-                                                end
-                                            end                                            
+                                            % track how long the delay was
+                                            delay_duration_master(triali) = toc(tStart);
+                                            if contains(trialType(triali),[{'H'} {'L'}])
+                                                delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+                                            end
 
                                             % assign to 0 for not met, and open the
                                             % door by setting openDoor to 1
@@ -699,12 +718,10 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');
                                     
                                     % if not the first trial, track how long the delay was
-                                    if triali > 1 && isempty(tStart)==0
-                                        delay_duration_master(triali-1) = toc(tStart);
-                                        if contains(trialType(triali),[{'H'} {'L'}])
-                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
-                                        end
-                                    end                                    
+                                    delay_duration_master(triali) = toc(tStart);
+                                    if contains(trialType(triali),[{'H'} {'L'}])
+                                        delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+                                    end
 
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1
@@ -729,12 +746,10 @@ while toc(sStart)/60 < session_length || sessEnd == 0
                                     [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "delayEnd" 601 2');                
                 
                                     % if not the first trial, track how long the delay was
-                                    if triali > 1 && isempty(tStart)==0
-                                        delay_duration_master(triali-1) = toc(tStart);
-                                        if contains(trialType(triali),[{'H'} {'L'}])
-                                            delay_duration_manipulate(triali-1) = delay_duration_master(triali-1); % a variable used to manipulate the control
-                                        end
-                                    end                                    
+                                    delay_duration_master(triali) = toc(tStart);
+                                    if contains(trialType(triali),[{'H'} {'L'}])
+                                        delay_duration_manipulate(triali) = delay_duration_master(triali); % a variable used to manipulate the control
+                                    end                                 
 
                                     % assign to 0 for not met, and open the
                                     % door by setting openDoor to 1

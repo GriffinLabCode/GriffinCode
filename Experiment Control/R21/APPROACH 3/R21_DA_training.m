@@ -62,6 +62,7 @@ catch
     cd(dataStored)
     save(dataLoad,'baselineMean','baselineSTD')
 end
+
 %% threshold definition
 threshLoad = ['CoherenceDistribution',targetRat];
 cd(dataStored)
@@ -168,7 +169,7 @@ if TrainingDay == 1
 elseif TrainingDay == 2
     speedVector = [1 2 3 4 6];
 elseif TrainingDay == 3 || TrainingDay > 3
-    speedVector = [2 4 6 8];
+    speedVector = [1 3 5 7];
 end
 
 
@@ -421,7 +422,12 @@ for triali = 1:numTrials
             writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
             pause(0.25)
             writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
-
+            
+            if triali == numTrials || toc(sStart)/60 > session_length
+                next = 1;
+                break
+            end
+            
             % begin treadmill
             write(s,treadFuns.start,'uint8');
 
@@ -432,7 +438,7 @@ for triali = 1:numTrials
                 write(s,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one
                 pause(0.25)
             end                
-
+            
             % pause for random time interval during delay
             disp(['Pausing for delay of ',num2str(delay_durations(triali)) ' seconds'])
             pause(delay_durations(triali))
@@ -503,6 +509,16 @@ save(save_var);
 
 % close doors
 writeline(s,doorFuns.closeAll);
+
+% unplug rat
+next =0;
+while next == 0
+    prompt = ['Is the rat unplugged and wrapped up? '];
+    ratReady = input(prompt,'s');
+    if contains(ratReady,[{'Y'} {'y'}])
+        next = 1;
+    end
+end
 
 % begin treadmill
 write(s,treadFuns.start,'uint8');
