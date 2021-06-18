@@ -43,9 +43,12 @@ for i = 1:length(f)
     
     % continue, down sample your S variable
     sOut{i} = S{i}(fKeep);
+    
+    % change row to column
+    sOut{i} = change_row_to_column(sOut{i});
 end
 
+% put data into a matrix for easy use
 sMat = horzcat(sOut{:});
-sMat = change_row_to_column(sMat);
 
 end
