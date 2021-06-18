@@ -15,11 +15,16 @@ function [spike_duration] = calculate_spike_duration(Samples,Header)
 %% Calculate spike width
 
 % extract unique ADbitVolt value and multiply by Samples
-ad_bit_string = cell2mat(Header(16));
+idxAD = find(contains(Header,'ADBitVolts')==1);
+ad_bit_string = cell2mat(Header(idxAD));
 ad_bit = strsplit(ad_bit_string);
-ad_bit = ad_bit(end);
-ad_bit = cell2mat(ad_bit);
-ad_bit = str2num(ad_bit);
+for i = 1:length(ad_bit)
+    try ad_conv{i} = str2double(ad_bit{i}); catch; end;
+end
+%ad_conv  = cell2mat(ad_conv);
+ad_conv = ad_conv(isnan(ad_conv)==0);
+ad_bit = [];
+ad_bit = ad_conv(1);
 
 % Average all data points for each wire, pick highest peak, convert to V
 spike_avg = (mean(Samples,3))*ad_bit;
