@@ -12,45 +12,25 @@ end
 
 %% load rat specific data
 threshold.coh_duration = 0.5;
-try
-    % location of data
-    %dataStored = ['C:\Users\jstout\Desktop\Data 2 Move\' targetRat];
-    dataStored = 'C:\Users\jstout\Desktop\Data 2 Move\APPROACH 3\Rat Specific Inputs';
-    cd(dataStored)
-    % name of rat
-    ratID = strsplit(targetRat,'-');
-    dataLoad = ['baselineData_', ratID{1},'_',ratID{2}];
-    load(dataLoad)
-    disp(['Loaded baseline data for ' targetRat])
-    
-    % interface with user
-    prompt   = 'Enter LFP1 name (HPC) ';
-    LFP1name = input(prompt,'s');
-    prompt   = 'Enter LFP2 name (PFC) ';
-    LFP2name = input(prompt,'s'); 
-        
-    % interface with cheetah setup
-    [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);
 
-catch
-    disp(['Getting baseline data for ' targetRat])
-    
-    % interface with user
-    prompt   = 'Enter LFP1 name (HPC) ';
-    LFP1name = input(prompt,'s');
-    prompt   = 'Enter LFP2 name (PFC) ';
-    LFP2name = input(prompt,'s'); 
-    
-    % interface with cheetah setup
-    [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
-    
-    % this may not have to be run each day
-    [baselineMean,baselineSTD] = baselineDetection(LFP1name,LFP2name,srate,10);
-    % location of data
-    dataStored = 'C:\Users\jstout\Desktop\Data 2 Move\APPROACH 3\Rat Specific Inputs';
-    cd(dataStored)
-    save(dataLoad,'baselineMean','baselineSTD')
-end
+disp(['Getting baseline data for ' targetRat])
+
+% interface with user
+prompt   = 'Enter LFP1 name (HPC) ';
+LFP1name = input(prompt,'s');
+prompt   = 'Enter LFP2 name (PFC) ';
+LFP2name = input(prompt,'s'); 
+
+% interface with cheetah setup
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
+
+% this may not have to be run each day
+[baselineMean,baselineSTD] = baselineDetection(LFP1name,LFP2name,srate,10);
+% location of data
+dataStored = 'C:\Users\jstout\Desktop\Data 2 Move\APPROACH 3\Rat Specific Inputs';
+cd(dataStored)
+ratSave = strsplit(targetRat,'-');
+save(['baselineData_' ratSave{1} '_' ratSave{2}],'baselineMean','baselineSTD')
 
 % parameters
 params.Fs      = srate;

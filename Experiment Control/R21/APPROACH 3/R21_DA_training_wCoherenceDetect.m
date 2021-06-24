@@ -135,13 +135,13 @@ end
 % digital ports for reverse maze
 irArduino.Treadmill = 'D9';
 irArduino.rGoalArm  = 'D10';
-irArduino.lGoalArm  = 'D11';
+irArduino.lGoalArm  = 'D12';
 irArduino.rGoalZone = 'D7';
 irArduino.lGoalZone = 'D2';
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.lGoal)
+    readDigitalPin(a,irArduino.Treadmill)
 end
 %}
 
@@ -545,11 +545,7 @@ for triali = 1:length(trajectory_text)-1
 end
 
 %% ending noise - a fitting song to end the session
-load handel.mat;
-sound(y, 2*Fs);
-writeline(s,[doorFuns.centralClose])
-
-%% save data
+load handel.mat;%% save data
 % save data
 c = clock;
 c_save = strcat(num2str(c(2)),'_',num2str(c(3)),'_',num2str(c(1)),'_','EndTime',num2str(c(4)),num2str(c(5)));
@@ -568,6 +564,10 @@ save_var = strcat(rat_name,'_',task_name,'_',c_save);
 place2store = ['C:\Users\jstout\Desktop\Data 2 Move\APPROACH 3\', targetRat];
 cd(place2store);
 save(save_var);
+sound(y, 2*Fs);
+writeline(s,[doorFuns.centralClose])
+
+
 
 %% clean maze
 
