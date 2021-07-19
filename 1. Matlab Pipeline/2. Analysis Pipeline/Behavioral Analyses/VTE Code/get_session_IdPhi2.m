@@ -35,22 +35,32 @@ for i = 1:numTrials
 end
 
 % middle position of stem
-if contains(stemOrientation,'x') | contains(stemOrientation,'X')
-    %PosMidStem = 500;
-    for i = 1:numTrials
-        idx_mid = []; idx_mid = find(x_data_temp{i} >= middleStemPosition);
-        x_data{i}  = x_data_temp{i}(idx_mid);
-        y_data{i}  = y_data_temp{i}(idx_mid);
-        ts_data{i} = ts_data_temp{i}(idx_mid);
+if isempty(middleStemPosition) == 0
+    if contains(stemOrientation,'x') | contains(stemOrientation,'X')
+        %PosMidStem = 500;
+        for i = 1:numTrials
+            idx_mid = []; idx_mid = find(x_data_temp{i} >= middleStemPosition);
+            x_data{i}  = x_data_temp{i}(idx_mid);
+            y_data{i}  = y_data_temp{i}(idx_mid);
+            ts_data{i} = ts_data_temp{i}(idx_mid);
+        end
+    elseif contains(stemOrientation,'y') | contains(stemOrientation,'Y')
+        %PosMidStem = 500;
+        for i = 1:numTrials
+            idx_mid = []; idx_mid = find(y_data_temp{i} >= middleStemPosition);
+            x_data{i}  = x_data_temp{i}(idx_mid);
+            y_data{i}  = y_data_temp{i}(idx_mid);
+            ts_data{i} = ts_data_temp{i}(idx_mid);
+        end    
     end
-elseif contains(stemOrientation,'y') | contains(stemOrientation,'Y')
-    %PosMidStem = 500;
-    for i = 1:numTrials
-        idx_mid = []; idx_mid = find(y_data_temp{i} >= middleStemPosition);
-        x_data{i}  = x_data_temp{i}(idx_mid);
-        y_data{i}  = y_data_temp{i}(idx_mid);
-        ts_data{i} = ts_data_temp{i}(idx_mid);
-    end    
+else
+
+    % if you don't want to specify a stem or maze location outside of what
+    % the int allows you to:
+    x_data = x_data_temp;
+    y_data = y_data_temp;
+    ts_data = ts_data_temp;
+    
 end
 
 % remove empty arrays (this can happen if youre missing data)
