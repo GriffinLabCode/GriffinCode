@@ -1,0 +1,24 @@
+NetCom Log File Opened - File Name:  MatlabNetComLogfile.txt
+Time Opened: (mm/dd/yyyy): 06/28/2021 At Time: 14:36:48
+NetCom Version 3.1.0
+
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 14:36:53 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26200.
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 14:36:53 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 14:36:57 - NetworkNodeClient::ConnectToServer - NetCom client connected to server 192.168.3.100 on port 26201.
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 14:37:02 - NodeConnectionClient::AddStreamObject - Object HPC_BLACK has been added to our stream list. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 14:37:02 - NodeConnectionClient::AddStreamObject - Object PFC_RED has been added to our stream list. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: SingleElectrode
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Stereotrode
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Tetrode
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for SingleElectrode stream processing thread. Stream Type: SingleElectrode
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Event
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Stereotrode stream processing thread. Stream Type: Stereotrode
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: Video
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Tetrode stream processing thread. Stream Type: Tetrode
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for CSC stream processing thread. Stream Type: CSC
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Video stream processing thread. Stream Type: Video
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::CloseServerStream - Call to wait for thread completion was successful for Event stream processing thread. Stream Type: Event
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NetworkNodeClient::DisconnectFromServer - NetCom client has been disconnected from its server.
+-* NOTICE  *- (mm/dd/yyyy): 06/28/2021 At Time: 15:26:01 - NodeConnectionClient::WaitOnConnection - Attempt to receive data has failed, socket has been closed gracefully. Stream Type: CSC
+Log File Closed - End of File
+

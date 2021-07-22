@@ -44,7 +44,7 @@ speed_cell{1} = NaN;
 
 % make an array where its row index is the speed
 speed_cell(2:end) = struct2cell(treadSpeeds);
-speedVector = [2 4 6 8];
+speedVector = [2 4 6];
 for i = speedVector
     % set treadmill speed
     write(s,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one
