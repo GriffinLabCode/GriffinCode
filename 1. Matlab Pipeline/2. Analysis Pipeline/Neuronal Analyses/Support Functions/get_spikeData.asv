@@ -52,7 +52,8 @@ function [spkTimes,clusterID,spikeDuration] = get_spkTimes(datafolder,tt_name)
             try
                 spkTimes{ci} = textread(clusters(ci).name);
             catch
-                spkTimes{ci}  = NaN;
+                spkTimes{ci} = [];
+                cluster
                 continue
             end
         end
@@ -78,7 +79,7 @@ function [spkTimes,clusterID,spikeDuration] = get_spkTimes(datafolder,tt_name)
                 spikeDuration{ci} = calculate_spike_duration(Samples,Header);   
             catch
                 disp('Make sure to save your spike data out as .ntt files')
-                spikeDuration{ci} = NaN;
+                spikeDuration{ci} = [];
                 continue
             end
         end 
