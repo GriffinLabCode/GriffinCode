@@ -51,25 +51,32 @@ function [spkTimes,clusterID,spikeDuration] = get_spkTimes(datafolder,tt_name)
         for ci=1:length(clusters)
             spkTimes{ci} = textread(clusters(ci).name);
         end
-        
+
         % get spike features, but only for those units where there are .txt
         % files
         datafolderMod = [datafolder,'\'];
         clust_ntt = clusters;
         for ci = 1:size(clust_ntt,1)
-            % split name up
-            splitName = strsplit(clust_ntt(i).name,'.');
-            splitName{2} = '.ntt'; % add .ntt
-            % glue it back together
-            clust_ntt(ci).name = horzcat(splitName{:});
-            
-            [Timestamps, ScNumbers, CellNumbers, Features, Samples,...
-                        Header] = Nlx2MatSpike(strcat(datafolderMod,...
-                        clust_ntt(ci).name), [1 1 1 1 1], 1, 1, [] );
-                    
-            % Calculate spike duration        
-            spikeDuration = [];
-            spikeDuration{ci} = calculate_spike_duration(Samples,Header);                    
+            try
+                % split name up
+                splitName = strsplit(clust_ntt(ci).name,'.');
+                splitName{2} = '.ntt'; % add .ntt
+                % glue it back together
+                clust_ntt(ci).name = horzcat(splitName{:});
+
+                [Timestamps, ScNumbers, CellNumbers, Features, Samples,...
+                            Header] = Nlx2MatSpike(strcat(datafolderMod,...
+                            clust_ntt(ci).name), [1 1 1 1 1], 1, 1, [] );
+
+                % Calculate spike duration        
+                spikeDuration = [];
+                spikeDuration{ci} = calculate_spike_duration(Samples,Header);   
+            catch
+                disp('Make sure to save your spike data out as .ntt files')
+                spikeDuration{ci} = [];
+                continue
+            end
         end 
+
     end
 end
