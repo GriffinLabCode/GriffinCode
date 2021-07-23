@@ -21,33 +21,32 @@
 
 function [l,a] = plotCurves(data,xRange,colors,dataLabels,distType)
 
-pd = []; y = [];
+pd = [];
 for i = 1:length(data)
-    
     % make sure orientation is correct
-    data{i} = change_row_to_column(data{i}); 
-
+    data{i} = change_row_to_column(data{i});
     % fit distributions
     if exist('distType')==0
-        pd = fitdist(data{i},'Kernel','Kernel','normal');
+        pd{i} = fitdist(data{i},'Normal');
     else
-        pd = fitdist(data{i},'Kernel','Kernel',distType);
+        pd{i} = fitdist(data{i},distType);
     end
-
-    % get y axis
-    y{i} = smoothdata(pdf(pd,xRange),'gauss');   
-    
     % find minima and maxima for all variables
     minimums(i) = min(data{i});
     maximums(i) = max(data{i});
-    
+end
+% haven't figured out how to automate this
+%x_pdf = [min(minimums):.1:max(maximums)];
+
+y = [];
+for i = 1:length(data)
+    y{i} = pdf(pd{i},xRange);
 end
 
 % make figs
 figure('Color','w'); hold on;
 for i = 1:length(data)
-    %l{i} = line(xRange,y{i},'Color',colors{i},'LineWidth',2);
-    p{i} = plot(xRange,y{i},'Color',colors{i},'LineWidth',2); 
+    l{i} = line(xRange,y{i},'Color',colors{i},'LineWidth',2);
 end
 legend(dataLabels);
 
