@@ -8,19 +8,16 @@
 % If you see a drastic drop in the first few samples of the graph, it's
 % because the connect2netcom function starts and stops the acquisition
 %
-% JS - 8/4/20
+% JS - 8/4/20 - OG
+% JS - 8/5/21 - Modifications
 
 %% initialize
 clear; clc
-
-% downloaded location of github code
-github_download_directory = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21';
-addpath(github_download_directory);
-
+%{
 % connect to netcom
-pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
-serverName = '192.168.3.100';
-connect2netcom(pathName,serverName)
+%pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
+%serverName = '192.168.3.100';
+%connect2netcom(pathName,serverName)
 
 % open a stream to interface with Nlx objects - this is required
 [succeeded, cheetahObjects, cheetahTypes] = NlxGetDASObjectsAndTypes; % gets cheetah objects and types
@@ -67,8 +64,21 @@ srate = double(mode(samplingFreqArray(1,:)));
 % get timing
 timing(1,:) = length(dataArray(1,:))/srate;
 timing(2,:) = length(dataArray(2,:))/srate;
+%}
+cd('X:\01.Experiments\R21\APPROACH 3\Rat Specific Inputs')
+load('CoherenceDistribution21-5')
 
 %% coherence detection
+%LFP1name = 'HPC_clear';
+%LFP2name = 'PFC_blue';
+threshold.coh_duration = 0.5;
+
+% set up function
+cd('C:\Users\jstout\Documents\GitHub\GriffinCode\Experiment Control\R21')
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);
+
+% define amount of time to pull data
+amountOfData = 0.5;
 
 % for multitapers
 params.tapers = [3 5];
@@ -112,10 +122,43 @@ for i = 1:looper
         continue
     end
     
+    % detrend data - did not clean to improve processing speed
+    data_det = [];
+    data_det(1,:) = locdetrend(dataArray(1,:),params.Fs); 
+    data_det(2,:) = locdetrend(dataArray(2,:),params.Fs); 
+
+    % detect artifacts
+    idxNoise = []; zArtifact = [];
+    [idxNoise,zArtifact] = artifactDetect(data_det,baselineMean,baselineSTD);    
+    
     % calculate coherence - chronux toolbox is way faster. Like sub 0.01
     % seconds sometimes, while wcoherence is around 0.05 sec.
-    [coh,phase,~,~,~,freq] = coherencyc(dataArray(1,:),dataArray(2,:),params);
+    %[coh,phase,~,~,~,freq] = coherencyc(dataArray(1,:),dataArray(2,:),params);
     
+    % calculate coherence based on whether artifacts are present
+    if isempty(idxNoise) ~= 1
+
+        % store data for later
+        data_dirty{i}  = data_det;
+        times_dirty{i} = timeStampArray;
+
+        coh   = NaN; % add nan to know this was ignored
+        phase = NaN;
+        continue
+        disp('scratch detected - coherence not calculated')
+    else 
+
+        % store data for later
+        data_clean{i}  = data_det;
+        times_clean{i} = timeStampArray;
+
+        coh_temp = [];
+        %coh_temp = coherencyc(data_det(1,:),data_det(2,:),params); 
+        [coh,phase,~,S1,S2,f] = coherencyc(data_det(1,:),data_det(2,:),params); 
+        %coh = [coh nanmean(coh_temp)]; % add nan to know this was ignored
+
+    end    
+
     % amount of data in consideration
     timings(i) = length(dataArray)/srate;
     
@@ -158,4 +201,4 @@ box off
 title(['Events streamed at a rate of ', num2str(amountOfData),' seconds'])
 
 % remove path of github download directory
-rmpath(github_download_directory);
+%rmpath(github_download_directory);

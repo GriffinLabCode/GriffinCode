@@ -67,7 +67,7 @@ LFP2name = baselineCohData.LFP2name; % PFC
 session_length = 20; % minutes
 
 % define number of trials
-numTrials  = 6;
+numTrials  = 13;
 
 pellet_count = 1;
 timeout_len  = 60*15;
