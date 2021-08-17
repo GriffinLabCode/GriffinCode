@@ -1,4 +1,4 @@
-  %% startup
+%% startup
 % Run this first
 %
 % last edit 8/3/20 - JS

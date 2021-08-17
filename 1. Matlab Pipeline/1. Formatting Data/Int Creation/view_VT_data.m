@@ -34,28 +34,28 @@ vt_name = 'VT1.mat';
 %% Create boxes around locations of interest for int creation
 
 % right reward zone (sideways room, R)
-minY = 400; addY = 500-minY;
-minX = 425; addX = 600-minX;
+minY = 300; addY = 425-minY;
+minX = 475; addX = 555-minX;
 rRW_fld = [minX minY addX addY];
 
 % left reward zone (sideways room, R)
-minY = -10; addY = 65-minY;
-minX = 425; addX = 600-minX;
+minY = 300; addY = 425-minY;
+minX = 150; addX = 225-minX;
 lRW_fld = [minX minY addX addY];
 
 % central stem (sideways room, R)
-minY = 200; addY = 280-minY;
-minX = 225; addX = 500-minX;
+minY = 150; addY = 350-minY;
+minX = 330; addX = 370-minX;
 STM_fld = [minX minY addX addY]; 
 
 % delay pedestal (sideways room, R) OR T-maze base junction
-minY = 200; addY = 280-minY;
-minX = 100; addX = 225-minX;
+minY = 20; addY = 135-minY;
+minX = 275; addX = 425-minX;
 PED_fld = [minX minY addX addY];
 
 % choice point/T-junction (sideways room, R)
-minY = 200; addY = 280-minY;
-minX = 500; addX = 650-minX;
+minY = 350; addY = 425-minY;
+minX = 320; addX = 380-minX;
 CP_fld = [minX minY addX addY]; %[260 150 30 270];
 
 figure('color','w');
