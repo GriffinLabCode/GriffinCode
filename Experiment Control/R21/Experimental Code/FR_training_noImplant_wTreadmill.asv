@@ -133,18 +133,30 @@ pause(0.25)
 writeline(s,[doorFuns.gzLeftClose doorFuns.gzRightClose])
 
 %% trial set up
-left  = cellstr(repmat('L',[numTrials/2 1]));
-right = cellstr(repmat('R',[numTrials/2 1]));
-both = interleave_vars(left,right);
+left  = repmat('L',[numTrials/2 1]);
+right = repmat('R',[numTrials/2 1]);
+lef
+[out] = interleave_vars(x,y);
 
-% randomly select a trajectory
-randSelect = randi(1:2);
+both  = [left right];
 
-if randSelect == 1
-    trajectory = interleave_vars(left,right);
-elseif randSelect == 2
-    trajectory = interleave_vars(right,left);
+
+
+AB = reshape(both, size(both,1), []);
+
+
+both(:)'
+both_shuffled = both;
+
+C = [A;B];
+C = C(:)';
+
+
+for i = 1:1000
+    % notice how it rewrites the both_shuffled variable
+    both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
 end
+trajectory = cellstr(both_shuffled);
 
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
