@@ -164,7 +164,7 @@ for triali = 1:numTrials
     end        
 
     % set central door timeout value
-    s.Timeout = timeout_len; % 5 minutes before matlab stops looking for an IR break    
+    s.Timeout = .2;%timeout_len; % 5 minutes before matlab stops looking for an IR break    
 
     % first trial - set up the maze doors appropriately
     if trajectory{triali} == 'R'
@@ -172,7 +172,7 @@ for triali = 1:numTrials
     elseif trajectory{triali} == 'L'
         writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightClose doorFuns.centralOpen]);
     end   
-    pause(0.5);     
+    %pause(0.5);     
 
     % set irTemp to empty matrix
     irTemp = []; 
@@ -191,9 +191,9 @@ for triali = 1:numTrials
                 %pause(0.25)
             end    
 
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
 
             % break while loop
@@ -209,9 +209,9 @@ for triali = 1:numTrials
                 %pause(0.25)
             end                       
 
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
 
             % break out of while loop

@@ -28,7 +28,7 @@ if ~contains(confirm,[{'y'} {'Y'}])
     error('This code does not match the target rat')
 end
 
-prompt = ['What day of FR training is this? '];
+prompt = ['What day of FR treadmill training is this? '];
 FRday  = str2num(input(prompt,'s'));
 
 pause(20);
@@ -138,6 +138,7 @@ right = cellstr(repmat('R',[numTrials/2 1]));
 both = interleave_vars(left,right);
 
 % randomly select a trajectory
+rng('shuffle');
 randSelect = randi(1:2);
 
 if randSelect == 1
@@ -185,7 +186,7 @@ for triali = 1:numTrials
     end        
 
     % set central door timeout value
-    s.Timeout = timeout_len; % 5 minutes before matlab stops looking for an IR break    
+    s.Timeout = .2; % 5 minutes before matlab stops looking for an IR break    
 
     % first trial - set up the maze doors appropriately
     if trajectory{triali} == 'R'
@@ -193,7 +194,7 @@ for triali = 1:numTrials
     elseif trajectory{triali} == 'L'
         writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightClose doorFuns.centralOpen]);
     end   
-    pause(0.5);     
+
 
     % set irTemp to empty matrix
     irTemp = []; 
@@ -203,24 +204,27 @@ for triali = 1:numTrials
     next = 0;
     while next == 0
         if readDigitalPin(a,irArduino.rGoalArm)==0
-
+            %pause(1);
             % Reward zone and eating
             % send to netcom 
             for rewardi = 1:pellet_count
                 %pause(0.25)
+               % writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightClose doorFuns.centralOpen]);
                 writeline(s,rewFuns.right)
+                %writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightClose doorFuns.centralOpen]);
                 %pause(0.25)
             end    
 
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
 
             % break while loop
             next = 1;
 
         elseif readDigitalPin(a,irArduino.lGoalArm)==0
+            %pause(1);
 
             % Reward zone and eating
             % send to netcom 
@@ -230,9 +234,9 @@ for triali = 1:numTrials
                 %pause(0.25)
             end                       
 
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
-            pause(2)
+            pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
 
             % break out of while loop
@@ -311,13 +315,13 @@ for triali = 1:numTrials
                 speedVector = [1 2 2 2];
             elseif FRday == 2
                 speedVector = [1 2 3 3];
-            elseif FRday == 4
+            elseif FRday == 3
                 speedVector = [1 3 3 4];                
-            elseif FRday == 5
+            elseif FRday == 4
                 speedVector = [1 3 4 5];
-            elseif FRday == 6
+            elseif FRday == 5
                 speedVector = [1 3 5 5];
-            elseif FRday == 7
+            elseif FRday == 6
                 speedVector = [1 3 5 7];                
             end
 
@@ -376,8 +380,17 @@ save(save_var);
 %% clean maze
 
 % close doors
-writeline(s,doorFuns.closeAll);            
+writeline(s,doorFuns.closeAll);  
 
+% treadmill run after the delay
+write(s,treadFuns.start,'uint8');
+
+for i = speedVector
+    % set treadmill speed
+    write(s,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one
+    pause(0.25)
+end   
+          
 next = 0;
 while next == 0
     
