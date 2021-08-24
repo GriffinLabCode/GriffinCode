@@ -16,6 +16,9 @@
 % with different approaches, but have decided to stick with the chronux way for
 % purposes of reproducibility.
 %
+% As of 8-23-2021, I (JS) followed powerpoints and examples from Chronux
+% toolbox examples. Some modifications were made. 
+%
 % This code is probably redundant as its calling 'cleaningscript'
 
 function [lfp_clean,lfp_det,lfp_data] = preprocessLFP(lfp_data,params)
@@ -46,16 +49,10 @@ lfp_data  = change_row_to_column(lfp_data); % chronux
 lfp_det = locdetrend(lfp_data,params.Fs,[1 0.5]);
 
 % scrub of 60hz
-[cleaned] = rmlinesc(lfp_det,params,0.05,'n',60);
+%[lfp_clean] = rmlinesc(lfp_det,params,0.05,'n',60);
 
-figure; plot(cleaned)
-params.pad = 2;
-[S,f] = mtspectrumc(cleaned(1:20000),params);
-figure; plot(f,log10(S))
-
-
-[lfp_clean, datafit] = rmlinesmovingwinc(lfp_det,[1 0.5],10,params,'n');
-lfp_clean = lfp_clean';
+[lfp_clean, datafit] = rmlinesmovingwinc(lfp_det,[1 0.5],10,params,[],'n');
+%lfp_clean = lfp_clean';
 
 
 end
