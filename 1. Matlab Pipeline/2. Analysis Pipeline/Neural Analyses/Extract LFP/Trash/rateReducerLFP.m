@@ -39,6 +39,13 @@ if srate ~= target_rate
     samples_ds = []; times_ds = [];
     samples_ds = Samples(:,1:divisor:end);
     times_ds   = Timestamps(:,1:divisor:end);
+    
+    for i = 1:size(Samples,2)
+        samples_ds(:,i) = Samples(1:divisor:end,i);
+        times_ds(:,i)   = Timestamps(1:divisor:end,i);
+        
+    samples_ds = Samples(:,1:divisor:end);
+    times_ds   = Timestamps(:,1:divisor:end);
 
     % format data for output
     Samples = []; Timestamps = [];

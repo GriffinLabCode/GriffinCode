@@ -46,10 +46,15 @@ lfp_data  = change_row_to_column(lfp_data); % chronux
 lfp_det = locdetrend(lfp_data,params.Fs,[1 0.5]);
 
 % scrub of 60hz
-[cleaned] = rmlinesc(lfp_det,params,0.05,'n',60);
+params.pad = 1;
+[S,f] = mtspectrumc(lfp_det(1:8000),params);
+figure; plot(f,log10(S))
+
+params.pad = 2; % padding for noise detection
+%f0 = 60;
+[cleaned] = rmlinesc(lfp_det,params,0.05,'n',59);
 
 figure; plot(cleaned)
-params.pad = 2;
 [S,f] = mtspectrumc(cleaned(1:20000),params);
 figure; plot(f,log10(S))
 

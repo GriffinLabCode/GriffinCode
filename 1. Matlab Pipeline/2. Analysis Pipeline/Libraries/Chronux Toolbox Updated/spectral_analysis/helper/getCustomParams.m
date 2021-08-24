@@ -17,11 +17,12 @@ params.cleanFreq = [58 62];
 
 % use 3 and 5 for tapers - it really seems like the best middle ground
 params.tapers = [3 5];
-params.pad = 0;
+params.pad = 2; % padding helps frequency resolution
 params.Fs = [];
 params.fpass = [0 100];
 params.err = [2 .05];
 params.trialave = 0;
+%params.cleanFreq = 60;
 
 disp('Remember to define params.Fs as your sampling rate')
 
