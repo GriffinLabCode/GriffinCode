@@ -33,12 +33,11 @@
 %
 % written by John Stout
 
-function [idxNoise,zArtifact] = artifactDetect(data,baselineMean,baselineSTD,noiseThreshold)
+function [idxNoise,zArtifact,percentSat] = artifactDetect(data,baselineMean,baselineSTD,noiseThreshold)
 
 % zscore data against your defined mean and std
 zArtifact = [];
-zArtifact(1,:) = ((data-baselineMean(1))./baselineSTD(1));
-%zArtifact(2,:) = ((data(2,:)-baselineMean(2))./baselineSTD(2));
+zArtifact(1,:) = ((data-baselineMean)./baselineSTD);
 
 % using a std threshold of 4, detect instances of clipping or large
 % movement artifacts or other sources of noise like scratching
@@ -50,3 +49,8 @@ end
 % going voltage direction, or the negative going voltage direction, then
 % identify it   
 idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold);
+
+% saturation
+percentSat = (numel(idxNoise)/numel(zArtifact))*100;
+
+

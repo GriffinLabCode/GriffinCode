@@ -2,7 +2,8 @@ For quick/easy access for analysis, use the following to call your data:
 
 getLFPdata: a quick and easy way to extract LFP for analysis. It calls on 'convertLFPdata' and 'getLFPsrate'
 
-preprocessLFP: chronux routine detrending (loess) and cleaning methods.
+preprocessLFP: chronux routine detrending (loess) and cleaning methods. Includes a method that fits low-order polynomials,
+		and subtracts them from the signal to further detrend.
 
 ****
 IMPORTANT: make sure you've converted your LFP from a neuralynx to matlab readible format.
@@ -14,10 +15,23 @@ Detailed methods used in the code above
 
 convertLFPdata: Before you analyze, we convert our LFP to a vector.
 
-rateReducerLFP: another way to downsample your LFP. Would recommend this method
-
-________________________
-Less recommended, but could try:
-
 downSampleLFPdata: a method to downsample your LFP. Ideally, your LFP will all be sampled at the same rate.
 
+________________________
+
+Cleaning history:
+
+If you first detrend your data, then clean it without setting a boundary for what is detected as noise, 
+your LFP averages will not be ~0, rendering detrending a miss.
+
+Even if you clean your data first, then detrend, it will leave LFP averages not 0. Far from 0 really.
+
+What does get values near zero is polynomial method (1), cleaning with rmlinesc (2) without defining significance
+threshold (code accounts for this using multiple comparisons methods), and then detrending with loess method (3).
+Sometimes, the cleaning procedure can change the data drastically. So the additional detrending minimally changes the data,
+while ensuring a detrended signal.
+
+Simple locdetrending does not correct all movement artifacts from recording. The addition of a different
+method is included.
+
+Power spectra too smooth
