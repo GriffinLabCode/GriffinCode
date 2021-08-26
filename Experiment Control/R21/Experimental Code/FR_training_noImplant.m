@@ -35,7 +35,7 @@ end
 prompt = ['What day of FR training is this? '];
 FRday  = str2num(input(prompt,'s'));
 
-pause(20);
+pause(2);
 
 %% prep 2 - define parameters for the session
 

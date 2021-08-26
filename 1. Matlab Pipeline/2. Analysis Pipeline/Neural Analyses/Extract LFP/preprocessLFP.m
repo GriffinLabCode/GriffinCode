@@ -11,7 +11,11 @@
 %
 % This code is probably redundant as its calling 'cleaningscript'
 
+<<<<<<< Updated upstream
 function [lfp_ready] = preprocessLFP(lfp_data,params)
+=======
+function [lfp_det,lfp_data] = preprocessLFP(lfp_data,params)
+>>>>>>> Stashed changes
 
 %{
 
@@ -49,8 +53,17 @@ lfp_poly = detrend_LFP(lfp_data);
 % clean 
 lfp_clean = rmlinesc(lfp_poly,params,[],'n');
 
+% henry just detrended LFP and removed artifacts later. I think this is
+% important bc dependending on the parameters, the rmlinesc functions can
+% really change the LFP.
+lfp_det = detrend_LFP(lfp_data);
+
 % loess detrend
+<<<<<<< Updated upstream
 lfp_ready = locdetrend(lfp_clean,params.Fs);
+=======
+%lfp_det = locdetrend(lfp_data,params.Fs,[1 0.5]);
+>>>>>>> Stashed changes
 
 %{
 for i = 1:size(lfp_data,2)
