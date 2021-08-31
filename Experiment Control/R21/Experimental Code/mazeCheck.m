@@ -26,15 +26,15 @@ pause(2);
 writeline(s,doorFuns.closeAll);
 pause(2);
 
-% begin treadmill
-write(s,treadFuns.start,'uint8');
-
 prompt  = ['Did doors properly open and close? [y/Y OR n/N] '];
 moveOn  = input(prompt,'s');
 
 if contains(moveOn,[{'N'} {'n'}])
     error('Restart hardware. Plug in to computer, turn on E-box, then air compressor.')
 end
+
+% begin treadmill
+write(s,treadFuns.start,'uint8');
 
 % increase tread speed gradually
 speed_cell = cell(size(fieldnames(treadSpeeds),1)+1,1);
