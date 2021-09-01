@@ -19,12 +19,7 @@ convertLFPdata: Before you analyze, we convert our LFP to a vector.
 
 IMPORTANT:
 
-Do not use the following code unless you first filter your data at a 4:1 ratio, such that the srate is 4x the high cutoff filter
-For example, a sampling rate of 2kHz would be ideally bandpass filtered at 1-500Hz. An FIR filter is being created to mimick what
-Cheetah uses---
-
-downSampleLFPdata: a method to downsample your LFP. Ideally, your LFP will all be sampled at the same rate.
-
+downSampleLFPdata: First, it filters data, then downsamples to avoid aliases.
 ________________________
 
 Cleaning history:

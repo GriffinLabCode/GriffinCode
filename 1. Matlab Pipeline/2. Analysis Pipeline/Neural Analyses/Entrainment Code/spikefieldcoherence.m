@@ -1,4 +1,4 @@
-function [coherence, freq] = spikefieldcoherence(Samples, Timestamps, srate, spk, edges, def_params, spkAvg_fig, spc_fig)
+function [coherence, freq] = spikefieldcoherence(lfp_data, lfp_times, srate, spk, edges, spkAvg_fig, spc_fig)
 %% Spike Field Coherence
 %  Description:
 %       This is a function to quantify spike field coherence;
@@ -14,10 +14,13 @@ function [coherence, freq] = spikefieldcoherence(Samples, Timestamps, srate, spk
 %   is coherent to a frequency
 %
 % - Suhaas Adiraju
+%
+% - Modified by JS 9-1-21
+
 %% Inputs and Outputs
 % Inputs: 
-%   (1) - Samples: LFP samples from loaded datafolder and region('HPC')
-%   (2) - Timestamps: timestamps from loaded datafolder and region('HPC')
+%   (1) - Samples: Vectorized LFP
+%   (2) - Timestamps: Vectorized and converted timestamps
 %   (3) - srate: sample rate, depending on data set and recording session
 %                (found in datafolder)
 %   (4) - spk: set of spikes to perform analysis on (sourced from TT-file) 
@@ -34,17 +37,22 @@ function [coherence, freq] = spikefieldcoherence(Samples, Timestamps, srate, spk
 %   (2) - freq: the corresponding frequencies by which coherencies will
 %   be juxtaposed
 %%
-% spike triggered average
-[spk_triggered_plot,spk_triggered_sem,spk_triggered] = spk_triggered_avg(Samples, Timestamps, spk, srate, edges, spkAvg_fig);
 
-% default params
-if def_params == 0
-    params = getCustomParams;
-    params.tapers = [10 19]; 
-    params.Fs = getLFPsrate(Timestamps,Samples);
-end 
+% filter (1) and downsample data(:4) to 500hz to improve speed
+lowPass  = 1;
+highPass = 500/4; % 4:1 ratio
+target_rate = 500;
+[lfp_ds, times_ds] = downSampleLFPdata(lfp_data,lfp_times,srate,target_rate,lowPass,highPass);
+
+% redefine sampling rate
+srate = target_rate;
+
+% spike triggered average
+[spk_triggered_plot,spk_triggered_sem,spk_triggered] = spk_triggered_avg(lfp_ds, times_ds, spk, srate, edges, 1);
 
 % get power spectrum of spike triggered avg (300ms of lfp) 
+params.Fs = srate;
+params.tapers = [3 5];
 [S_stp,f_stp,Serr_stp]=mtspectrumc(spk_triggered_plot,params);
 
 % get avg power spectrum of all lfp signal traces used for triggered avg

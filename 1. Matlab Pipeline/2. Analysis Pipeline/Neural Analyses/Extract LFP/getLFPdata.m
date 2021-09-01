@@ -40,7 +40,6 @@ if exist('sessionMarkers')
     lfp      = SamplesKeep(:)';
     lfpTimes = linspace(TimestampsKeep(1),TimestampsKeep(end),length(lfp));
 
-    
     % replace old var
     Samples    = [];
     Timestamps = [];
@@ -53,7 +52,7 @@ else
     numStarts = numel(find(contains(EventStrings,'Starting Recording')==1));
     
     if numStarts > 1
-        error('Data will not be processed unless you select which epochs to use')
+        error(['Multiple stop/start recordings were detected. Data will not be processed unless you select which epochs to use'])
     else
         % convert data - do not linspace. Interpolation is much closer to
         % accurate timestamp generation
