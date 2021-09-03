@@ -48,11 +48,11 @@ target_rate = 500;
 srate = target_rate;
 
 % spike triggered average
-[spk_triggered_plot,spk_triggered_sem,spk_triggered] = spk_triggered_avg(lfp_ds, times_ds, spk, srate, edges, 1);
+[spk_triggered_plot,spk_triggered_sem,spk_triggered] = spk_triggered_avg(lfp_ds, times_ds, spk, srate, edges, spkAvg_fig);
 
 % get power spectrum of spike triggered avg (300ms of lfp) 
 params.Fs = srate;
-params.tapers = [3 5];
+%params.tapers = [3 5];
 [S_stp,f_stp,Serr_stp]=mtspectrumc(spk_triggered_plot,params);
 
 % get avg power spectrum of all lfp signal traces used for triggered avg
