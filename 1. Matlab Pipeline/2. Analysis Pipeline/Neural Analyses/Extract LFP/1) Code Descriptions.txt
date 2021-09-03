@@ -2,9 +2,6 @@ For quick/easy access for analysis, use the following to call your data:
 
 getLFPdata: a quick and easy way to extract LFP for analysis. It calls on 'convertLFPdata' and 'getLFPsrate'
 
-preprocessLFP: chronux routine detrending (loess) and cleaning methods. Includes a method that fits low-order polynomials,
-		and subtracts them from the signal to further detrend.
-
 ****
 IMPORTANT: make sure you've converted your LFP from a neuralynx to matlab readible format.
 		Otherwise, none of these functions will work.
@@ -13,10 +10,16 @@ ________________________
 
 Detailed methods used in the code above
 
+BEFORE YOU CONVERT YOUR LFP DATA!!!
+
+If you have multiple 'Starting Recording' and 'Stopping Recording' events, you MUST specify your start/end epochs
+before you convert. Otherwise, your conversion is going to be slightly incorrect.
+
 convertLFPdata: Before you analyze, we convert our LFP to a vector.
 
-downSampleLFPdata: a method to downsample your LFP. Ideally, your LFP will all be sampled at the same rate.
+IMPORTANT:
 
+downSampleLFPdata: First, it filters data, then downsamples to avoid aliases.
 ________________________
 
 Cleaning history:

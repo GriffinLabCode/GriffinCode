@@ -1,0 +1,47 @@
+It is important to note that there are many options for 'cleaning' and detrending your LFP.
+
+The method of your choosing can severely change your results. Therefore, prior to spectral analysis,
+you must be inspecting your data to ensure that your procedures are doing what you would expect.
+
+_________________________________
+Make sure your data is sampled at a similar sampling rate.
+
+If not, you can filter your data, then downsample your data. 
+Do NOT downsample before filtering, or without filtering. You will
+induce Aliases in your data.
+
+**Important: Using padcat to create a matrix of LFP data can skew coherence
+	estimates near 1 if the data are different sizes.
+_________________________________
+
+
+Typical Rundown of analysis:
+
+1) Run cleaningscript on the entire signal
+
+2) Run detrend_LFP on entire signal
+	-> This really helps trim out those low frequency signals
+
+3) Extract epochs of interest into a cell array
+	-> I have tried detrending on individual trials. While this works great if the
+		signal is long enough, and even gets the average closest to zero, it will
+		drastically change your signal if it is less than 1/2 second. Moreover, it
+		minimally changes the distribution - most reflect normal distributions, regardless
+		of how you detrend. It's just that this changes the data more than the above steps, 
+		and can even drop lower freq the power (<15Hz)
+
+4) Run 'detect_clipping' on RAW LFP data. 
+	-> do NOT run detect_clipping using detrended data
+		----> This is bc detect_clipping identifies clip artifacts, which will become skewed by detrending
+
+5) Remove trials that have artifacts. Extract the trials that you need.
+
+6) Define parameters
+	-> params = getCustomParams;
+	-> params.tapers   = [3 5];
+	-> params.pad      = 1; % or 0
+	-> params.Fs       = srate; % YOU MUST DEFINE THIS AS YOUR SAMPLING RATE!!!!!!
+	-> params.trialave = 1;
+
+7) Run chronux spectral analysis
+	

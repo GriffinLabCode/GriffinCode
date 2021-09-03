@@ -5,9 +5,8 @@ function [spk_triggered_plot, spk_triggered_sem, spk_triggered] = spk_triggered_
 %   pair
 
 %   Inputs:
-%       Samples:        512 x n samples matrix of continuously sampled LFP
-%                       data
-%       Timestamps:     1 x n samples array of CSC timestamp values
+%       Samples:        vectorized lfp data
+%       Timestamps:     vectorized timestamps
 %       spk:            n spikes x 1 array of spike timestamp values
 %       srate:          Sampling rate (Hz)
 %       edges:          ([lower upper]) - Lower and upper boundaries for
@@ -21,11 +20,7 @@ function [spk_triggered_plot, spk_triggered_sem, spk_triggered] = spk_triggered_
 %       spk_triggered_sem =  Standard error of the mean for spike-triggered
 %                            LFP values
 
-%%
-
-%Samples = Samples(:)';
-%Timestamps = linspace(Timestamps(1,1),Timestamps(1,end),length(Samples));
-
+% modified by JS on 9-1-21
 
 %%
 
@@ -35,12 +30,15 @@ function [spk_triggered_plot, spk_triggered_sem, spk_triggered] = spk_triggered_
 % array with NaN
 for i = 1:length(spk)
     spk_ind = dsearchn(Timestamps',spk(i));
+    % converted time to samples
     if spk_ind > (srate*edges(1,2)) && spk_ind < (length(Samples)-(srate*edges(1,2)))
-    spk_triggered(i,:) = Samples(1,spk_ind+(srate*edges(1,1)):spk_ind+(srate*edges(1,2)));
+        spk_triggered(i,:) = Samples(1,spk_ind+(srate*edges(1,1)):spk_ind+(srate*edges(1,2)));
     else
-    spk_triggered(i,1:(abs(srate*edges(1,1))+(srate*edges(1,2)))+1) = NaN;
+        spk_triggered(i,1:(abs(srate*edges(1,1))+(srate*edges(1,2)))+1) = NaN;
     end
 end
+% spk_triggered: rows reflect spks, columns are LFP data. if you divide
+% size(spk_triggered,2)/srate you will get amount of data in seconds.
 
 % Get rid of NaN rows created by spike timestamps that occurred too early
 % or too late
