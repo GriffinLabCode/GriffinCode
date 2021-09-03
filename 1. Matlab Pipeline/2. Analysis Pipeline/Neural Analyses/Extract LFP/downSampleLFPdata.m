@@ -23,19 +23,31 @@ function [lfp_ds, times_ds] = downSampleLFPdata(lfp_data,lfp_times,srate,target_
 if srate ~= target_rate
     disp('Sampling rate does not match the target rate, therefore data will be down-sampled...')
     
-    % get the downsampling rate divisor
-    [divisor] = find_downsample_rate(srate,target_rate);
-
-    % FIR filter
-    taps     = 32; % subtract 1 from the actual signal
     disp(['Bandpass filter bw ',num2str(lowPass), ' & ' ,num2str(highPass) , 'Hz'])
     
+	% butterworth filter
+	dataOut = skaggs_filter_var(lfp_data, lowPass, highPass, srate)
+	
+	% arbitrary response filter
+	%{
+    % FIR filter
+    %taps     = 32; % subtract 1 from the actual signal	
+	
     bpFilt = designfilt('bandpassfir','FilterOrder',taps-1, ...
              'CutoffFrequency1',lowPass,'CutoffFrequency2',highPass, ...
              'SampleRate',srate);
     dataOut = filter(bpFilt,lfp_data);
-    
-    % downsample data
+    %}
+	
+	% Adam said his guys use 32-tap Bartlett windowing FIR
+	%lfp_ds = fir1(taps,highPass,bartlett())	
+	%blo = fir1(34,0.48,chebwin(35,30));
+	%outlo = filter(blo,1,y);
+	
+    % get the downsampling rate divisor
+    [divisor] = find_downsample_rate(srate,target_rate);
+
+    % downsample data	
     lfp_ds = []; times_ds = [];
     lfp_ds   = dataOut(1:divisor:end);
     times_ds = lfp_times(1:divisor:end);
