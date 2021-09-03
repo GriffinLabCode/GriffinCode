@@ -25,20 +25,18 @@ if srate ~= target_rate
     
     disp(['Bandpass filter bw ',num2str(lowPass), ' & ' ,num2str(highPass) , 'Hz'])
     
-	% butterworth filter
-	dataOut = skaggs_filter_var(lfp_data, lowPass, highPass, srate)
-	
 	% arbitrary response filter
-	%{
-    % FIR filter
-    %taps     = 32; % subtract 1 from the actual signal	
-	
+    % FIR filter    
+    taps     = 32; % subtract 1 from the actual signal		
     bpFilt = designfilt('bandpassfir','FilterOrder',taps-1, ...
              'CutoffFrequency1',lowPass,'CutoffFrequency2',highPass, ...
              'SampleRate',srate);
     dataOut = filter(bpFilt,lfp_data);
-    %}
-	
+    
+    
+	% butterworth filter (kind of rounds things too much for my liking)
+	%dataOut = skaggs_filter_var(lfp_data, lowPass, highPass, srate);    
+    
 	% Adam said his guys use 32-tap Bartlett windowing FIR
 	%lfp_ds = fir1(taps,highPass,bartlett())	
 	%blo = fir1(34,0.48,chebwin(35,30));

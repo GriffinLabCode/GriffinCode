@@ -1,4 +1,4 @@
-function [coherence, freq] = spikefieldcoherence(lfp_data, lfp_times, srate, spk, edges, spkAvg_fig, spc_fig)
+function [coherence, freq] = spikefieldcoherence(lfp_data, lfp_times, params, spk, edges, spc_fig)
 %% Spike Field Coherence
 %  Description:
 %       This is a function to quantify spike field coherence;
@@ -42,13 +42,13 @@ function [coherence, freq] = spikefieldcoherence(lfp_data, lfp_times, srate, spk
 lowPass  = 1;
 highPass = 500/4; % 4:1 ratio
 target_rate = 500;
-[lfp_ds, times_ds] = downSampleLFPdata(lfp_data,lfp_times,srate,target_rate,lowPass,highPass);
+[lfp_ds, times_ds] = downSampleLFPdata(lfp_data,lfp_times,params.Fs,target_rate,lowPass,highPass);
 
 % redefine sampling rate
 srate = target_rate;
 
 % spike triggered average
-[spk_triggered_plot,spk_triggered_sem,spk_triggered] = spk_triggered_avg(lfp_ds, times_ds, spk, srate, edges, spkAvg_fig);
+[spk_triggered_plot,spk_triggered_sem,spk_triggered] = spk_triggered_avg(lfp_ds, times_ds, spk, srate, edges, 1);
 
 % get power spectrum of spike triggered avg (300ms of lfp) 
 params.Fs = srate;
@@ -58,6 +58,7 @@ params.Fs = srate;
 % get avg power spectrum of all lfp signal traces used for triggered avg
 % trial avg
 params.trialave = 1;
+%params.err = [2 0.05]
 [S_tap,f_tap,Serr_tap]=mtspectrumc(spk_triggered',params);
 
 % spk field
@@ -65,6 +66,26 @@ coherence = S_stp./S_tap;
 freq = f_tap;
 
 if spc_fig == 0 
-    figure; plot(freq,coherence);
+    figure('color','w'); 
+    subplot 411;
+        times = linspace(edges(1,1),edges(1,2),size(spk_triggered_plot,2));
+        varargout=shadedErrorBar(times,spk_triggered_plot,spk_triggered_sem,'b',1);
+        box off
+        set(gca,'TickDir','out')
+        xlabel('Time (Seconds)') 
+        title('Spike triggered average')
+    subplot 412;
+        plot(f_stp,S_stp,'b','LineWidth',2)
+        title('power of spk-triggered-avg')
+        box off
+    subplot 413
+        plot(f_tap,S_tap,'b','LineWidth',2)
+        title('power of spk-triggered-avg')
+        box off
+        title('Average power of all spike triggered LFP')    
+    subplot 414;
+        plot(freq,coherence,'r','LineWidth',2);
+        title('Spike Field Coherence')
+        box off
 else 
 end
