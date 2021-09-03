@@ -170,7 +170,7 @@ for triali = 1:numTrials
     end        
 
     % set central door timeout value
-    s.Timeout = .2; % 5 minutes before matlab stops looking for an IR break    
+    s.Timeout = .05; % 5 minutes before matlab stops looking for an IR break    
 
     % first trial - set up the maze doors appropriately
     writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);
@@ -405,7 +405,7 @@ task_name = input(prompt,'s');
 
 save_var = strcat(rat_name,'_',task_name,'_',c_save);
 
-place2store = ['X:\01.Experiments\R21\Experimental Cohort\FR Training Data - No Implant'];
+place2store = ['X:\01.Experiments\R21\Experimental Cohort\Training Data'];
 cd(place2store);
 save(save_var);
 
