@@ -87,7 +87,7 @@ else
              % linspacing this works great as long as you do not have multiple
              % starting recording epochs
              lfp{i}      = SamplesKeep(:)';
-             lfpTimes{i} = linspace(TimestampsKeep(1),TimestampsKeep(end),length(lfp));
+             lfpTimes{i} = linspace(TimestampsKeep(1),TimestampsKeep(end),length(lfp{i}));
         end
         disp('LFP will be returned as a cell array organized by starting and stopping recording epochs')
     
