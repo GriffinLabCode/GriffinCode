@@ -24,6 +24,10 @@ function [spk_triggered_plot, spk_triggered_sem, spk_triggered] = spk_triggered_
 
 %%
 
+% make sure data is formatted correctly
+Samples = change_row_to_column(Samples);
+Samples = Samples';
+
 % Index spike timestamps with CSC timestamps
 % If the spike timestamp occurs earlier than the lower edge boundary, or
 % later than the upper edge boundary, populate its spike-triggered average
