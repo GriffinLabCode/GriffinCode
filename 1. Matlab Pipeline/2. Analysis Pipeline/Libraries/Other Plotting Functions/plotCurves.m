@@ -19,7 +19,7 @@
 %
 % written by John Stout using MATLABs website
 
-function [l,a] = plotCurves(data,xRange,colors,dataLabels,distType)
+function [y,a] = plotCurves(data,xRange,colors,dataLabels,distType)
 
 pd = []; y = [];
 for i = 1:length(data)
