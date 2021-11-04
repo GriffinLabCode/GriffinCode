@@ -69,6 +69,7 @@ for i = 1:numTrials-1
 end
 percentCorrect = (((numTrials)-(sum(Int(:,4))))/(numTrials))*100;
 
+save('Int_IR','Int')
 %{
 % get video tracking data
 missing_data = 'interp'; % this could be 'exclude' or 'ignore'
