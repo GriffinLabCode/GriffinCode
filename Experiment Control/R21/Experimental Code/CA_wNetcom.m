@@ -36,7 +36,7 @@ FRday  = str2num(input(prompt,'s'));
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 20; % minutes
+session_length = 30; % minutes
 
 % pellet count and machine timeout
 pellet_count = 1;
@@ -85,7 +85,7 @@ irArduino.choicePoint = 'D6';
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.lGoalZone)
+    readDigitalPin(a,irArduino.choicePoint)
 end
 %}
 
@@ -111,6 +111,19 @@ writeline(s,[doorFuns.centralClose doorFuns.sbLeftClose ...
 
 pause(0.25)
 writeline(s,[doorFuns.gzLeftClose doorFuns.gzRightClose])
+
+%% interface with cheetah
+% downloaded location of github code - automate for github
+github_download_directory = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21';
+addpath(github_download_directory);
+
+% connect to netcom - automate this for github
+pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
+serverName = '192.168.3.100';
+connect2netcom(pathName,serverName)
+
+% open a stream to interface with Nlx objects - this is required
+[succeeded, cheetahObjects, cheetahTypes] = NlxGetDASObjectsAndTypes; % gets cheetah objects and types
 
 %% start recording - make a noise when recording begins
 [succeeded, reply] = NlxSendCommand('-StartRecording');
@@ -158,7 +171,7 @@ for triali = 1:numTrials
 
     % first trial - set up the maze doors appropriately
     writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);
-
+    
     % set irTemp to empty matrix
     irTemp = []; 
 
@@ -282,7 +295,7 @@ for triali = 1:numTrials
     while next == 0
         %irTemp = read(s,4,"uint8");  
         %l = readDigitalPin(a,irArduino.lGoalZone);
-        d = readDigitalPin(a,irArduino.Delay);
+        %d = readDigitalPin(a,irArduino.Delay);
        % r = readDigitalPin(a,irArduino.rGoalZone);
         
         % track choice entry
@@ -294,16 +307,19 @@ for triali = 1:numTrials
         end
         %}
         
-        if readDigitalPin(a,irArduino.lGoalZone) == 0 || readDigitalPin(a,irArduino.Delay) == 0
+        if readDigitalPin(a,irArduino.lGoalZone) == 0
             
             % neuralynx timestamp command
-            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "Return" 422 2');
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "ReturnRight" 422 2');
             
-            % close both for audio symmetry
+            % close both for audio symmetry and do opposite doors first
+            % with a slightly longer delay so the rats can have a fraction
+            % of time longer to enter
+            %pause(0.5)
+            pause(0.5)
+            writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.gzLeftClose])
-            pause(0.25)
-            writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
             pause(0.25)
@@ -311,13 +327,13 @@ for triali = 1:numTrials
             
             next = 1;
             
-        elseif readDigitalPin(a,irArduino.rGoalZone) == 0 || readDigitalPin(a,irArduino.Delay) == 0
+        elseif readDigitalPin(a,irArduino.rGoalZone) == 0
 
             % neuralynx timestamp command
-            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "Return" 412 2');            
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "ReturnLeft" 412 2');            
             
             % close both for audio symmetry
-            pause(0.25)
+            pause(0.5)
             writeline(s,[doorFuns.gzLeftClose])
             pause(0.25)
             writeline(s,[doorFuns.gzRightClose])
@@ -330,18 +346,20 @@ for triali = 1:numTrials
         end
     end
 
-    %{
+    
     next = 0;
     while next == 0   
         % track choice entry
         if readDigitalPin(a,irArduino.Delay)==0 
-            disp('Choice-entry')
-            tEntry = [];
-            tEntry = tic;
+            disp('StemEntry')
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "StemEntry" 102 2');              
+            %tEntry = [];
+            %tEntry = tic;
             next = 1;
         end
     end
-    %}
+    
         
     %{
     if readDigitalPin(a,irArduino.lGoalZone)==0 || readDigitalPin(a,irArduino.Delay)==0
@@ -388,6 +406,7 @@ for triali = 1:numTrials
         break % break out of for loop
     end      
 end 
+[succeeded, reply] = NlxSendCommand('-StopRecording');
 
 % get amount of time past since session start
 c = clock;
@@ -549,12 +568,12 @@ rat_name = input(prompt,'s');
 prompt   = 'Please enter the task ';
 task_name = input(prompt,'s');
 
-%prompt   = 'Enter the directory to save the data ';
-%dir_name = input(prompt,'s');
+prompt   = 'Enter notes for the session ';
+info     = input(prompt,'s');
 
 save_var = strcat(rat_name,'_',task_name,'_',c_save);
 
-place2store = ['X:\01.Experiments\R21\Experimental Cohort\Training Data'];
+place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
 save(save_var);
 

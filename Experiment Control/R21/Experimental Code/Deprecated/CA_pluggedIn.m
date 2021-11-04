@@ -85,7 +85,7 @@ irArduino.choicePoint = 'D6';
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.lGoalZone)
+    readDigitalPin(a,irArduino.choicePoint)
 end
 %}
 
@@ -401,6 +401,7 @@ for triali = 1:numTrials
         break % break out of for loop
     end      
 end 
+[succeeded, reply] = NlxSendCommand('-StopRecording');
 
 % get amount of time past since session start
 c = clock;
@@ -567,7 +568,7 @@ task_name = input(prompt,'s');
 
 save_var = strcat(rat_name,'_',task_name,'_',c_save);
 
-place2store = ['X:\01.Experiments\R21\Experimental Cohort\Training Data'];
+place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
 save(save_var);
 
