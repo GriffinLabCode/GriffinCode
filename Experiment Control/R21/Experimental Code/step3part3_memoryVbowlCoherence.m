@@ -12,7 +12,7 @@ rats{7} = '21-22';
 for i = 1:length(rats)
     try
         cd(['X:\01.Experiments\R21\',rats{i},'\step3-definingCoherenceThresholds']);
-        dataIN{i,:} = load(['CoherenceDistribution',rats{i}],'coh');
+        dataIN{i,:} = load(['CoherenceDistribution',rats{i}],'coh','LFP1name','LFP2name');
     end
 end
 
@@ -34,12 +34,138 @@ distType   = 'normal';
 
 % so I need to get rats performing the CA task and eating on all trials
 
+%%
+clearvars -except cohData dataIN rats
+
+% now get data for every session and compute coherence like for 21-13 below
+%Datafolders = 'X:\01.Experiments\R21';
+
+for i = 1:length(rats)
+    % get datafolders (session names) into a cell array
+    Datafolders = ['X:\01.Experiments\R21\',rats{i},'\Sessions'];
+    dir_content = [];
+    dir_content = dir(Datafolders);
+    dir_content = extractfield(dir_content,'name');
+    remIdx = contains(dir_content,'.mat') | contains(dir_content,'.');
+    dir_content(remIdx)=[];
+
+    % define LFP names
+    hpcName = dataIN{i}.LFP1name;
+    pfcName = dataIN{i}.LFP2name;
+
+    try
+        % loop across
+        for sessi = 1:length(dir_content)
+            clear lfp_pf_cp lfp_hc_cp lfp_pfc lfp_hpc lfp_ts Int
+
+            % define datafolder
+            datafolder = [Datafolders,'\',dir_content{sessi}];
+
+            % load INT
+            cd(datafolder);
+            load('Int_IR')
+            
+            % load lfp
+            [lfp_pfc,lfp_ts,srate] = getLFPdata(datafolder,pfcName);
+            [lfp_hpc,~,srate_hc] = getLFPdata(datafolder,hpcName);
+
+            % get data into usable format
+            lfp_pfc = lfp_pfc{:};
+            lfp_hpc = lfp_hpc{:};
+            lfp_ts  = lfp_ts{:};
+
+            % get times and lfp around cp
+            numTrials = size(Int,1);
+            for triali = 1:numTrials
+                idx = find(lfp_ts > (Int(triali,5)) & lfp_ts < (Int(triali,6)));
+                lfp_pf_cp{triali} = lfp_pfc(idx);
+                lfp_hc_cp{triali} = lfp_hpc(idx);
+            end
+
+            %% first, create coherence across frequencies plot
+            % randomly pull 500ms of data, 1000 times
+            %rng('shuffle')
+            %outRand = randi([1 10],1); % was 3
+            rng(3);
+            k = 1000;
+            clear lfp_pf_rand lfp_hc_rand lfp_pf_det lfp_hc_det coh
+            for triali = 1:numTrials
+                % define instances to pull from, min to max
+                % subtract 1/2 second, give some leeway (eg add 1/4 sec)
+                idxPull = 1:length(lfp_pf_cp{triali})-((srate));
+                % define your start idx's
+                try 
+                    randPull = randperm(length(idxPull),k);
+                catch
+                    randPull = randperm(length(idxPull),length(idxPull));
+                end
+                % get data
+                for n = 1:length(randPull)
+                    % pull data
+                    lfp_pf_rand = lfp_pf_cp{triali}(randPull(n):randPull(n)+srate/2);
+                    lfp_hc_rand = lfp_hc_cp{triali}(randPull(n):randPull(n)+srate/2);
+                    % detrend
+                    lfp_pf_det = detrend(lfp_pf_rand);
+                    lfp_hc_det = detrend(lfp_hc_rand);
+                    % coherence
+                    fpass = [1:20];
+                    window = []; noverlap = [];
+                    [coh{triali}{n},f] = mscohere(lfp_hc_det,lfp_pf_det,window,noverlap,fpass,srate);
+                    disp(['finished with iteration',num2str(n)])
+                end
+                disp(['finished with trial ',num2str(triali)])
+            end
+
+            % first, check the coherence distribution, is 6-12hz similar to what it was
+            % using real-time coh methods?
+
+            % second, perform averaging across 6-12hz bands, generate probability
+            % density function and compare with real-time coh methods. Is there a
+            % 'memory' bump, like Fernandez ruiz 2019 found with SWRs?
+            coh_mat = [];
+            for n = 1:length(coh)
+                coh_mat{n} = vertcat(coh{n}{:});
+            end
+            coh_mat_avg = []; coh_mat_trial = []; coh_mat_tAvg = []; coh_mat_tSEM = [];
+            coh_mat_avg = cellfun(@nanmean,coh_mat,'UniformOutput',false);
+            coh_mat_trial = vertcat(coh_mat_avg{:});
+            coh_mat_tAvg = nanmean(coh_mat_trial);
+            coh_mat_tSEM = stderr(coh_mat_trial,1);
+
+            % store
+            dataOUT{i}.fXc_avg = coh_mat_tAvg;
+            dataOUT{i}.fXc_sem = coh_mat_tSEM;
+
+            %% next get the distribution averaged across 6-12hz
+
+            % now compare 6-12hz distributions
+            clear coh_mat_theta
+            for n = 1:length(coh_mat)
+                idxTheta = find(f > 6 & f < 12);
+                % select 600
+                %randPull = randperm(length(coh_mat{i}),400);
+                % average across frequencies, then across iterations
+                coh_mat_theta{n} = nanmean(coh_mat{n}(:,idxTheta),2);
+            end
+            cohMatAll = []; randPull = [];
+            cohMatAll = vertcat(coh_mat_theta{:});
+
+            randPull = randperm(length(cohMatAll),600);
+            coh_mat_use = cohMatAll(randPull);
+
+            dataOUT{i}.thetaCoh = coh_mat_use;
+        end       
+    end
+    disp(['Finished with ' rats{i}])
+end
+
+%{     
 %% 21-13
 % rat did well, so gonna test if coherence differs bw bowl and CP
 datafolder = 'X:\01.Experiments\R21\21-13\2021-11-02_15-07-45 - use';
 cd(datafolder);
 load('Int_IR');
-mazeData = load('mazeData');
+mazeData = load('MazeData');
 cd('X:\01.Experiments\R21\21-13\step3-definingCoherenceThresholds')
 cohDistBowl = load('CoherenceDistribution21-13');
 cd(datafolder);
@@ -147,3 +273,4 @@ dataLabels{1} = 'Bowl distribution 6-12hz'; dataLabels{2} = 'Trial distribution 
 distType   = 'normal';
 [y,a] = plotCurves(data2plot,xRange,colors,dataLabels,distType);
 
+%}
