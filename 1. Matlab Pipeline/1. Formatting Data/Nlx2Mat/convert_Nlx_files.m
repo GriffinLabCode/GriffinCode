@@ -22,7 +22,7 @@ strCSC = [{'PFC_red'} {'PFC_blue'} {'HPC_red'} {'HPC_green'} {'HPC_blue'} {'HPC_
 % load & convert Video-Tracking data
 try
     [TimeStamps, ExtractedX, ExtractedY,ExtractedAngle] = Nlx2MatVT(strcat(datafolder,'\VT1.nvt'), [1 1 1 0 0 0], 1, 1, []);
-    save(strcat(datafolder,'\VT1.mat'));
+    save('VT1.mat','-regexp', '^(?!(datafolder|strCSC|numCSC)$).');
     clearvars -except datafolder numCSC strCSC
 catch
     disp('Could not convert VT data - may be missing')
@@ -31,7 +31,7 @@ end
 % load & convert Events data
 try
     [TimeStamps, EventIDs, TTLs, Extras, EventStrings] = Nlx2MatEV(strcat(datafolder,'\events.nev'), [1 1 1 1 1], 0, 1, [] );
-    save(strcat(datafolder,'\Events.mat'));
+    save('Events.mat','-regexp', '^(?!(datafolder|strCSC|numCSC)$).');
     clearvars -except datafolder numCSC strCSC
 catch
     disp('Could not convert Events - may be missing')

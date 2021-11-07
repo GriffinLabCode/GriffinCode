@@ -161,7 +161,7 @@ for triali = 1:numTrials
     % start out with this as a way to make sure you don't exceed 30
     % minutes of the session
     if toc(sStart)/60 > session_length
-        writeline(s,doorFuns.closeAll)
+        %writeline(s,doorFuns.closeAll)
         %sessEnd = 1;            
         break % break out of for loop
     end        
@@ -555,7 +555,7 @@ lsline
 %% ending noise - a fitting song to end the session
 load handel.mat;
 sound(y, 2*Fs);
-writeline(s,[doorFuns.closeAll])
+%writeline(s,[doorFuns.closeAll])
 
 %% save data
 % save data
