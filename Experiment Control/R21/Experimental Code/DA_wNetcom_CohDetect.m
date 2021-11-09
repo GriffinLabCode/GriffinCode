@@ -31,10 +31,7 @@ end
 prompt = ['What day of DA training is this? '];
 FRday  = str2num(input(prompt,'s'));
 
-prompt = ['Will treadmill be used? '];
-tmUse  = (input(prompt,'s'));
-
-pause(20);
+%pause(20);
 
 %% prep 2 - define parameters for the session
 
@@ -52,6 +49,10 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 
 % define number of trials
 numTrials  = 24;
+
+%% randomize delay durations
+delayDur = 5:1:45; % 5-45 seconds
+delayLenTrial = randsample(delayDur,numTrials);
 
 %% auto maze prep.
 
@@ -79,39 +80,19 @@ if exist("a") == 0
 end
 
 % digital ports for reverse maze
-irArduino.Delay     = 'D8';
-irArduino.rGoalArm  = 'D10';
-irArduino.lGoalArm  = 'D12';
-irArduino.rGoalZone = 'D7';
-irArduino.lGoalZone = 'D2';
-irArduino.Treadmill = 'D6';
+irArduino.Delay       = 'D8';
+irArduino.rGoalArm    = 'D10';
+irArduino.lGoalArm    = 'D12';
+irArduino.rGoalZone   = 'D7';
+irArduino.lGoalZone   = 'D2';
+irArduino.choicePoint = 'D6';
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.Treadmill)
+    readDigitalPin(a,irArduino.choicePoint)
 end
 %}
 
-%% treadmill setup
-% get treadmill
-[treadFuns,treadSpeed] = TreadMillFuns;
-
-% load treadmill functions and settings
-[treadFuns,treadSpeeds] = TreadMillFuns;
-
-% make an empty array
-speed_cell = cell(size(fieldnames(treadSpeeds),1)+1,1);
-
-% fill the first cell with nan because there is no 1mpm rate
-speed_cell{1} = NaN;
-
-% make an array where its row index is the speed
-speed_cell(2:end) = struct2cell(treadSpeeds);
-
-% randomize treadmill running durations
-minDelay = 5;  % minimum delay duration set to 5 seconds
-maxDelay = 15; % maximum delay duration set to 15 seconds
-delay_durations = (maxDelay-minDelay).*rand(numTrials-1,1) + minDelay; % vector of values
 
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
@@ -135,7 +116,21 @@ writeline(s,[doorFuns.centralClose doorFuns.sbLeftClose ...
 pause(0.25)
 writeline(s,[doorFuns.gzLeftClose doorFuns.gzRightClose])
 
+%% interface with cheetah
+% downloaded location of github code - automate for github
+github_download_directory = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21';
+addpath(github_download_directory);
+
+% connect to netcom - automate this for github
+pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
+serverName = '192.168.3.100';
+connect2netcom(pathName,serverName)
+
+% open a stream to interface with Nlx objects - this is required
+[succeeded, cheetahObjects, cheetahTypes] = NlxGetDASObjectsAndTypes; % gets cheetah objects and types
+
 %% start recording - make a noise when recording begins
+[succeeded, reply] = NlxSendCommand('-StartRecording');
 load gong.mat;
 sound(y);
 pause(5)
@@ -155,8 +150,14 @@ sessEnd = 0;
 c = clock;
 session_start = str2num(strcat(num2str(c(4)),num2str(c(5))));
 session_time  = session_start-session_start; % quick definitio of this so it starts the while loop
+
+% neuralynx timestamp command
+[succeeded, cheetahReply] = NlxSendCommand('-PostEvent "SessionStart" 700 3');
 writeline(s,doorFuns.centralOpen);
 
+% neuralynx timestamp command
+[succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TrialStart" 700 2');
+ 
 % make this array ready to track amount of time spent at choice
 time2choice = [];
 for triali = 1:numTrials
@@ -164,7 +165,7 @@ for triali = 1:numTrials
     % start out with this as a way to make sure you don't exceed 30
     % minutes of the session
     if toc(sStart)/60 > session_length
-        writeline(s,doorFuns.closeAll)
+        %writeline(s,doorFuns.closeAll)
         %sessEnd = 1;            
         break % break out of for loop
     end        
@@ -174,17 +175,30 @@ for triali = 1:numTrials
 
     % first trial - set up the maze doors appropriately
     writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);
-
+    
     % set irTemp to empty matrix
     irTemp = []; 
-
-    % t-beam
-    tEntry = [];
-    tEntry = tic;
+    
+    next = 0;
+    while next == 0
+        if readDigitalPin(a,irArduino.choicePoint) == 0   % if central beam is broken
+            tEntry = [];
+            tEntry = tic;            
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPentry" 202 2');
+            next = 1; % break out of the loop
+        end
+    end    
+    
     % check which direction the rat turns at the T-junction
     next = 0;
     while next == 0
         if readDigitalPin(a,irArduino.rGoalArm)==0
+            
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPexit" 202 2');
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "Left" 312 2');
             
             % track the trajectory_text
             time2choice(triali) = toc(tEntry); % amount of time it took to make a decision
@@ -218,7 +232,7 @@ for triali = 1:numTrials
                     
             end
             pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
+            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen doorFuns.centralClose]);
             %pause(5)
             %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
 
@@ -226,6 +240,11 @@ for triali = 1:numTrials
             next = 1;
 
         elseif readDigitalPin(a,irArduino.lGoalArm)==0
+            
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPexit" 202 2');
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "Right" 322 2');
             
             % track the trajectory_text
             time2choice(triali) = toc(tEntry); % amount of time it took to make a decision
@@ -261,7 +280,7 @@ for triali = 1:numTrials
             end                      
 
             pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
+            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen doorFuns.centralClose]);
            % pause(5)
             %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
 
@@ -274,26 +293,46 @@ for triali = 1:numTrials
     next = 0;
     while next == 0
         %irTemp = read(s,4,"uint8");  
-
-        if readDigitalPin(a,irArduino.lGoalZone)==0
-            % send neuralynx command for timestamp
-
-            % close both for audio symmetry
+        %l = readDigitalPin(a,irArduino.lGoalZone);
+        %d = readDigitalPin(a,irArduino.Delay);
+       % r = readDigitalPin(a,irArduino.rGoalZone);
+        
+        % track choice entry
+        %{
+        if d == 0 
+            disp('Choice-entry')
+            tEntry = [];
+            tEntry = tic;
+        end
+        %}
+        
+        if readDigitalPin(a,irArduino.lGoalZone) == 0
+            
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "ReturnRight" 422 2');
+            
+            % close both for audio symmetry and do opposite doors first
+            % with a slightly longer delay so the rats can have a fraction
+            % of time longer to enter
+            %pause(0.5)
+            pause(0.5)
+            writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.gzLeftClose])
             pause(0.25)
-            writeline(s,[doorFuns.gzRightClose])
-            pause(0.25)
             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
             pause(0.25)
-            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
+            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]); 
             
-            next = 1;                          
-        elseif readDigitalPin(a,irArduino.rGoalZone)==0
-            % send neuralynx command for timestamp
+            next = 1;
+            
+        elseif readDigitalPin(a,irArduino.rGoalZone) == 0
 
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "ReturnLeft" 412 2');            
+            
             % close both for audio symmetry
-            pause(0.25)
+            pause(0.5)
             writeline(s,[doorFuns.gzLeftClose])
             pause(0.25)
             writeline(s,[doorFuns.gzRightClose])
@@ -304,74 +343,47 @@ for triali = 1:numTrials
 
             next = 1;
         end
-
-    end  
-    writeline(s,doorFuns.centralClose);
-    
-    % startbox beam
-    % return arm
-    next = 0;
-    while next == 0
-        if readDigitalPin(a,irArduino.Delay)==0
-            writeline(s,doorFuns.closeAll) 
-            if triali ~= numTrials
-                pause(10);
-                next = 1;
-            else
-                next = 1;
-            end
-        end
     end
 
+    
+    next = 0;
+    while next == 0   
+        % track choice entry
+        if readDigitalPin(a,irArduino.Delay)==0 
+            disp('DelayEntry')
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEntry" 102 2');  
+            writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
+            %tEntry = [];
+            %tEntry = tic;
+            next = 1;
+
+        end
+    end
+    
+    % begin delay pause and real-time coherence detection
+    
+
+    
     if triali == numTrials || toc(sStart)/60 > session_length
         break % break out of for loop
     end       
     
     % open central door
-    writeline(s,doorFuns.centralOpen)
-    
-    next = 0;
-    while next == 0
-        if readDigitalPin(a,irArduino.Treadmill)==0
-            if contains(tmUse,[{'y'} {'Y'}])
-                % treadmill run after the delay
-                write(s,treadFuns.start,'uint8');
-                speedVector = [1 3 5 7];                
-
-                for i = speedVector
-                    % set treadmill speed
-                    write(s,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one
-                    pause(0.25)
-                end   
-
-                % pause for random time interval during delay
-                disp(['Pausing for delay of ',num2str(delay_durations(triali)) ' seconds'])
-                pause(delay_durations(triali))
-
-                % stop treadmill and breakout
-                write(s,treadFuns.stop,'uint8');
-                next = 1;
-            else
-                % pause for random time interval during delay
-                disp(['Pausing for delay of ',num2str(delay_durations(triali)) ' seconds'])
-                pause(delay_durations(triali))
-                next=1;
-            end
-        end
-    end    
-    
+    %writeline(s,doorFuns.centralOpen)     
 
     if toc(sStart)/60 > session_length
         break % break out of for loop
     end      
 end 
+[succeeded, reply] = NlxSendCommand('-StopRecording');
 
 % get amount of time past since session start
 c = clock;
 session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
 session_time = session_time_update-session_start;
 
-% compute accuracy array
+%% compute accuracy array and create some figures
 accuracy = [];
 accuracy_text = cell(1, length(trajectory_text)-1);
 for triali = 1:length(trajectory_text)-1
@@ -383,11 +395,137 @@ for triali = 1:length(trajectory_text)-1
         accuracy_text{triali} = 'incorrect';
     end
 end
+percentAccurate = ((numel(find(accuracy==0)))/(numel(accuracy)))*100;
+
+% perseveration index
+for i = 2:length(trajectory_text)-1
+    % if the previous trajectory equals the future trajectory and the
+    % previous trajectory is the current trajectory and the current trajectory is the future trajectory
+    if (trajectory(i-1) == trajectory(i+1))  && (trajectory(i-1) == trajectory(i)) && (trajectory(i) == trajectory(i+1))
+        persev(i-1) = 1;
+    else
+        persev(i-1) = 0;
+    end
+end
+
+% perseveration index - because of indexing (consideration of 3 consecutive
+% turns = perseveration), we have to do numTrials-2
+percentPerseveration = (sum(persev)/(numTrials-2))*100;
+
+% turn bias
+rTurn = numel(find(contains(trajectory_text,'R')==1));
+lTurn = numel(find(contains(trajectory_text,'L')==1));
+percentBias = ((abs(rTurn-lTurn))/(rTurn+lTurn))*100;
+disp(['Rat performed at ', num2str(percentAccurate), '%', ' perseverated ', num2str(percentPerseveration), '%', ' with a turn bias of ',num2str(percentBias),'%'])
+
+% moving window method for time2choice
+winLength = 8; % trials
+winStep   = 1;
+avg_t = []; sem_t = [];
+for i = 1:winStep:length(time2choice)
+    if i == 1      
+        % define a starter variable that will be saved for each loop and
+        % modified each time
+        starter(i) = 1;
+        ender(i)   = winLength;
+
+        % get data        
+        avg_t = [avg_t nanmean(time2choice(starter(i):ender(i)))];
+        sem_t = [sem_t stderr(time2choice(starter(i):ender(i)),1)];
+        
+		% -- enter your code here and save per each loop -- %
+        
+    else
+        starter(i) = starter(i-1)+(winStep);
+        ender(i)   = starter(i-1)+(winLength);
+
+        % in the case where you've run out of data, break out of the loop
+        if ender(i) > length(time2choice)
+            starter(i) = [];
+            ender(i)   = [];
+            break
+        end
+        
+        % get data        
+        avg_t = [avg_t nanmean(time2choice(starter(i):ender(i)))];
+        sem_t = [sem_t stderr(time2choice(starter(i):ender(i)),1)];        
+           
+		% -- enter your code here and save per each loop -- %
+        
+    end
+
+end
+
+% moving window method for choice accuracy
+avg_c = []; sem_c = [];
+for i = 1:winStep:length(accuracy)
+    try
+        if i == 1      
+            % define a starter variable that will be saved for each loop and
+            % modified each time
+            starter(i) = 1;
+            ender(i)   = winLength;
+
+            % get data        
+            choiceAcc_temp = ((numel(find(accuracy(starter(i):ender(i))==0)))/winLength)*100;
+            avg_c = [avg_c choiceAcc_temp];
+
+            % -- enter your code here and save per each loop -- %
+
+        else
+            starter(i) = starter(i-1)+(winStep);
+            ender(i)   = starter(i-1)+(winLength);
+
+            % in the case where you've run out of data, break out of the loop
+            if ender(i) > length(time2choice)
+                starter(i) = [];
+                ender(i)   = [];
+                break
+            end
+
+            % get data        
+            choiceAcc_temp = ((numel(find(accuracy(starter(i):ender(i))==0)))/winLength)*100;
+            avg_c = [avg_c choiceAcc_temp];
+
+            % -- enter your code here and save per each loop -- %
+
+        end
+    end
+end
+
+figure('color','w')
+subplot(3,3,1)
+    bar(percentAccurate,'FaceColor',[.6 0 1])
+    box off;
+    ylim([0 100]); ylabel('Choice Accuracy')
+subplot(3,3,2)
+    bar(percentPerseveration,'FaceColor','r')
+    box off;
+    ylabel('% Perseveration')
+subplot(3,3,3)
+    bar(percentBias,'FaceColor',[1 0 .5])
+    box off;
+    ylabel('% Turn Bias')
+subplot(3,1,2)
+    plot(1:length(avg_c),avg_c,'Color',[.6 0 1],'LineWidth',2)
+    ylabel('Choice Accuracy')
+    xlabel(['Trial Moving Window (' num2str(winLength) ' trials in increments of ' num2str(winStep) ' trial'])
+    box off;       
+subplot(3,1,3)
+    shadedErrorBar(1:length(avg_t),avg_t,sem_t,'k',1)
+    ylabel('Time Spent at CP (sec)')
+    xlabel(['Trial Moving Window (' num2str(winLength) ' trials in increments of ' num2str(winStep) ' trial'])
+    box off;
+
+figure('Color','w');
+scatter(1:length(time2choice),time2choice)
+lsline
+[r,p] = corrcoef(1:length(time2choice),time2choice)
 
 %% ending noise - a fitting song to end the session
 load handel.mat;
 sound(y, 2*Fs);
-writeline(s,[doorFuns.centralClose])
+%writeline(s,[doorFuns.closeAll])
 
 %% save data
 % save data
@@ -400,12 +538,12 @@ rat_name = input(prompt,'s');
 prompt   = 'Please enter the task ';
 task_name = input(prompt,'s');
 
-%prompt   = 'Enter the directory to save the data ';
-%dir_name = input(prompt,'s');
+prompt   = 'Enter notes for the session ';
+info     = input(prompt,'s');
 
 save_var = strcat(rat_name,'_',task_name,'_',c_save);
 
-place2store = ['X:\01.Experiments\R21\Experimental Cohort\Training Data'];
+place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
 save(save_var);
 
@@ -414,15 +552,6 @@ save(save_var);
 % close doors
 writeline(s,doorFuns.closeAll);  
 
-% treadmill run after the delay
-write(s,treadFuns.start,'uint8');
-
-for i = speedVector
-    % set treadmill speed
-    write(s,uint8(speed_cell{i}'),'uint8'); % add a second command in case the machine missed the first one
-    pause(0.25)
-end   
-          
 next = 0;
 while next == 0
     
@@ -437,5 +566,5 @@ while next == 0
     end
 end
 
-write(s,treadFuns.stop,'uint8');
+
 
