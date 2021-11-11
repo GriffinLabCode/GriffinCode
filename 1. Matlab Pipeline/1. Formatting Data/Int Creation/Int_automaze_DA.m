@@ -18,6 +18,7 @@ load('Events','EventStrings','TimeStamps')
 [pos_x,pos_y,pos_t] = getVTdata(datafolder,'interp','VT1.mat');
 
 %% get sequence of events
+numTrials_maze = load('MazeData','numTrials');
 
 % get trial onset
 %trialOnset = contains(EventStrings,'centralOpen');
@@ -36,6 +37,9 @@ LeftTurn  = find(contains(EventStrings,[{'ReturnLeft'}]));
 
 %% use sequence of events to piece together the int file
 numTrials = length(CPentry);
+if numTrials > numTrials_maze.numTrials
+    numTrials = numTrials_maze.numTrials;
+end
 Int = zeros([numTrials 8]);
 
 for triali = 1:numTrials

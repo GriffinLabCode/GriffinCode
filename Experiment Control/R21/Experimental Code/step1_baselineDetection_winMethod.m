@@ -63,7 +63,7 @@ while attempt == 0
         %clearStream(LFP1name,LFP2name);
 
         % pause 0.5 sec
-        pause(0.5);
+        %pause(0.5);
 
         % pull data
         [~, dataArray, timeStampArray, ~, ~, ...
@@ -74,18 +74,13 @@ while attempt == 0
     end
 end
 
-% detrend
-data_det = [];
-data_det(1,:) = detrend(dataArray(1,:)); 
-data_det(2,:) = detrend(dataArray(2,:)); 
-
 % arrive at baselines for both signals
 baselineMean = []; baselineSTD = [];
-baselineMean(:,1) = mean(data_det(1,:));
-baselineSTD(:,1)  = std(data_det(1,:));
-baselineMean(:,2) = mean(data_det(2,:));
-baselineSTD(:,2)  = std(data_det(2,:));
+baselineMean(:,1) = mean(dataArray(1,:));
+baselineSTD(:,1)  = std(dataArray(1,:));
+baselineMean(:,2) = mean(dataArray(2,:));
+baselineSTD(:,2)  = std(dataArray(2,:));
 
 %% save outputs
 cd(dataStored)
-save('step1_baselineData.mat','baselineMean','baselineSTD','LFP1name','LFP2name','srate','targetRat','dataArray')
+save('step1_baselineData_noDetrend.mat','baselineMean','baselineSTD','LFP1name','LFP2name','srate','targetRat','dataArray')

@@ -58,7 +58,7 @@ cohB_avg = cellfun(@nanmean,cohB_rat,'UniformOutput',false);
 cohB_std = cellfun2(cohB_rat,'stderr',{'1'});
 
 % -- compare coh x freq plots -- %
-rati = 3;
+rati = 2;
 fcoh = dataIN{1}{1}.fcoh;
 figure('color','w'); hold on;
 s1 = shadedErrorBar(fcoh,coh_avg{rati},coh_std{rati},'b',0);
