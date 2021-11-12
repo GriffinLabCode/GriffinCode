@@ -143,7 +143,7 @@ while next == 0
             detectedB(i)=0;
         end
 
-        [cohB{i},f] = mscohere(dataWin(1,:),dataWin(2,:),window,noverlap,fpass,srate);
+        [cohB{i},f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
         % cohAvg = nanmean(coh);
        
         % store data
@@ -556,7 +556,7 @@ for triali = 1:numTrials
         end
         
         % calculate coherence
-        [coh{triali}{i},f] = mscohere(dataWin(1,:),dataWin(2,:),window,noverlap,fpass,srate);
+        [coh{triali}{i},f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
        % cohAvg = nanmean(coh);
        
         % store data
