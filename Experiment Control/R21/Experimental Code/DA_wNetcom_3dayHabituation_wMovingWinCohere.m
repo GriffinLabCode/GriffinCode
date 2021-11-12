@@ -306,13 +306,18 @@ for triali = 1:numTrials
         %writeline(s,doorFuns.closeAll)
         %sessEnd = 1;            
         break % break out of for loop
-    end        
+    else        
+        % set central door timeout value
+        s.Timeout = .05; % 5 minutes before matlab stops looking for an IR break    
 
-    % set central door timeout value
-    s.Timeout = .05; % 5 minutes before matlab stops looking for an IR break    
+        % first trial - set up the maze doors appropriately
+        writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);
+    end
 
-    % first trial - set up the maze doors appropriately
-    writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);
+    % neuralynx timestamp command
+    if triali > 1
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayExit" 102 2'); 
+    end
     
     % set irTemp to empty matrix
     irTemp = []; 
@@ -501,6 +506,9 @@ for triali = 1:numTrials
     % begin delay pause and real-time coherence detection
     delayLength = delayLenTrial(triali);
 
+    % neuralynx timestamp command
+    [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CohDetectStart" 102 2');  
+    
     dStart = [];
     dStart = tic;
     for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
@@ -557,8 +565,11 @@ for triali = 1:numTrials
         if toc(dStart) > delayLength
             break
         end
-    end 
-     
+    end
+    
+    % neuralynx timestamp command
+    [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CohDetectEnd" 102 2');  
+    
     if triali == numTrials || toc(sStart)/60 > session_length
         break % break out of for loop
     end       
