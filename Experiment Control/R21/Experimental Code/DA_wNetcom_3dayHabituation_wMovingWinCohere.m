@@ -125,6 +125,10 @@ while next == 0
         dataWin(:,1:length(dataArray))=[]; % remove 560 samples
         dataWin = [dataWin dataArray]; % add data
 
+        % calculate coherence
+        data_det(1,:) = detrend(dataWin(1,:));
+        data_det(2,:) = detrend(dataWin(2,:));        
+        
         % determine if data is noisy
         zArtifact = [];
         zArtifact(1,:) = ((dataWin(1,:)-baselineMean(1))./baselineSTD(1));
@@ -138,8 +142,7 @@ while next == 0
         else
             detectedB(i)=0;
         end
-        
-        % calculate coherence
+
         [cohB{i},f] = mscohere(dataWin(1,:),dataWin(2,:),window,noverlap,fpass,srate);
         % cohAvg = nanmean(coh);
        
@@ -534,6 +537,10 @@ for triali = 1:numTrials
         dataWin(:,1:length(dataArray))=[]; % remove 560 samples
         dataWin = [dataWin dataArray]; % add data
 
+        % calculate coherence
+        data_det(1,:) = detrend(dataWin(1,:));
+        data_det(2,:) = detrend(dataWin(2,:));
+        
         % determine if data is noisy
         zArtifact = [];
         zArtifact(1,:) = ((dataWin(1,:)-baselineMean(1))./baselineSTD(1));
