@@ -284,6 +284,12 @@ s = scatter(pauseDur,thetaPeak,'m','Filled','MarkerEdgeColor','k','LineWidth',1)
 xlabel('Amount of data (sec)')
 ylabel('Theta peak frequency (Hz) of coherence')
 
+figure('color','w')
+s = scatter(pauseDur,cohMag,'m','Filled','MarkerEdgeColor','k','LineWidth',1);
+xlabel('Amount of data (sec)')
+ylabel('Theta magnitude (4-12hz)')
+
+
 %% Moving window
 % cannot treat the data as if its discrete. The analyses above indicate
 % that data can be extracted at 250ms resolution with 0 failures, but
