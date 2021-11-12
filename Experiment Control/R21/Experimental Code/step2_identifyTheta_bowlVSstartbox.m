@@ -5,8 +5,8 @@ rats{1} = '21-12';
 rats{2} = '21-13';
 rats{3} = '21-14';
 %rats{4} = '21-15';
-%rats{4} = '21-16';
-rats{4} = '21-21';
+rats{4} = '21-16';
+rats{5} = '21-21';
 %rats{7} = '21-22';
 
 %%
@@ -49,18 +49,81 @@ for i = 1:length(rats)
         if length(dataINfolder) > 1
             error('Make sure there is only one .mat file name with your rat')
         end
-        dataIN = load(dataINfolder{1});
-
-        % define LFP names
-        hpcName = dataIN{i}.LFP1name;
-        pfcName = dataIN{i}.LFP2name;
-    
-        % load INT
-        load('Int_IR')
+        dataIN = load(dataINfolder{1},'dataStored','dataStoredB','detected','detectedB');
+        
+        % -- FIRST focus on the startbox -- %
         
         % identify detected events as clean or dirty
+        detectB_art = find(dataIN.detectedB==1);
+        detectB_cle = find(dataIN.detectedB==0);
         
-        % get coherence from clean
+        % compute coherence, then separate clean and dirty
+        cohB = []; window = []; noverlap = []; fpass = [1:.5:20]; srate = 2000;
+        for j = 1:length(dataIN.dataStoredB)
+            temp_data = [];
+            temp_data = dataIN.dataStoredB{j};
+            % detrend
+            data_det(1,:) = detrend(temp_data(1,:));
+            data_det(2,:) = detrend(temp_data(2,:));
+            % coherence
+            [cohB{j},fB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+        end
+        
+        % sep data
+        cohB_clean = []; cohB_dirty = [];
+        cohB_clean = cohB(detectB_cle);
+        cohB_dirty = cohB(detectB_art);
+        
+        % organize data 
+        cohB_clean_mat = []; cohB_dirty_mat = [];
+        cohB_clean_mat = vertcat(cohB_clean{:});
+        cohB_dirty_mat = vertcat(cohB_dirty{:});
+        
+        % get averages and stderr
+        cohB_clean_avg = []; cohB_dirty_avg = []; cohB_clean_ser = []; cohB_dirty_ser = [];
+        cohB_clean_avg = nanmean(cohB_clean_mat);
+        cohB_dirty_avg = nanmean(cohB_dirty_mat);
+        cohB_clean_ser = stderr(cohB_clean_mat,1);
+        cohB_dirty_ser = stderr(cohB_dirty_mat,1);  
+        
+        % figure
+        figure('color','w'); hold on;
+        s1 = shadedErrorBar(fB,cohB_clean_avg,cohB_clean_ser,'b',0);
+        s2 = shadedErrorBar(fB,cohB_dirty_avg,cohB_dirty_ser,'r',0);
+        legend([s1.mainLine,s2.mainLine],'Accepted LFP','Rejected LFP')
+        box off
+        ylabel('Coherence')
+        xlabel('Frequency')
+        title(['Rat ',num2str(rats{i}),' session ',num2str(sessi)])
+        cd('X:\01.Experiments\R21\Figures\Method parameters')
+        savefig(['Rat',num2str(rats{i}),'_session',num2str(sessi),'_artifReject.fig'])
+
+        % create a distribution of coherence 
+        ftheta     = [6 10];
+        idxTheta   = find(fB > 6 & fB < 10);
+        distTheta_clean = nanmean(cohB_clean_mat(:,idxTheta),2);
+        distTheta_dirty = nanmean(cohB_dirty_mat(:,idxTheta),2);   
+        
+        data       = [];
+        data{1}    = distTheta_clean;
+        data{2}    = distTheta_dirty;
+        xRange     = [0:.05:1];
+        colors{1}  = 'b'; colors{2} = 'r'; 
+        dataLabels = [{'Accepted LFP'} {'Rejected LFP'}];
+        distType   = 'normal';
+        [y,a] = plotCurves(data,xRange,colors,dataLabels,distType);
+        title('Bowl')
+        ylabel('Cumulative density')
+        xlabel('Mean coherence (6-10hz)')
+
+        
+        % cache data
+        cohB_cache{i}.clean_cXf_avg{sessi} = cohB_clean_avg;
+        cohB_cache{i}.clean_cXf_ser{sessi} = cohB_clean_ser;
+        cohB_cache{i}.dirty_cXf_avg{sessi} = cohB_dirty_avg;
+        cohB_cache{i}.dirty_cXf_ser{sessi} = cohB_dirty_ser;
+        cohB_cache{i}.clean_cXf_mat{sessi} = cohB_clean_mat;
+        cohB_cache{i}.dirty_cXf_mat{sessi} = cohB_dirty_mat;
         
         % do the same for startbox data
         
