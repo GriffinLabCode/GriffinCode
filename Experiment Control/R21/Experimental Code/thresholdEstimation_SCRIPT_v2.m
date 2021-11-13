@@ -73,6 +73,7 @@ while attempt == 0
     end
 end
 
+<<<<<<< Updated upstream
 %{
 % filtering and detrending takes too long. I'm going to focus on 6-8hz as
 coherence isn't below .
@@ -92,6 +93,17 @@ data_det(2,:) = detrend(filtLFP(2,:));
 zArtifact = [];
 zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
 zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+=======
+data_det = [];
+data_det(1,:) = detrend(dataArray(1,:)); 
+data_det(2,:) = detrend(dataArray(2,:)); 
+disp('Real-time data detrended...')
+
+% test for artifact
+zArtifact = [];
+zArtifact(1,:) = ((dataArray(1,:)-baselineMean(1))./baselineSTD(1));
+zArtifact(2,:) = ((dataArray(2,:)-baselineMean(2))./baselineSTD(2));
+>>>>>>> Stashed changes
 
 noiseThreshold = 4;
 idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
@@ -111,12 +123,20 @@ if isempty(idxNoise) ~= 1
     %}
 else   
     % frequencies
+<<<<<<< Updated upstream
     fpass = [6:8];
+=======
+    fpass = [4 12];
+>>>>>>> Stashed changes
     window = []; noverlap = [];
     % initialize
     coh_temp = [];
     % coherence
+<<<<<<< Updated upstream
     [coh_temp,fcoh] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+=======
+    [coh,fcoh] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+>>>>>>> Stashed changes
     % store
     coh  = [coh nanmean(coh_temp)]; % add nan to know this was ignored 
     %xVar = [xVar i];
