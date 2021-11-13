@@ -126,6 +126,7 @@ while next == 0
         dataWin = [dataWin dataArray]; % add data
 
         % calculate coherence
+        data_det=[];
         data_det(1,:) = detrend(dataWin(1,:));
         data_det(2,:) = detrend(dataWin(2,:));        
         
@@ -538,6 +539,7 @@ for triali = 1:numTrials
         dataWin = [dataWin dataArray]; % add data
 
         % calculate coherence
+        data_det=[];
         data_det(1,:) = detrend(dataWin(1,:));
         data_det(2,:) = detrend(dataWin(2,:));
         
