@@ -759,6 +759,8 @@ prompt = 'Did the EIB come off the rats head during any trials? ';
 eibOFF  = input(prompt,'s');
 if contains(eibOFF,[{'y'} {'Y'}])
     eibSave = 'EIBfellOFF_trialsRemoved';
+else
+    eibSave = 'allTrialsGood';
 end
 
 %% VISUALIZE
@@ -796,7 +798,7 @@ if contains(eibOFF,[{'y'} {'Y'}])
 
 end
 
-save_var = strcat(rat_name,'_',task_name,'_',c_save);
+save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save);
 
 place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);

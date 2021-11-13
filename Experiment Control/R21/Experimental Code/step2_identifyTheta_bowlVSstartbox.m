@@ -51,13 +51,9 @@ for i = 1:length(rats)
             error('Make sure there is only one .mat file name with your rat')
         end
         dataIN = [];
-        dataIN = load(dataINfolder{1},'dataStored','dataStoredB','detected','detectedB');
+        dataIN = load(dataINfolder{1},'dataStored','dataStoredB','detected','detectedB','baselineMean','baselineSTD','noiseThreshold','noisePercent');
         
         % -- FIRST focus on the startbox -- %
-
-        % identify detected events as clean or dirty
-        %detectB_art = find(dataIN.detectedB==1);
-        %detectB_cle = find(dataIN.detectedB==0);
         
         % compute coherence, then separate clean and dirty
         noiseThreshold = []; noisePercent = [];
@@ -71,6 +67,7 @@ for i = 1:length(rats)
         baselineMean   = dataIN.baselineMean;
         baselineSTD    = dataIN.baselineSTD;
         
+        detectedB = [];
         for j = 1:length(dataIN.dataStoredB)
             temp_data = [];
             temp_data = dataIN.dataStoredB{j};
@@ -88,14 +85,19 @@ for i = 1:length(rats)
             idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
             percSat = (length(idxNoise)/length(zArtifact))*100;
             if percSat > noisePercent
-                detected(j)=1;
+                detectedB(j)=1;
             else
-                detected(j)=0;
+                detectedB(j)=0;
             end  
         
             % coherence
             [cohB{j},fB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
         end
+        
+        % identify detected events as clean or dirty
+        detectB_art = []; detectB_cle = [];
+        detectB_art = find(detectedB==1);
+        detectB_cle = find(detectedB==0);
         
         % sep data
         cohB_clean = []; cohB_dirty = [];
@@ -164,15 +166,12 @@ for i = 1:length(rats)
         %_____________________________________%
         
         dataSB = horzcat(dataIN.dataStored{:});
-        detectedSB = horzcat(dataIN.detected{:});       
-        
-        % identify detected events as clean or dirty
-        detectSB_art = find(detectedSB==1);
-        detectSB_cle = find(detectedSB==0);
+        %detectedSB = horzcat(dataIN.detected{:});       
         
         % compute coherence, then separate clean and dirty
         cohSB = []; window = []; noverlap = []; fpass = [1:.5:20]; srate = 2000;
-        for j = 1:length(detectedSB)
+        detectedSB = [];
+        for j = 1:length(dataSB)
             temp_data = [];
             temp_data = dataSB{j};
             
@@ -189,14 +188,19 @@ for i = 1:length(rats)
             idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
             percSat = (length(idxNoise)/length(zArtifact))*100;
             if percSat > noisePercent
-                detected(j)=1;
+                detectedSB(j)=1;
             else
-                detected(j)=0;
+                detectedSB(j)=0;
             end            
             
             % coherence
             [cohSB{j},fSB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
         end
+        
+        % identify detected events as clean or dirty
+        detectB_art = []; detectB_cle = [];        
+        detectSB_art = find(detectedSB==1);
+        detectSB_cle = find(detectedSB==0);
         
         % sep data
         cohSB_clean = []; cohSB_dirty = [];
@@ -299,17 +303,17 @@ for i = 1:length(rats)
 
     disp(['Finished with ' rats{i}])
 end
+f = fSB;
 cd('X:\01.Experiments\R21\Figures\Method parameters')
 save('data_cohBowl_cohDelay','cohSB_cache','cohB_cache','rats','f')
 
 %% loop across rats
-clearvars -except cohSB_cache cohB_cache rats
+clearvars -except cohSB_cache cohB_cache rats f
 for i = 1:length(cohSB_cache)
     cohSB_cache{i}.clean_cXf_mat_all = vertcat(cohSB_cache{i}.clean_cXf_mat{:});
     cohB_cache{i}.clean_cXf_mat_all = vertcat(cohB_cache{i}.clean_cXf_mat{:});
 end
 
-f = [1:.5:20];
 ftheta     = [6 10];
 idxTheta   = find(f > 6 & f < 10);
 
