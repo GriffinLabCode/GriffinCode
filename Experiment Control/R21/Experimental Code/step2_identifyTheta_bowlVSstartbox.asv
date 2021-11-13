@@ -54,10 +54,12 @@ for i = 1:length(rats)
         dataIN = load(dataINfolder{1},'dataStored','dataStoredB','detected','detectedB');
         
         % -- FIRST focus on the startbox -- %
-
+            
+        
+        
         % identify detected events as clean or dirty
-        %detectB_art = find(dataIN.detectedB==1);
-        %detectB_cle = find(dataIN.detectedB==0);
+        detectB_art = find(dataIN.detectedB==1);
+        detectB_cle = find(dataIN.detectedB==0);
         
         % compute coherence, then separate clean and dirty
         noiseThreshold = []; noisePercent = [];
@@ -74,24 +76,24 @@ for i = 1:length(rats)
         for j = 1:length(dataIN.dataStoredB)
             temp_data = [];
             temp_data = dataIN.dataStoredB{j};
-            
             % detrend
             data_det = [];
             data_det(1,:) = detrend(temp_data(1,:));
             data_det(2,:) = detrend(temp_data(2,:));
-
-            % determine if data is noisy
-            zArtifact = [];
-            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));              
             
             idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
             percSat = (length(idxNoise)/length(zArtifact))*100;
             if percSat > noisePercent
-                detected(j)=1;
+                detected{triali}(i)=1;
+                disp('Artifact Detected - coherence not calculated')     
             else
-                detected(j)=0;
-            end  
+                detected{triali}(i)=0;
+            end
+        
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));    
         
             % coherence
             [cohB{j},fB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
@@ -175,25 +177,10 @@ for i = 1:length(rats)
         for j = 1:length(detectedSB)
             temp_data = [];
             temp_data = dataSB{j};
-            
             % detrend
             data_det = [];
             data_det(1,:) = detrend(temp_data(1,:));
             data_det(2,:) = detrend(temp_data(2,:));
-
-            % determine if data is noisy
-            zArtifact = [];
-            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));              
-            
-            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-            percSat = (length(idxNoise)/length(zArtifact))*100;
-            if percSat > noisePercent
-                detected(j)=1;
-            else
-                detected(j)=0;
-            end            
-            
             % coherence
             [cohSB{j},fSB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
         end
