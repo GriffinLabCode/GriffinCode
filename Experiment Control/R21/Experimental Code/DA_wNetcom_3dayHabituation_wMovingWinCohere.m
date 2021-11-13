@@ -133,7 +133,7 @@ while next == 0
         % determine if data is noisy
         zArtifact = [];
         zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-        zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+        zArtifact(2,:) =  ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
 
         idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
         percSat = (length(idxNoise)/length(zArtifact))*100;
