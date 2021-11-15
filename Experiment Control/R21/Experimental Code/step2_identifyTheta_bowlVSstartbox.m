@@ -67,99 +67,135 @@ for i = 1:length(rats)
         baselineMean   = dataIN.baselineMean;
         baselineSTD    = dataIN.baselineSTD;
         
-        detectedB = [];
-        for j = 1:length(dataIN.dataStoredB)
-            temp_data = [];
-            temp_data = dataIN.dataStoredB{j};
-            
-            % detrend
-            data_det = [];
-            data_det(1,:) = detrend(temp_data(1,:));
-            data_det(2,:) = detrend(temp_data(2,:));
-
-            % determine if data is noisy
-            zArtifact = [];
-            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));              
-            
-            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-            percSat = (length(idxNoise)/length(zArtifact))*100;
-            if percSat > noisePercent
-                detectedB(j)=1;
-            else
-                detectedB(j)=0;
-            end  
+        noiseThreshold(1) = 4;
+        noiseThreshold(2) = 4;
         
-            % coherence
-            [cohB{j},fB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+        try 
+            checker = dataIN.dataStoredB;
+        catch
+            checker = [];
         end
-        
-        % identify detected events as clean or dirty
-        detectB_art = []; detectB_cle = [];
-        detectB_art = find(detectedB==1);
-        detectB_cle = find(detectedB==0);
-        
-        % sep data
-        cohB_clean = []; cohB_dirty = [];
-        cohB_clean = cohB(detectB_cle);
-        cohB_dirty = cohB(detectB_art);
-        
-        % organize data 
-        cohB_clean_mat = []; cohB_dirty_mat = [];
-        cohB_clean_mat = vertcat(cohB_clean{:});
-        cohB_dirty_mat = vertcat(cohB_dirty{:});
-        
-        % get averages and stderr
-        cohB_clean_avg = []; cohB_dirty_avg = []; cohB_clean_ser = []; cohB_dirty_ser = [];
-        cohB_clean_avg = nanmean(cohB_clean_mat);
-        cohB_dirty_avg = nanmean(cohB_dirty_mat);
-        cohB_clean_ser = stderr(cohB_clean_mat,1);
-        cohB_dirty_ser = stderr(cohB_dirty_mat,1);  
-        
-        %{
-        % figure
-        figure('color','w'); hold on;
-        s1 = shadedErrorBar(fB,cohB_clean_avg,cohB_clean_ser,'b',0);
-        s2 = shadedErrorBar(fB,cohB_dirty_avg,cohB_dirty_ser,'r',0);
-        legend([s1.mainLine,s2.mainLine],'Accepted LFP','Rejected LFP')
-        box off
-        ylabel('Coherence')
-        xlabel('Frequency')
-        title(['Rat ',num2str(rats{i}),' session ',num2str(sessi)])
-        cd('X:\01.Experiments\R21\Figures\Method parameters')
-        savefig(['Rat',num2str(rats{i}),'_session',num2str(sessi),'_artifReject.fig'])
-        %}
-        % create a distribution of coherence 
-        ftheta     = [6 10];
-        idxTheta   = find(fB > 6 & fB < 10);
-        distTheta_cleanB = nanmean(cohB_clean_mat(:,idxTheta),2);
-        distTheta_dirtyB = nanmean(cohB_dirty_mat(:,idxTheta),2);   
-        
-        %{
-        data       = [];
-        data{1}    = distTheta_cleanB;
-        data{2}    = distTheta_dirtyB;
-        xRange     = [0:.05:1];
-        colors{1}  = 'b'; colors{2} = 'r'; 
-        dataLabels = [{'Accepted LFP'} {'Rejected LFP'}];
-        distType   = 'normal';
-        [y,a] = plotCurves(data,xRange,colors,dataLabels,distType);
-        title('Bowl')
-        ylabel('Cumulative density')
-        xlabel('Mean coherence (6-10hz)')
-        savefig(['Rat',num2str(rats{i}),'_session',num2str(sessi),'_cleanDirty_B_dist.fig'])        
+        if isempty(checker)==0
+            detectedB = [];
+            for j = 1:length(dataIN.dataStoredB)
+                temp_data = [];
+                temp_data = dataIN.dataStoredB{j};
 
-        %}
+                % detrend
+                data_det = [];
+                %data_det(1,:) = polyDetrend(temp_data(1,:)');
+                %data_det(2,:) = polyDetrend(temp_data(2,:)');
+                data_det(1,:) = detrend(temp_data(1,:),3);
+                data_det(2,:) = detrend(temp_data(2,:),3);
+
+                % determine if data is noisy
+                zArtifact = [];
+                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));              
+
+                idxNoise = find(zArtifact(1,:) > noiseThreshold(1) | zArtifact(1,:) < -1*noiseThreshold(1) | zArtifact(2,:) > noiseThreshold(2) | zArtifact(2,:) < -1*noiseThreshold(2) );
+                percSat = (length(idxNoise)/length(zArtifact))*100;
+
+                % theta delta ratio
+                td = []; 
+                %[detrended_signal] = polyDetrend(Sample)
+                %td = tdRatio(data_det(1,:),srate);
+
+                if percSat > noisePercent %|| td < 2
+                    detectedB(j)=1;
+                else
+                    detectedB(j)=0;
+                end  
+
+                %{
+                figure('color','w')
+                subplot 211
+                plot(zArtifact(1,:),'b')
+                subplot 212;
+                plot(zArtifact(2,:),'r')
+                title(['Noise = ',num2str(percSat),'%, TD = ',num2str(td)])            
+                pause;
+                close;
+                %}
+                % coherence
+                [cohB{j},fB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+            end
+
+            % identify detected events as clean or dirty
+            detectB_art = []; detectB_cle = [];
+            detectB_art = find(detectedB==1);
+            detectB_cle = find(detectedB==0);
+
+            % sep data
+            cohB_clean = []; cohB_dirty = [];
+            cohB_clean = cohB(detectB_cle);
+            cohB_dirty = cohB(detectB_art);
+
+            % organize data 
+            cohB_clean_mat = []; cohB_dirty_mat = [];
+            cohB_clean_mat = vertcat(cohB_clean{:});
+            cohB_dirty_mat = vertcat(cohB_dirty{:});
+
+            % get averages and stderr
+            cohB_clean_avg = []; cohB_dirty_avg = []; cohB_clean_ser = []; cohB_dirty_ser = [];
+            cohB_clean_avg = nanmean(cohB_clean_mat);
+            cohB_dirty_avg = nanmean(cohB_dirty_mat);
+            cohB_clean_ser = stderr(cohB_clean_mat,1);
+            cohB_dirty_ser = stderr(cohB_dirty_mat,1);  
         
-        % cache data
-        cohB_cache{i}.clean_cXf_avg{sessi}  = cohB_clean_avg;
-        cohB_cache{i}.clean_cXf_ser{sessi}  = cohB_clean_ser;
-        cohB_cache{i}.dirty_cXf_avg{sessi}  = cohB_dirty_avg;
-        cohB_cache{i}.dirty_cXf_ser{sessi}  = cohB_dirty_ser;
-        cohB_cache{i}.clean_cXf_mat{sessi}  = cohB_clean_mat;
-        cohB_cache{i}.dirty_cXf_mat{sessi}  = cohB_dirty_mat;
-        cohB_cache{i}.clean_coh_dist{sessi} = distTheta_cleanB;
-        cohB_cache{i}.dirty_coh_dist{sessi} = distTheta_dirtyB;
+            %{
+            % figure
+            figure('color','w'); hold on;
+            s1 = shadedErrorBar(fB,cohB_clean_avg,cohB_clean_ser,'b',0);
+            s2 = shadedErrorBar(fB,cohB_dirty_avg,cohB_dirty_ser,'r',0);
+            legend([s1.mainLine,s2.mainLine],'Accepted LFP','Rejected LFP')
+            box off
+            ylabel('Coherence')
+            xlabel('Frequency')
+            title(['Rat ',num2str(rats{i}),' session ',num2str(sessi)])
+            cd('X:\01.Experiments\R21\Figures\Method parameters')
+            savefig(['Rat',num2str(rats{i}),'_session',num2str(sessi),'_artifReject.fig'])
+            %}
+            
+            % create a distribution of coherence 
+            ftheta     = [6 10];
+            idxTheta   = find(fB > 6 & fB < 10);
+            try
+                distTheta_cleanB = nanmean(cohB_clean_mat(:,idxTheta),2);
+            catch
+                distTheta_cleanB = [];
+            end
+            try
+                distTheta_dirtyB = nanmean(cohB_dirty_mat(:,idxTheta),2);   
+            catch
+                distTheta_dirtyB = [];
+            end
+             %{
+            data       = [];
+            data{1}    = distTheta_cleanB;
+            data{2}    = distTheta_dirtyB;
+            xRange     = [0:.05:1];
+            colors{1}  = 'b'; colors{2} = 'r'; 
+            dataLabels = [{'Accepted LFP'} {'Rejected LFP'}];
+            distType   = 'normal';
+            [y,a] = plotCurves(data,xRange,colors,dataLabels,distType);
+            title('Bowl')
+            ylabel('Cumulative density')
+            xlabel('Mean coherence (6-10hz)')
+            savefig(['Rat',num2str(rats{i}),'_session',num2str(sessi),'_cleanDirty_B_dist.fig'])        
+
+            %}
+        
+            % cache data
+            cohB_cache{i}.clean_cXf_avg{sessi}  = cohB_clean_avg;
+            cohB_cache{i}.clean_cXf_ser{sessi}  = cohB_clean_ser;
+            cohB_cache{i}.dirty_cXf_avg{sessi}  = cohB_dirty_avg;
+            cohB_cache{i}.dirty_cXf_ser{sessi}  = cohB_dirty_ser;
+            cohB_cache{i}.clean_cXf_mat{sessi}  = cohB_clean_mat;
+            cohB_cache{i}.dirty_cXf_mat{sessi}  = cohB_dirty_mat;
+            cohB_cache{i}.clean_coh_dist{sessi} = distTheta_cleanB;
+            cohB_cache{i}.dirty_coh_dist{sessi} = distTheta_dirtyB;
+        end
         
         % -- do the same for startbox data -- %
         
@@ -177,21 +213,35 @@ for i = 1:length(rats)
             
             % detrend
             data_det = [];
-            data_det(1,:) = detrend(temp_data(1,:));
-            data_det(2,:) = detrend(temp_data(2,:));
+            %data_det(1,:) = polyDetrend(temp_data(1,:)');
+            %data_det(2,:) = polyDetrend(temp_data(2,:)');
+            data_det(1,:) = detrend(temp_data(1,:),3);
+            data_det(2,:) = detrend(temp_data(2,:),3);
 
             % determine if data is noisy
             zArtifact = [];
             zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
             zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));              
             
-            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            idxNoise = find(zArtifact(1,:) > noiseThreshold(1) | zArtifact(1,:) < -1*noiseThreshold(1) | zArtifact(2,:) > noiseThreshold(2) | zArtifact(2,:) < -1*noiseThreshold(2) );
             percSat = (length(idxNoise)/length(zArtifact))*100;
+            %{
             if percSat > noisePercent
                 detectedSB(j)=1;
             else
                 detectedSB(j)=0;
-            end            
+            end
+            %}
+            % theta delta ratio
+            %td = []; 
+            %[detrended_signal] = polyDetrend(Sample)
+            %td = tdRatio(data_det(1,:),srate);
+   
+            if percSat > noisePercent% || td < 2
+                detectedSB(j)=1;
+            else
+                detectedSB(j)=0;
+            end              
             
             % coherence
             [cohSB{j},fSB] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
@@ -238,9 +288,16 @@ for i = 1:length(rats)
         distTheta_clean = []; distTheta_dirty = [];
         ftheta     = [6 10];
         idxTheta   = find(fSB > 6 & fB < 10);
-        distTheta_clean = nanmean(cohSB_clean_mat(:,idxTheta),2);
-        distTheta_dirty = nanmean(cohSB_dirty_mat(:,idxTheta),2);   
-        
+        try
+            distTheta_clean = nanmean(cohSB_clean_mat(:,idxTheta),2);
+        catch
+            distTheta_clean = [];
+        end
+        try
+            distTheta_dirty = nanmean(cohSB_dirty_mat(:,idxTheta),2);   
+        catch
+            distTheta_dirty = [];
+        end  
         %{
         data       = [];
         data{1}    = distTheta_clean;
