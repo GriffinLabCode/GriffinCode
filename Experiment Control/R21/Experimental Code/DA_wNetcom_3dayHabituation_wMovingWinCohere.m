@@ -125,10 +125,10 @@ while next == 0
         dataWin(:,1:length(dataArray))=[]; % remove 560 samples
         dataWin = [dataWin dataArray]; % add data
 
-        % calculate coherence
+        % detrend by removing third degree polynomial
         data_det=[];
-        data_det(1,:) = detrend(dataWin(1,:));
-        data_det(2,:) = detrend(dataWin(2,:));        
+        data_det(1,:) = detrend(dataWin(1,:),3);
+        data_det(2,:) = detrend(dataWin(2,:),3);        
         
         % determine if data is noisy
         zArtifact = [];
@@ -139,7 +139,7 @@ while next == 0
         percSat = (length(idxNoise)/length(zArtifact))*100;
         if percSat > noisePercent
             detectedB(i)=1;
-            disp('Artifact Detected - coherence not calculated')     
+            disp('Artifact Detected')     
         else
             detectedB(i)=0;
         end
@@ -538,10 +538,10 @@ for triali = 1:numTrials
         dataWin(:,1:length(dataArray))=[]; % remove 560 samples
         dataWin = [dataWin dataArray]; % add data
 
-        % calculate coherence
+        % detrend by removing third degree polynomial
         data_det=[];
-        data_det(1,:) = detrend(dataWin(1,:));
-        data_det(2,:) = detrend(dataWin(2,:));
+        data_det(1,:) = detrend(dataWin(1,:),3);
+        data_det(2,:) = detrend(dataWin(2,:),3);
         
         % determine if data is noisy
         zArtifact = [];
@@ -552,7 +552,7 @@ for triali = 1:numTrials
         percSat = (length(idxNoise)/length(zArtifact))*100;
         if percSat > noisePercent
             detected{triali}(i)=1;
-            disp('Artifact Detected - coherence not calculated')     
+            %disp('Artifact Detected - coherence not calculated')     
         else
             detected{triali}(i)=0;
         end
@@ -755,7 +755,7 @@ task_name = input(prompt,'s');
 prompt   = 'Enter notes for the session ';
 info     = input(prompt,'s');
 
-prompt = 'Did the EIB come off the rats head during any trials? ';
+prompt = 'Did the EIB come off the rats head during any delay trials? ';
 eibOFF  = input(prompt,'s');
 if contains(eibOFF,[{'y'} {'Y'}])
     eibSave = 'EIBfellOFF_trialsRemoved';
