@@ -44,7 +44,7 @@ cd(dataStored)
 clearStream(LFP1name,LFP2name);
 
 % after 10 minutes, pull data
-numMin = 5;
+numMin = 10;
 for i = 1:numMin
     if i == 1
         disp('Beginning pause')
@@ -76,7 +76,7 @@ end
 
 % detrend
 data_det = [];
-data_det(1,:) = detrend(dataArray(1,:)); 
+data_det(1,:) = detrend(dataArray(1,:),3); 
 data_det(2,:) = detrend(dataArray(2,:)); 
 
 % arrive at baselines for both signals
