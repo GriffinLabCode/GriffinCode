@@ -1056,7 +1056,6 @@ fpass = [6:10];
 
 actualDataDuration = [];
 time2cohAndSend = [];
-time2coherence  = [];
 % Need to approximate idealized window lengths and true window lengths
 % clear stream 
 roundTrip = []; time2coherence = []; timeFromCoherence = [];
@@ -1064,22 +1063,18 @@ noiseThreshold = 4; noisePercent = 1;
 triggerTic = 2; % hardcode for first run
 for i = 1:1000
         
-    if i == 1
-        clearStream(LFP1name,LFP2name);
-        pause(windowDuration)
-        [succeeded, dataArray, timeStampArray, ~, ~, ...
-        numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-   
-        % 2) store the data
-        % now add and remove data to move the window
-        dataWin = dataArray;
-        dataWinOG = dataWin; % store this for trouble shooting
-    end
-    
+    clearStream(LFP1name,LFP2name);
+
+    % 2) store the data
+    % now add and remove data to move the window
+    dataWin = dataArray;
+    dataWinOG = dataWin; % store this for trouble shooting
+
     % 3) pull in 0.25 seconds of data
     % pull in data at shorter resolution   
     pause(pauseTime)
-    tic;
+    
+    timeStart = tic; 
     [succeeded, dataArray, timeStampArray, ~, ~, ...
     numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
@@ -1093,14 +1088,14 @@ for i = 1:1000
 
     % determine if data is noisy
     zArtifact = [];
-    zArtifact(1,:) = ((dataDet(1,:)-baselineMean(1))./baselineSTD(1));
-    zArtifact(2,:) = ((dataDet(2,:)-baselineMean(2))./baselineSTD(2));
+    zArtifact(1,:) = ((dataArray(1,:)-baselineMean(1))./baselineSTD(1));
+    zArtifact(2,:) = ((dataArray(2,:)-baselineMean(2))./baselineSTD(2));
 
     idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
     percSat = (length(idxNoise)/length(zArtifact))*100;
     if percSat > noisePercent
         artifact(i) = 1;
-        disp(['Artifact Detected at ' num2str(percSat) '% saturation'])     
+        %disp(['Artifact Detected at ' num2str(percSat) '% saturation'])     
     else
         % store data
         artifact(i) = 0;
@@ -1112,18 +1107,22 @@ for i = 1:1000
     cohAvg_data = [cohAvg_data cohAvg];    
     
     % extract -> coherence
-    time2coherence = [time2coherence toc];
+    time2coherence = [time2coherence toc(timeStart)];
+    
+    timeFromStart = tic;
     
     % calculate the amount of data actually pulled in
     actualDataDuration(i) = length(dataWin)/srate;
-    
-    disp(['Iteration', num2str(i)])
+
+    % test the amount of time it takes until the door opens - set to 0.7 so
+    % that there aren't too many events, causing the maze to overwork
+    % itself
+    if triggerTic > 3
+        writeline(s,doorFuns.centralClose)
+        %close = 1;
+    end
 
 end
-
-figure('color','w')
-histogram(time2coherence)
-box off
 
 % Here, we are going to perform an automated procedure to determine the
 % exact amount of time required for the door to open
@@ -1165,7 +1164,6 @@ for i = 1:1000
 end
 
 figure('color','w')
-scatter(1:length(fail2detect),fail2detect)
 scatter(pauseDur,fail2detect)
 
 figure('color','w')
