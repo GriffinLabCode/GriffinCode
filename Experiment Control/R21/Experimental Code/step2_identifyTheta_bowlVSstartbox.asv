@@ -34,7 +34,6 @@ for i = 1:length(rats)
     folder2load = ['X:\01.Experiments\R21\',rats{i},'\baseline alternative'];
     cd(folder2load);
     load('baselineData')
-    baselineSTD = baselineStd;
     
     % loop across
     for sessi = 1:length(dir_content)
@@ -63,17 +62,17 @@ for i = 1:length(rats)
         % compute coherence, then separate clean and dirty
         noiseThreshold = []; noisePercent = [];
         cohB = []; window = []; noverlap = []; 
-        %baselineMean = []; baselineSTD = [];
+        baselineMean = []; baselineSTD = [];
         
         % define some parameters
         fpass = [1:.5:20]; srate = 2000;
-        %noiseThreshold = dataIN.noiseThreshold;
-        %baselineMean   = dataIN.baselineMean;
-        %baselineSTD    = dataIN.baselineSTD;
+        noiseThreshold = dataIN.noiseThreshold;
+        noisePercent   = 1;
+        baselineMean   = dataIN.baselineMean;
+        baselineSTD    = dataIN.baselineSTD;
         
         noiseThreshold(1) = 4;
         noiseThreshold(2) = 4;
-        noisePercent      = 1;
         
         try 
             checker = dataIN.dataStoredB;
