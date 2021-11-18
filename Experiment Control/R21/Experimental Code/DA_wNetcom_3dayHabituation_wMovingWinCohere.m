@@ -36,8 +36,8 @@ prompt = ['What day of DA training is this? '];
 FRday  = str2num(input(prompt,'s'));
 
 disp(['Getting baseline data for ' targetRat])
-cd(['C:\Users\jstout\Desktop\Data 2 Move\',targetRat,'\step1-definingBaseline']);
-load('step1_baselineData')
+cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
+load('baselineData')
 
 % interface with cheetah setup
 threshold.coh_duration = 0.5;
