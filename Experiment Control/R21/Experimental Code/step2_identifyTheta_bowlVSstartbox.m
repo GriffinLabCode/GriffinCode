@@ -7,7 +7,7 @@ rats{3} = '21-14';
 %rats{4} = '21-15';
 rats{4} = '21-16';
 rats{5} = '21-21';
-%rats{7} = '21-22';
+rats{7} = '21-22';
 
 %%
 clearvars -except cohData dataIN rats dataOUT
@@ -31,10 +31,10 @@ for i = 1:length(rats)
     % define LFP names
     %hpcName = dataIN{i}.LFP1name;
     %pfcName = dataIN{i}.LFP2name;
-    folder2load = ['X:\01.Experiments\R21\',rats{i},'\baseline alternative'];
+    folder2load = ['X:\01.Experiments\R21\',rats{i},'\baseline'];
     cd(folder2load);
     load('baselineData')
-    baselineSTD = baselineStd;
+    %baselineSTD = baselineStd;
     
     % loop across
     for sessi = 1:length(dir_content)
