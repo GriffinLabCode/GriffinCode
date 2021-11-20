@@ -7,7 +7,7 @@ rats{3} = '21-14';
 %rats{4} = '21-15';
 rats{4} = '21-16';
 rats{5} = '21-21';
-%rats{7} = '21-22';
+rats{7} = '21-22';
 
 for i = 1:length(rats)
     try
