@@ -20,7 +20,8 @@ end
 disp(['Getting baseline data for ' targetRat])
 cd(['C:\Users\jstout\Desktop\Data 2 Move\',targetRat,'\step1-definingBaseline']);
 load('step1_baselineData','LFP1name','LFP2name')
-
+LFP1name = 'HPC_green';
+%%
 % interface with cheetah setup
 threshold.coh_duration = 0.5;
 [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    

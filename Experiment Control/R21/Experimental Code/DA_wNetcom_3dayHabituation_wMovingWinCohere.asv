@@ -188,27 +188,39 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 numTrials = 100; %24;
 %umTrials = 24;
 
+
 %% randomize delay durations
 maxDelay = 30;
 minDelay = 5;
 delayDur = minDelay:1:maxDelay; % 5-45 seconds
 rng('shuffle')
 
-delayLenTrial = [];
 next = 0;
 while next == 0
+    shortDuration = randsample(5:15,5,'true');
+    longDuration = randsample(16:30,5,'true');
+    allDurations = [shortDuration longDuration];
+    interleaved = allDurations(randperm(length(allDurations)));
+    
+    delayLenTrials = [delayLenTrial inter];
+    delayLens = randsample(delayDur,numTrials,'true');
+    %randi([minDelay, maxDelay], [1, numTrials])
 
-    if numel(delayLenTrial) >= 100
-        next = 1;
+    % even number of <15 and >15 in 10 trial increments
+    checker    = delayLens(i:i+9);
+    numLess    = numel(find(checker < maxDelay/2));
+    numGreater = numel(find(checker > maxDelay/2));
+
+    if numLess ~= numGreater
+        next = 0;
     else
-        shortDuration  = randsample(5:15,5,'true');
-        longDuration   = randsample(16:30,5,'true');
-        allDurations   = [shortDuration longDuration];
-        interleaved    = allDurations(randperm(length(allDurations)));
-        delayLenTrial = [delayLenTrial interleaved];
+        next = 1;
+        delayLenTrial = [delayLenTrial delayLens];
     end
 end
-
+    
+for i = 1:10:numTrials
+end
 %% auto maze prep.
 
 % -- automaze set up -- %

@@ -413,6 +413,9 @@ c = clock;
 session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
 session_time = session_time_update-session_start;
 
+% END TIME
+endTime = toc(sStart)/60;
+
 %% compute accuracy array and create some figures
 accuracy = [];
 accuracy_text = cell(1, length(trajectory_text)-1);
