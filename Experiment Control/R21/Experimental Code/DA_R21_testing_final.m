@@ -77,6 +77,11 @@ thetaRange = [6 11];
 actualDataDuration = [];
 time2cohAndSend = [];
 
+% define a noise threshold in standard deviations
+noiseThreshold = 4;
+% define how much noise you're willing to accept
+noisePercent = 1; % 5 percent
+
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
@@ -108,8 +113,13 @@ while next == 0
     if numel(delayLenTrial) >= 100
         next = 1;
     else
-        shortDuration  = randsample(5:15,5,'true');
-        longDuration   = randsample(16:30,5,'true');
+        %shortDuration  = randsample(5:15,5,'true');
+        %longDuration   = randsample(16:30,5,'true');
+        
+        % used for troubleshooting ->
+        shortDuration  = randsample(1:5,5,'true');
+        longDuration   = randsample(6:10,5,'true');        
+        
         allDurations   = [shortDuration longDuration];
         interleaved    = allDurations(randperm(length(allDurations)));
         delayLenTrial = [delayLenTrial interleaved];
@@ -533,9 +543,16 @@ for triali = 1:numTrials
 
             % if coherence is higher than your threshold, and the data is
             % accepted, then let the rat make a choice
-            if cohAvg > cohHighThreshold && rejected == 0
+            if cohTheta > cohHighThreshold && rejected == 0
+                met_high = 1;
+                indicatorOUT{triali} = 'highMET';                
+                break 
+            % if you exceed 30s, break out
+            elseif toc(dStart) > maxDelay
+                met_high = 0;
+                indicatorOUT{triali} = 'highFAIL'; 
                 break
-            end
+            end  
         end
         
         %yokH_store = yokH;
@@ -543,14 +560,15 @@ for triali = 1:numTrials
         
         % IMPORTANT: Storing this for later
         delayLenTrial(triali) = toc(dStart); 
-        %disp(['Coh detect low end at ', num2str(cohEnd)])
+        disp(['Coh detect high end at ', num2str(delayLenTrial(triali))])
 
         % now replace the delayLenTrial with coherence delay
         %delayLenTrial(triali) = cohEnd;
-
-        
+   
         % now identify yoked high, and replace with control delay
-        yokH = [yokH delayLenTrial(triali)];
+        if met_high == 1
+            yokH = [yokH delayLenTrial(triali)];
+        end
         
     elseif contains(indicatorOUT{triali},'low')
         dStart = [];
@@ -626,34 +644,61 @@ for triali = 1:numTrials
 
             % if coherence is less than your threshold, and the data is
             % accepted, then let the rat make a choice
-            if cohAvg < cohLowThreshold && rejected == 0
-                %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
+            if cohTheta < cohLowThreshold && rejected == 0
+                %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]); 
+                met_low = 1;
+                indicatorOUT{triali} = 'lowMET';
+                break
+            % if you exceed 30s, break out
+            elseif toc(dStart) > maxDelay
+                met_low = 0;
+                indicatorOUT{triali} = 'lowFAIL';
                 break
             end
+                
         end
         
         %yokH_store = yokH;
         %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                        
         delayLenTrial(triali) = toc(dStart); 
-        %disp(['Coh detect low end at ', num2str(cohEnd)])
+        disp(['Coh detect low end at ', num2str(delayLenTrial(triali))])
 
         % now replace the delayLenTrial with coherence delay
         %delayLenTrial(triali) = cohEnd;
 
         % now identify yoked high, and replace with control delay
-        yokL = [yokL delayLenTrial(triali)];
+        if met_low == 1
+            yokL = [yokL delayLenTrial(triali)];
+        end
         
-    elseif contains(indicatorOUT{triali},'yokeL')
-        % pause for yoked control
-        disp(['Pausing for low yoked control of ',num2str(yokL(1))])
-        pause(yokL(1));
-        % delete so that next time, 1 is the updated delay
-        yokL(1)=[];
-
-    elseif contains(indicatorOUT{triali},'yokeH')
-        disp(['Pausing for high yoked control of ',num2str(yokH(1))])
-        pause(yokH(1));
-        yokH(1)=[];
+    % only yoke up if you have options to pull from, if not then it'll
+    % become a 'norm' trial
+    elseif contains(indicatorOUT{triali},'yokeL')  
+        
+        if isempty(yokL)==0
+            % pause for yoked control
+            disp(['Pausing for low yoked control of ',num2str(yokL(1))])
+            pause(yokL(1));
+            % delete so that next time, 1 is the updated delay
+            yokL(1)=[];
+        elseif isempty(yokL)==1
+            disp(['Normal delay of ',num2str(delayLenTrial(triali))])
+            pause(delayLenTrial(triali));
+            indicatorOUT{triali} = 'yokeL_FAIL';
+        end
+        
+    elseif contains(indicatorOUT{triali},'yokeH') && isempty(yokH)==0
+        % if you have a yoke to pull from
+        if isempty(yokH)==0
+            disp(['Pausing for high yoked control of ',num2str(yokH(1))])
+            pause(yokH(1));
+            yokH(1)=[];
+        % if you don't have a yoke to pull from
+        elseif isempty(yokH)==1
+            disp(['Normal delay of ',num2str(delayLenTrial(triali))])
+            pause(delayLenTrial(triali));
+            indicatorOUT{triali} = 'yokeH_FAIL';          
+        end        
     end    
        
 end 
