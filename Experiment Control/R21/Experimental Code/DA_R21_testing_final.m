@@ -27,8 +27,12 @@ prompt = ['What day of DA TESTING is this? '];
 DAday  = str2num(input(prompt,'s'));
 
 disp(['Getting baseline data for ' targetRat])
-cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
+cd(['X:\01.Experiments\R21\',targetRat,'\baseline alternative']);
 load('baselineData')
+
+disp(['Getting LFP names for ' targetRat])
+cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
+load('baselineData','LFP1name','LFP2name')
 
 % load in thresholds
 disp('Getting threshold data')
