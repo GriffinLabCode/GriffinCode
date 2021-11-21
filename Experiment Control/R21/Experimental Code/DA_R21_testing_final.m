@@ -480,6 +480,7 @@ for triali = 1:numTrials
         pause(delayLenTrial(triali));
 
     elseif contains(indicatorOUT{triali},'high')
+        pause(3.5);
         dStart = [];
         dStart = tic;
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
@@ -575,6 +576,7 @@ for triali = 1:numTrials
         end
         
     elseif contains(indicatorOUT{triali},'low')
+        pause(3.5);
         dStart = [];
         dStart = tic;
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
