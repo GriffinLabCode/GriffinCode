@@ -96,6 +96,8 @@ noiseThreshold = 4;
 % define how much noise you're willing to accept
 noisePercent = 1; % 5 percent
 
+% no real point to the bowl
+%{
 next = 0;
 while next == 0
 
@@ -169,6 +171,7 @@ clear coh detected dataClean dataDirty
 
 disp('Press any key when you are ready to begin running the rat on the maze')
 pause();
+%}
 
 %% prep 2 - define parameters for the session
 
