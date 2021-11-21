@@ -71,6 +71,8 @@ coh          = [];
 % prep for coherence
 window = []; noverlap = []; 
 fpass = [1:.5:20];
+deltaRange = [1 4];
+thetaRange = [6 11];
 
 actualDataDuration = [];
 time2cohAndSend = [];
@@ -449,39 +451,198 @@ for triali = 1:numTrials
         end
     end
 
+    % break out of the session if youre out of time
+    if triali == numTrials || toc(sStart)/60 > session_length
+        break % break out of for loop
+    end       
+
+    if toc(sStart)/60 > session_length
+        break % break out of for loop
+    end         
+    
     % open these for storing
     if contains(indicatorOUT{triali},'Norm')
         disp(['Normal delay of ',num2str(delayLenTrial(triali))])
         pause(delayLenTrial(triali));
 
     elseif contains(indicatorOUT{triali},'high')
-        cohStart = tic;  
-        % coherence detection goes here
+        dStart = [];
+        dStart = tic;
+        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
-        cohEnd = toc(cohStart); 
-        disp(['Coh detect high end at ', num2str(cohEnd)])
+            if i == 1
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;
+            end
+
+            % 3) pull in 0.25 seconds of data
+            % pull in data at shorter resolution   
+            pause(pauseTime)
+            [succeeded, dataArray, timeStampArray, ~, ~, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+            % 4) apply it to the initial array, remove what was there
+            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+            dataWin = [dataWin dataArray]; % add data
+
+            % detrend by removing third degree polynomial
+            data_det=[];
+            data_det(1,:) = detrend(dataWin(1,:),3);
+            data_det(2,:) = detrend(dataWin(2,:),3);
+
+            % calculate coherence
+            coh = [];
+            [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+
+            % perform logical indexing of theta and delta ranges to improve
+            % performance speed
+            %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            percSat = (length(idxNoise)/length(zArtifact))*100;                
+            
+            % only include if theta coherence is higher than delta. Reject
+            % if delta is greater than theta or if saturation exceeds
+            % threshold
+            if cohDelta > cohTheta || percSat > noisePercent
+                detected{triali}(i)=1;
+                rejected = 1;
+                %disp('Rejected')  
+            % accept if theta > delta and if minimal saturation
+            elseif cohTheta > cohDelta && percSat < noisePercent
+                rejected = 0;
+                detected{triali}(i)=0;
+            end
+
+            % store data
+            dataZStored{triali}{i} = zArtifact;
+            dataStored{triali}{i}  = dataWin;
+            cohOUT{triali}{i}      = coh;
+
+            % if coherence is higher than your threshold, and the data is
+            % accepted, then let the rat make a choice
+            if cohAvg > cohHighThreshold && rejected == 0
+                break
+            end
+        end
+        
+        %yokH_store = yokH;
+        %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
+        
+        % IMPORTANT: Storing this for later
+        delayLenTrial(triali) = toc(dStart); 
+        %disp(['Coh detect low end at ', num2str(cohEnd)])
 
         % now replace the delayLenTrial with coherence delay
-        delayLenTrial(triali) = cohEnd;
+        %delayLenTrial(triali) = cohEnd;
 
+        
         % now identify yoked high, and replace with control delay
         yokH = [yokH delayLenTrial(triali)];
-        %yokH_store = yokH;
-
+        
     elseif contains(indicatorOUT{triali},'low')
-        cohStart = tic;    
-        % coherence detection goes here
+        dStart = [];
+        dStart = tic;
+        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
-        cohEnd = toc(cohStart);        
-        disp(['Coh detect low end at ', num2str(cohEnd)])
+            if i == 1
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;
+            end
+
+            % 3) pull in 0.25 seconds of data
+            % pull in data at shorter resolution   
+            pause(pauseTime)
+            [succeeded, dataArray, timeStampArray, ~, ~, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+            % 4) apply it to the initial array, remove what was there
+            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+            dataWin = [dataWin dataArray]; % add data
+
+            % detrend by removing third degree polynomial
+            data_det=[];
+            data_det(1,:) = detrend(dataWin(1,:),3);
+            data_det(2,:) = detrend(dataWin(2,:),3);
+
+            % calculate coherence
+            coh = [];
+            [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+
+            % identify theta > delta or delta > theta
+            % take averages
+            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
+            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
+            
+            % perform logical indexing of theta and delta ranges to improve
+            % performance speed
+            cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+
+            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            percSat = (length(idxNoise)/length(zArtifact))*100;                
+            
+            % only include if theta coherence is higher than delta. Reject
+            % if delta is greater than theta or if saturation exceeds
+            % threshold
+            if cohDelta > cohTheta || percSat > noisePercent
+                detected{triali}(i)=1;
+                rejected = 1;
+                %disp('Rejected')  
+            % accept if theta > delta and if minimal saturation
+            elseif cohTheta > cohDelta && percSat < noisePercent
+                rejected = 0;
+                detected{triali}(i)=0;
+            end            
+
+            % store data
+            dataZStored{triali}{i} = zArtifact;
+            dataStored{triali}{i}  = dataWin;
+            cohOUT{triali}{i}      = coh;
+
+            % if coherence is less than your threshold, and the data is
+            % accepted, then let the rat make a choice
+            if cohAvg < cohLowThreshold && rejected == 0
+                %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
+                break
+            end
+        end
+        
+        %yokH_store = yokH;
+        %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                        
+        delayLenTrial(triali) = toc(dStart); 
+        %disp(['Coh detect low end at ', num2str(cohEnd)])
 
         % now replace the delayLenTrial with coherence delay
-        delayLenTrial(triali) = cohEnd;
+        %delayLenTrial(triali) = cohEnd;
 
-        % now identify low yoked duration of delay
+        % now identify yoked high, and replace with control delay
         yokL = [yokL delayLenTrial(triali)];
-        %yokL_store = yokL;
-
+        
     elseif contains(indicatorOUT{triali},'yokeL')
         % pause for yoked control
         disp(['Pausing for low yoked control of ',num2str(yokL(1))])
@@ -491,93 +652,10 @@ for triali = 1:numTrials
 
     elseif contains(indicatorOUT{triali},'yokeH')
         disp(['Pausing for high yoked control of ',num2str(yokH(1))])
-
         pause(yokH(1));
         yokH(1)=[];
     end    
-    
-    
-    %{
-    % neuralynx timestamp command
-    [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CohDetectStart" 102 2');  
-    
-    dStart = [];
-    dStart = tic;
-    for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
-
-        if i == 1
-            clearStream(LFP1name,LFP2name);
-            pause(windowDuration)
-            [succeeded, dataArray, timeStampArray, ~, ~, ...
-            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-            % 2) store the data
-            % now add and remove data to move the window
-            dataWin    = dataArray;
-        end
-
-        % 3) pull in 0.25 seconds of data
-        % pull in data at shorter resolution   
-        pause(pauseTime)
-        [succeeded, dataArray, timeStampArray, ~, ~, ...
-        numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-        % 4) apply it to the initial array, remove what was there
-        dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-        dataWin = [dataWin dataArray]; % add data
-
-        % detrend by removing third degree polynomial
-        data_det=[];
-        data_det(1,:) = detrend(dataWin(1,:),3);
-        data_det(2,:) = detrend(dataWin(2,:),3);
-        
-        % calculate coherence
-        [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
        
-        % identify theta > delta or delta > theta
-        deltaIdx = [1 4];
-        thetaIdx = [6 11];
-        
-        
-    
-        if percSat > noisePercent
-            detected{triali}(i)=1;
-            %disp('Artifact Detected - coherence not calculated')     
-        else
-            detected{triali}(i)=0;
-        end
-    
-% cohAvg = nanmean(coh);
-       
-        % store data
-        dataZStored{triali}{i} = zArtifact;
-        dataStored{triali}{i}  = dataWin;
-        
-        % store coherence data
-        %cohAvg_data = [cohAvg_data cohAvg];
-
-        % calculate the amount of data actually pulled in
-        %actualDataDuration(i) = length(dataWin)/srate;
-
-        if toc(dStart) > delayLength
-            break
-        end
-    end
-    
-    %}
-    % neuralynx timestamp command
-    [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CohDetectEnd" 102 2');  
-    
-    if triali == numTrials || toc(sStart)/60 > session_length
-        break % break out of for loop
-    end       
-    
-    % open central door
-    %writeline(s,doorFuns.centralOpen)     
-
-    if toc(sStart)/60 > session_length
-        break % break out of for loop
-    end      
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 

@@ -71,8 +71,8 @@ coh          = [];
 % prep for coherence
 window = []; noverlap = []; 
 fpass = [1:.5:20];
-deltaIdx = [1 4];
-thetaIdx = [6 11];
+deltaRange = [1 4];
+thetaRange = [6 11];
 
 actualDataDuration = [];
 time2cohAndSend = [];
@@ -451,6 +451,15 @@ for triali = 1:numTrials
         end
     end
 
+    % break out of the session if youre out of time
+    if triali == numTrials || toc(sStart)/60 > session_length
+        break % break out of for loop
+    end       
+
+    if toc(sStart)/60 > session_length
+        break % break out of for loop
+    end         
+    
     % open these for storing
     if contains(indicatorOUT{triali},'Norm')
         disp(['Normal delay of ',num2str(delayLenTrial(triali))])
@@ -491,18 +500,28 @@ for triali = 1:numTrials
             coh = [];
             [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
 
-            % identify theta > delta or delta > theta
-            % take averages
-            cohAvg   = nanmean(coh(thetaIdx));
-            cohDelta = nanmean(coh(deltaIdx));
-            cohTheta = nanmean(coh(thetaIdx));
+            % perform logical indexing of theta and delta ranges to improve
+            % performance speed
+            %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
 
-            % only include if theta coherence is higher than delta
-            if cohDelta > cohTheta
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            percSat = (length(idxNoise)/length(zArtifact))*100;                
+            
+            % only include if theta coherence is higher than delta. Reject
+            % if delta is greater than theta or if saturation exceeds
+            % threshold
+            if cohDelta > cohTheta || percSat > noisePercent
                 detected{triali}(i)=1;
                 rejected = 1;
-                %disp('Rejected')     
-            elseif cohTheta > cohDelta
+                %disp('Rejected')  
+            % accept if theta > delta and if minimal saturation
+            elseif cohTheta > cohDelta && percSat < noisePercent
                 rejected = 0;
                 detected{triali}(i)=0;
             end
@@ -512,20 +531,24 @@ for triali = 1:numTrials
             dataStored{triali}{i}  = dataWin;
             cohOUT{triali}{i}      = coh;
 
-            % only release from the loop if coherence reaches the threshold
-            % and if the data was not rejected
+            % if coherence is higher than your threshold, and the data is
+            % accepted, then let the rat make a choice
             if cohAvg > cohHighThreshold && rejected == 0
                 break
             end
         end
         
         %yokH_store = yokH;
-        cohEnd = toc(dStart); 
-        disp(['Coh detect high end at ', num2str(cohEnd)])
+        %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
+        
+        % IMPORTANT: Storing this for later
+        delayLenTrial(triali) = toc(dStart); 
+        %disp(['Coh detect low end at ', num2str(cohEnd)])
 
         % now replace the delayLenTrial with coherence delay
-        delayLenTrial(triali) = cohEnd;
+        %delayLenTrial(triali) = cohEnd;
 
+        
         % now identify yoked high, and replace with control delay
         yokH = [yokH delayLenTrial(triali)];
         
@@ -566,36 +589,56 @@ for triali = 1:numTrials
 
             % identify theta > delta or delta > theta
             % take averages
-            cohAvg   = nanmean(coh(thetaIdx));
-            cohDelta = nanmean(coh(deltaIdx));
-            cohTheta = nanmean(coh(thetaIdx));
+            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
+            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
+            
+            % perform logical indexing of theta and delta ranges to improve
+            % performance speed
+            %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
 
-            % only include if theta coherence is higher than delta
-            if cohDelta > cohTheta
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+
+            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            percSat = (length(idxNoise)/length(zArtifact))*100;                
+            
+            % only include if theta coherence is higher than delta. Reject
+            % if delta is greater than theta or if saturation exceeds
+            % threshold
+            if cohDelta > cohTheta || percSat > noisePercent
                 detected{triali}(i)=1;
                 rejected = 1;
-                %disp('Rejected')     
-            elseif cohTheta > cohDelta
+                %disp('Rejected')  
+            % accept if theta > delta and if minimal saturation
+            elseif cohTheta > cohDelta && percSat < noisePercent
                 rejected = 0;
                 detected{triali}(i)=0;
-            end
+            end            
 
             % store data
             dataZStored{triali}{i} = zArtifact;
             dataStored{triali}{i}  = dataWin;
             cohOUT{triali}{i}      = coh;
 
+            % if coherence is less than your threshold, and the data is
+            % accepted, then let the rat make a choice
             if cohAvg < cohLowThreshold && rejected == 0
+                %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
                 break
             end
         end
         
         %yokH_store = yokH;
-        cohEnd = toc(dStart); 
-        disp(['Coh detect low end at ', num2str(cohEnd)])
+        %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                        
+        delayLenTrial(triali) = toc(dStart); 
+        %disp(['Coh detect low end at ', num2str(cohEnd)])
 
         % now replace the delayLenTrial with coherence delay
-        delayLenTrial(triali) = cohEnd;
+        %delayLenTrial(triali) = cohEnd;
 
         % now identify yoked high, and replace with control delay
         yokL = [yokL delayLenTrial(triali)];
@@ -612,17 +655,7 @@ for triali = 1:numTrials
         pause(yokH(1));
         yokH(1)=[];
     end    
-      
-    if triali == numTrials || toc(sStart)/60 > session_length
-        break % break out of for loop
-    end       
-    
-    % open central door
-    %writeline(s,doorFuns.centralOpen)     
-
-    if toc(sStart)/60 > session_length
-        break % break out of for loop
-    end      
+       
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 
