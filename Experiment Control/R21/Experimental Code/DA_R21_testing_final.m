@@ -564,7 +564,6 @@ for triali = 1:numTrials
         %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
         
         % IMPORTANT: Storing this for later
-        delayLenTrial(triali) = toc(dStart); 
         disp(['Coh detect high end at ', num2str(delayLenTrial(triali))])
 
         % now replace the delayLenTrial with coherence delay
@@ -572,8 +571,17 @@ for triali = 1:numTrials
    
         % now identify yoked high, and replace with control delay
         if met_high == 1
+            % if coherence was met, replace the delay trial time with the
+            % amount of time it took to finish the delay
+            delayLenTrial(triali) = toc(dStart); 
             yokH = [yokH delayLenTrial(triali)];
+        elseif met_high == 0
+            % if coherence wasn't met, replace the next yokeH with a 'Norm'
+            % replace the next high with a 'norm'
+            idxRem = find(contains(indicatorOUT,'yokeH')==1);
+            indicatorOUT{idxRem(1)}='Norm';
         end
+            %yokH = [yokH NaN];
         
     elseif contains(indicatorOUT{triali},'low')
         pause(3.5);
@@ -664,17 +672,23 @@ for triali = 1:numTrials
                 
         end
         
-        %yokH_store = yokH;
-        %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                        
-        delayLenTrial(triali) = toc(dStart); 
+        % IMPORTANT: Storing this for later
         disp(['Coh detect low end at ', num2str(delayLenTrial(triali))])
 
         % now replace the delayLenTrial with coherence delay
         %delayLenTrial(triali) = cohEnd;
-
-        % now identify yoked high, and replace with control delay
+   
+        % now identify yoked low, and replace with control delay
         if met_low == 1
+            % if coherence was met, replace the delay trial time with the
+            % amount of time it took to finish the delay
+            delayLenTrial(triali) = toc(dStart); 
             yokL = [yokL delayLenTrial(triali)];
+        elseif met_low == 0
+            % if coherence wasn't met, replace the next yokeH with a 'Norm'
+            % replace the next high with a 'norm'
+            idxRem = find(contains(indicatorOUT,'yokeL')==1);
+            indicatorOUT{idxRem(1)}='Norm';
         end
         
     % only yoke up if you have options to pull from, if not then it'll
