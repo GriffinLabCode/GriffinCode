@@ -571,7 +571,8 @@ for triali = 1:numTrials
         % now replace the delayLenTrial with coherence delay
         %delayLenTrial(triali) = cohEnd;
    
-        % now identify yoked high, and replace with control delay        
+        % now identify yoked high, and replace with control delay
+        
         if met_high == 1
             % if coherence was met, replace the delay trial time with the
             % amount of time it took to finish the delay
