@@ -786,6 +786,9 @@ else
     eibSave = 'allTrialsGood';
 end
 
+prompt = 'Did the EIB come off at any OTHER point during the session? ';
+eibOFF_session = input(prompt,'s');
+
 %% VISUALIZE
 clear plot
 if contains(eibOFF,[{'y'} {'Y'}])

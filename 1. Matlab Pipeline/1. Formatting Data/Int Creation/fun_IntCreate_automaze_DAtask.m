@@ -4,17 +4,17 @@
 % your session of interest
 %
 % this script was not written by me
-clear; clc
 
+function [] = fun_IntCreate_automaze_DAtask(datafolder,ratName)
 
 % datafolder directory - stopped on baseline 1 need to do baseline 2 -
 % 9-2-2020 at 2:19
-datafolder = pwd;
-datafolderNew = datafolder;
+%datafolder = pwd;
+%datafolderNew = datafolder;
 cd(datafolder);
-clearvars -except datafolder datafolderNew
+%clearvars -except datafolder datafolderNew
 
-ratName = '21-16';
+%ratName = '21-16';
 
 % load in events
 load('Events','EventStrings','TimeStamps')
@@ -140,8 +140,6 @@ if contains(answer,'Y') | contains(answer,'y')
 else
     disp('IT IS RECOMMENDED that you check your int file as missing data will be stored as a non-existing trial');
 end
-
-
 
 save('Int_IR','Int')
 

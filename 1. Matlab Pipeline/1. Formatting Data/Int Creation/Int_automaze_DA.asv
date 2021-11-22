@@ -6,6 +6,7 @@
 % this script was not written by me
 clear; clc
 
+ratName = '21-16';
 
 % datafolder directory - stopped on baseline 1 need to do baseline 2 -
 % 9-2-2020 at 2:19
@@ -13,8 +14,6 @@ datafolder = pwd;
 datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
-
-ratName = '21-16';
 
 % load in events
 load('Events','EventStrings','TimeStamps')
@@ -26,7 +25,7 @@ dataINfolder = extractfield(dataINfolder,'name');
 idxKeep = find(contains(dataINfolder,ratName)==1);
 dataINfolder = dataINfolder(idxKeep);
         
-numTrials_maze = load(dataINfolder{1},'numTrials');
+numTrials_maze = load('MazeData','numTrials');
 
 % get trial onset
 %trialOnset = contains(EventStrings,'centralOpen');

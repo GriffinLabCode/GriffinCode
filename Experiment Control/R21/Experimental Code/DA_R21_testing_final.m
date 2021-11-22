@@ -117,12 +117,12 @@ while next == 0
     if numel(delayLenTrial) >= 100
         next = 1;
     else
-        %shortDuration  = randsample(5:15,5,'true');
-        %longDuration   = randsample(16:30,5,'true');
+        shortDuration  = randsample(5:15,5,'true');
+        longDuration   = randsample(16:30,5,'true');
         
         % used for troubleshooting ->
-        shortDuration  = randsample(1:5,5,'true');
-        longDuration   = randsample(6:10,5,'true');        
+        %shortDuration  = randsample(1:5,5,'true');
+        %longDuration   = randsample(6:10,5,'true');        
         
         allDurations   = [shortDuration longDuration];
         interleaved    = allDurations(randperm(length(allDurations)));
@@ -198,6 +198,7 @@ irArduino.rGoalZone   = 'D7';
 irArduino.lGoalZone   = 'D2';
 irArduino.choicePoint = 'D6';
 
+%writeline(s,doorFuns.closeAll);
 %{
 for i = 1:10000000
     readDigitalPin(a,irArduino.Delay)
@@ -480,9 +481,9 @@ for triali = 1:numTrials
         pause(delayLenTrial(triali));
 
     elseif contains(indicatorOUT{triali},'high')
-        pause(3.5);
         dStart = [];
-        dStart = tic;
+        dStart = tic;        
+        pause(3.5);
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
             if i == 1
@@ -564,7 +565,8 @@ for triali = 1:numTrials
         %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
         
         % IMPORTANT: Storing this for later
-        disp(['Coh detect high end at ', num2str(delayLenTrial(triali))])
+        cohEnd = toc(dStart);
+        disp(['Coh detect high end at ', num2str(cohEnd)])
 
         % now replace the delayLenTrial with coherence delay
         %delayLenTrial(triali) = cohEnd;
@@ -573,8 +575,8 @@ for triali = 1:numTrials
         if met_high == 1
             % if coherence was met, replace the delay trial time with the
             % amount of time it took to finish the delay
-            delayLenTrial(triali) = toc(dStart); 
-            yokH = [yokH delayLenTrial(triali)];
+            delayLenTrial(triali) = cohEnd; 
+            yokH = [yokH cohEnd];
         elseif met_high == 0
             % if coherence wasn't met, replace the next yokeH with a 'Norm'
             % replace the next high with a 'norm'
@@ -584,9 +586,9 @@ for triali = 1:numTrials
             %yokH = [yokH NaN];
         
     elseif contains(indicatorOUT{triali},'low')
-        pause(3.5);
         dStart = [];
         dStart = tic;
+        pause(3.5);        
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
             if i == 1
@@ -673,17 +675,18 @@ for triali = 1:numTrials
         end
         
         % IMPORTANT: Storing this for later
-        disp(['Coh detect low end at ', num2str(delayLenTrial(triali))])
+        cohEnd = toc(dStart);
+        disp(['Coh detect low end at ', num2str(cohEnd)])
 
         % now replace the delayLenTrial with coherence delay
         %delayLenTrial(triali) = cohEnd;
    
-        % now identify yoked low, and replace with control delay
+        % now identify yoked high, and replace with control delay
         if met_low == 1
             % if coherence was met, replace the delay trial time with the
             % amount of time it took to finish the delay
-            delayLenTrial(triali) = toc(dStart); 
-            yokL = [yokL delayLenTrial(triali)];
+            delayLenTrial(triali) = cohEnd; 
+            yokL = [yokL cohEnd];
         elseif met_low == 0
             % if coherence wasn't met, replace the next yokeH with a 'Norm'
             % replace the next high with a 'norm'
@@ -897,6 +900,9 @@ if contains(eibOFF,[{'y'} {'Y'}])
 else
     eibSave = 'allTrialsGood';
 end
+
+prompt = 'Did the EIB come off at any OTHER point during the session? ';
+eibOFF_session = input(prompt,'s');
 
 %% VISUALIZE
 clear plot
