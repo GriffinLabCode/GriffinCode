@@ -109,12 +109,12 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 %% experiment design prep.
 
 % define number of trials
-numTrials = 100; %24;
+numTrials = 124; %24;
 %umTrials = 24;
 
 %% randomize delay durations
-maxDelay = 30;
-minDelay = 5;
+maxDelay = 60;
+minDelay = 30;
 delayDur = minDelay:1:maxDelay; % 5-45 seconds
 rng('shuffle')
 
@@ -122,11 +122,11 @@ delayLenTrial = [];
 next = 0;
 while next == 0
 
-    if numel(delayLenTrial) >= 100
+    if numel(delayLenTrial) >= 124
         next = 1;
     else
-        shortDuration  = randsample(5:15,5,'true');
-        longDuration   = randsample(16:30,5,'true');
+        shortDuration  = randsample(30:45,6,'true');
+        longDuration   = randsample(46:60,6,'true');
         
         % used for troubleshooting ->
         %shortDuration  = randsample(1:5,5,'true');
@@ -140,36 +140,44 @@ end
 
 % designate what 20% looks like
 indicatorOUT = [];
-for i = 1:10:100
-    delays2pull = delayLenTrial(i:i+9);
-    numExp = length(delays2pull)*.20;
-    numCon = length(delays2pull)*.20;
+for i = 1:12:124
+    delays2pull = delayLenTrial(i:i+11);
+    numExp = 4;%length(delays2pull)*.20;
+    numCon = 4;%length(delays2pull)*.20;
     totalN = numExp+numCon;
     
     % randomly select which delay will be high and low
     %N1=1; N2=10;   % range desired
     %p=randperm(N1:N2);
-        
-    % high and low must happen before yoked
+    
+    % first is always high, second low, third, con h, 4 con L
+    indicator = cellstr(repmat('Norm',[12 1]));
+    
+    % now replace
+    indicator(1:2) = {'high'};
+    indicator(3:4) = {'low'};
+    indicator(5:6) = {'contH'};
+    indicator(7:8) = {'contL'};
+    
+    % shuffle
     next = 0;
     while next == 0
-        idx = randperm(10,totalN);
-        if idx(1) < idx(3) && idx(1) < idx(4) && idx(2) < idx(3) && idx(2) < idx(4)
+        shuffOut = randsample(indicator,12);
+        highO = find(contains(shuffOut,'high')==1);
+        lowO = find(contains(shuffOut,'low')==1);
+        highYO = find(contains(shuffOut,'contH')==1);
+        lowYO = find(contains(shuffOut,'contL')==1);        
+        % make it so that a cont can be before a high, so long as it
+        % follows both highs
+        idxH = find(highO > highYO);
+        idxL = find(lowO > lowYO);    
+        if highO(1) < highYO(1) && highO(2) < highYO(2) && lowO(1) < lowYO(1) && lowO(2) < lowYO(2)
             next = 1;
         end
     end
     
-    % first is always high, second low, third, con h, 4 con L
-    indicator = cellstr(repmat('Norm',[10 1]));
-    
-    % now replace
-    indicator{idx(1)} = 'high';
-    indicator{idx(2)} = 'low';
-    indicator{idx(3)} = 'contH';
-    indicator{idx(4)} = 'contL';
-    
     % store indicator variable
-    indicatorOUT = [indicatorOUT;indicator];
+    indicatorOUT = [indicatorOUT;shuffOut];
 
 end  
 
@@ -491,7 +499,8 @@ for triali = 1:numTrials
     elseif contains(indicatorOUT{triali},'high')
         dStart = [];
         dStart = tic;        
-        pause(3.5);
+        %pause(3.5);
+        pause(minDelay-1.5);
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
             if i == 1
@@ -598,7 +607,8 @@ for triali = 1:numTrials
     elseif contains(indicatorOUT{triali},'low')
         dStart = [];
         dStart = tic;
-        pause(3.5);        
+        %pause(3.5);   
+        pause(minDelay-1.5);
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
             if i == 1

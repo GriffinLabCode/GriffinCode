@@ -1,4 +1,9 @@
-%% Step 4
+%% Jedi Master Mode
+%
+% There seems to be a weak or trending effect of high coherence. It is
+% possible that the WM demand isnt strong enough, making the task too easy.
+% TO increase the difficulty, we had rats perform a hard version of the
+% task. The minimum delay was 20s, the max was 60
 
 %% 
 % sometimes if the session is not exceeding the time limit of 30 minutes,
@@ -109,12 +114,12 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 %% experiment design prep.
 
 % define number of trials
-numTrials = 100; %24;
+numTrials = 124; %24;
 %umTrials = 24;
 
 %% randomize delay durations
-maxDelay = 30;
-minDelay = 5;
+maxDelay = 60;
+minDelay = 20;
 delayDur = minDelay:1:maxDelay; % 5-45 seconds
 rng('shuffle')
 
@@ -122,11 +127,11 @@ delayLenTrial = [];
 next = 0;
 while next == 0
 
-    if numel(delayLenTrial) >= 100
+    if numel(delayLenTrial) >= 124
         next = 1;
     else
-        shortDuration  = randsample(5:15,5,'true');
-        longDuration   = randsample(16:30,5,'true');
+        shortDuration  = randsample(20:45,6,'true');
+        longDuration   = randsample(46:60,6,'true');
         
         % used for troubleshooting ->
         %shortDuration  = randsample(1:5,5,'true');
@@ -140,10 +145,10 @@ end
 
 % designate what 20% looks like
 indicatorOUT = [];
-for i = 1:10:100
-    delays2pull = delayLenTrial(i:i+9);
-    numExp = length(delays2pull)*.20;
-    numCon = length(delays2pull)*.20;
+for i = 1:12:124
+    delays2pull = delayLenTrial(i:i+11);
+    numExp = 4;%length(delays2pull)*.30;
+    numCon = 4;%length(delays2pull)*.30;
     totalN = numExp+numCon;
     
     % randomly select which delay will be high and low
@@ -153,14 +158,14 @@ for i = 1:10:100
     % high and low must happen before yoked
     next = 0;
     while next == 0
-        idx = randperm(10,totalN);
+        idx = randperm(12,totalN);
         if idx(1) < idx(3) && idx(1) < idx(4) && idx(2) < idx(3) && idx(2) < idx(4)
             next = 1;
         end
     end
     
     % first is always high, second low, third, con h, 4 con L
-    indicator = cellstr(repmat('Norm',[10 1]));
+    indicator = cellstr(repmat('Norm',[12 1]));
     
     % now replace
     indicator{idx(1)} = 'high';
