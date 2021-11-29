@@ -39,9 +39,10 @@ function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
     % make figure
     figure('color','w'); hold on;     
     for i = 1:length(data)
-        bar(i,nanmean(data{i}),'FaceColor',[0 0.5 1]);
+        %bar(i,nanmean(data{i}),'FaceColor',[0 0.5 1]);
+        bar(i,nanmean(data{i}),'FaceColor',[.5 .5 .5],'LineWidth',1);
         disp(data{i})
-        errorbar(i,nanmean(data{i}),stderr(data{i},1),'Color','k');
+        errorbar(i,nanmean(data{i}),stderr(data{i},1),'Color','k','LineWidth',1);
         if exist('jitter')
             if jitter == 1 | contains(jitter,'y')
                 %{
