@@ -34,6 +34,14 @@ disp(['Getting LFP names for ' targetRat])
 cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
 load('baselineData','LFP1name','LFP2name')
 
+% bandaide bc this rats PFC red went out
+%{
+if contains(targetRat,'21-16')
+    LFP1name = 'HPC_black';
+    LFP2name = 'PFC_blue';
+end
+%}
+
 % load in thresholds
 disp('Getting threshold data')
 cd(['X:\01.Experiments\R21\',targetRat,'\thresholds']);
@@ -101,12 +109,12 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 %% experiment design prep.
 
 % define number of trials
-numTrials = 100; %24;
+numTrials = 124; %24;
 %umTrials = 24;
 
 %% randomize delay durations
-maxDelay = 30;
-minDelay = 5;
+maxDelay = 60;
+minDelay = 30;
 delayDur = minDelay:1:maxDelay; % 5-45 seconds
 rng('shuffle')
 
@@ -114,11 +122,11 @@ delayLenTrial = [];
 next = 0;
 while next == 0
 
-    if numel(delayLenTrial) >= 100
+    if numel(delayLenTrial) >= 124
         next = 1;
     else
-        shortDuration  = randsample(5:15,5,'true');
-        longDuration   = randsample(16:30,5,'true');
+        shortDuration  = randsample(30:45,6,'true');
+        longDuration   = randsample(46:60,6,'true');
         
         % used for troubleshooting ->
         %shortDuration  = randsample(1:5,5,'true');
@@ -132,36 +140,44 @@ end
 
 % designate what 20% looks like
 indicatorOUT = [];
-for i = 1:10:100
-    delays2pull = delayLenTrial(i:i+9);
-    numExp = length(delays2pull)*.20;
-    numCon = length(delays2pull)*.20;
+for i = 1:12:124
+    delays2pull = delayLenTrial(i:i+11);
+    numExp = 6;%length(delays2pull)*.20;
+    numCon = 6;%length(delays2pull)*.20;
     totalN = numExp+numCon;
     
     % randomly select which delay will be high and low
     %N1=1; N2=10;   % range desired
     %p=randperm(N1:N2);
-        
-    % high and low must happen before yoked
+    
+    % first is always high, second low, third, con h, 4 con L
+    indicator = cellstr(repmat('Norm',[12 1]));
+    
+    % now replace
+    indicator(1:3)   = {'high'};
+    indicator(4:6)   = {'low'};
+    indicator(7:9)   = {'contH'};
+    indicator(10:12) = {'contL'};
+    
+    % shuffle
     next = 0;
     while next == 0
-        idx = randperm(10,totalN);
-        if idx(1) < idx(3) && idx(1) < idx(4) && idx(2) < idx(3) && idx(2) < idx(4)
+        shuffOut = randsample(indicator,12);
+        highO = find(contains(shuffOut,'high')==1);
+        lowO = find(contains(shuffOut,'low')==1);
+        highYO = find(contains(shuffOut,'contH')==1);
+        lowYO = find(contains(shuffOut,'contL')==1);        
+        % make it so that a cont can be before a high, so long as it
+        % follows both highs
+        idxH = find(highO > highYO);
+        idxL = find(lowO > lowYO);    
+        if highO(1) < highYO(1) && highO(2) < highYO(2) && lowO(1) < lowYO(1) && lowO(2) < lowYO(2)
             next = 1;
         end
     end
     
-    % first is always high, second low, third, con h, 4 con L
-    indicator = cellstr(repmat('Norm',[10 1]));
-    
-    % now replace
-    indicator{idx(1)} = 'high';
-    indicator{idx(2)} = 'low';
-    indicator{idx(3)} = 'yokeH';
-    indicator{idx(4)} = 'yokeL';
-    
     % store indicator variable
-    indicatorOUT = [indicatorOUT;indicator];
+    indicatorOUT = [indicatorOUT;shuffOut];
 
 end  
 
@@ -483,7 +499,8 @@ for triali = 1:numTrials
     elseif contains(indicatorOUT{triali},'high')
         dStart = [];
         dStart = tic;        
-        pause(3.5);
+        %pause(3.5);
+        pause(minDelay-1.5);
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
             if i == 1
@@ -581,7 +598,7 @@ for triali = 1:numTrials
             % if coherence wasn't met, replace the next yokeH with a 'Norm'
             % replace the next high with a 'norm'
             delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'yokeH')==1);
+            idxRem = find(contains(indicatorOUT,'contH')==1);
             indicatorOUT{idxRem(1)}='NormHighFail';
         end
         
@@ -590,7 +607,8 @@ for triali = 1:numTrials
     elseif contains(indicatorOUT{triali},'low')
         dStart = [];
         dStart = tic;
-        pause(3.5);        
+        %pause(3.5);   
+        pause(minDelay-1.5);
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
             if i == 1
@@ -693,41 +711,41 @@ for triali = 1:numTrials
             % if coherence wasn't met, replace the next yokeH with a 'Norm'
             % replace the next high with a 'norm'
             delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'yokeL')==1);
-            indicatorOUT{idxRem(1)}='NormHighFail';
+            idxRem = find(contains(indicatorOUT,'contL')==1);
+            indicatorOUT{idxRem(1)}='NormLowFail';
         end
         
     % only yoke up if you have options to pull from, if not then it'll
     % become a 'norm' trial
-    elseif contains(indicatorOUT{triali},'yokeL')  
+    elseif contains(indicatorOUT{triali},'contL')
         
         if isempty(yokL)==0
             % pause for yoked control
             disp(['Pausing for low yoked control of ',num2str(yokL(1))])
             pause(yokL(1));
-            indicatorOUT{triali} = 'yokL_MET';
+            indicatorOUT{triali} = 'yokeL_MET';
             delayLenTrial(triali) = yokL(1);            
             % delete so that next time, 1 is the updated delay
             yokL(1)=[];
         elseif isempty(yokL)==1
             disp(['Normal delay of ',num2str(delayLenTrial(triali))])
             pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokL_FAIL';
+            indicatorOUT{triali} = 'yokeL_FAIL';
         end
         
-    elseif contains(indicatorOUT{triali},'yokeH') && isempty(yokH)==0
+    elseif contains(indicatorOUT{triali},'contH')
         % if you have a yoke to pull from
         if isempty(yokH)==0
             disp(['Pausing for high yoked control of ',num2str(yokH(1))])
             pause(yokH(1));
-            indicatorOUT{triali} = 'yokH_MET';  
+            indicatorOUT{triali} = 'yokeH_MET';  
             delayLenTrial(triali) = yokH(1);
             yokH(1)=[];
         % if you don't have a yoke to pull from
         elseif isempty(yokH)==1
             disp(['Normal delay of ',num2str(delayLenTrial(triali))])
             pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokH_FAIL';          
+            indicatorOUT{triali} = 'yokeH_FAIL';          
         end        
     end    
        

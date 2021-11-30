@@ -43,6 +43,13 @@ Return = find(contains(EventStrings,[{'Return'}])==1);
 RightTurn = find(contains(EventStrings,[{'ReturnRight'}]));
 LeftTurn  = find(contains(EventStrings,[{'ReturnLeft'}]));
 
+% delay
+delayEntry = find(contains(EventStrings,[{'DelayEntry'}])==1);
+delayExitTemp  = find(contains(EventStrings,[{'DelayExit'}])==1);
+% first delay entry
+firstDelayExit = find(contains(EventStrings,[{'TrialStart'}])==1);
+delayExit = vertcat(firstDelayExit,delayExitTemp);
+
 %% use sequence of events to piece together the int file
 numTrials = length(CPentry);
 if numTrials > numTrials_maze.numTrials
@@ -52,14 +59,19 @@ Int = zeros([numTrials 8]);
 
 for triali = 1:numTrials
     
+    % delay exit
+    Int(triali,1) = TimeStamps(delayExit(triali));
+    
     % cp entry
     Int(triali,5) = TimeStamps(CPentry(triali));
     
     % cp exit
     Int(triali,6) = TimeStamps(CPexit(triali));
     
-    % return arm
-    Int(triali,8) = TimeStamps(Return(triali));
+    % delay entry
+    %Int(triali,8) = TimeStamps(Return(triali));\
+    Int(triali,8) = TimeStamps(delayEntry(triali));
+
 
     % Track left/right
     if contains(EventStrings(Return(triali)),'ReturnRight')
@@ -92,7 +104,7 @@ if contains(answer,'Y') | contains(answer,'y')
     numTrials = size(Int,1);
 
     p1 = []; p2 = [];
-    for i = 1:numTrials
+    for i = 1:numTrials-1
         figure('color','w'); hold on;    
         p1 = plot(pos_x,pos_y,'Color',[.8 .8 .8]); 
         p1.Annotation.LegendInformation.IconDisplayStyle = 'off';
@@ -100,6 +112,9 @@ if contains(answer,'Y') | contains(answer,'y')
         % get position data on a trial-by-trial basis
         x_trial = pos_x(pos_t >= Int(i,5) & pos_t <= Int(i,6));
         y_trial = pos_y(pos_t >= Int(i,5) & pos_t <= Int(i,6));
+        
+        x_trial = pos_x(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
+        y_trial = pos_y(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
         
         plot(x_trial,y_trial,'r','LineWidth',2)
 

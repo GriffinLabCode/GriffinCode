@@ -34,6 +34,14 @@ disp(['Getting LFP names for ' targetRat])
 cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
 load('baselineData','LFP1name','LFP2name')
 
+% bandaide bc this rats PFC red went out
+%{
+if contains(targetRat,'21-16')
+    LFP1name = 'HPC_black';
+    LFP2name = 'PFC_blue';
+end
+%}
+
 % load in thresholds
 disp('Getting threshold data')
 cd(['X:\01.Experiments\R21\',targetRat,'\thresholds']);
@@ -157,8 +165,8 @@ for i = 1:10:100
     % now replace
     indicator{idx(1)} = 'high';
     indicator{idx(2)} = 'low';
-    indicator{idx(3)} = 'yokeH';
-    indicator{idx(4)} = 'yokeL';
+    indicator{idx(3)} = 'contH';
+    indicator{idx(4)} = 'contL';
     
     % store indicator variable
     indicatorOUT = [indicatorOUT;indicator];
@@ -581,7 +589,7 @@ for triali = 1:numTrials
             % if coherence wasn't met, replace the next yokeH with a 'Norm'
             % replace the next high with a 'norm'
             delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'yokeH')==1);
+            idxRem = find(contains(indicatorOUT,'contH')==1);
             indicatorOUT{idxRem(1)}='NormHighFail';
         end
         
@@ -693,41 +701,41 @@ for triali = 1:numTrials
             % if coherence wasn't met, replace the next yokeH with a 'Norm'
             % replace the next high with a 'norm'
             delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'yokeL')==1);
-            indicatorOUT{idxRem(1)}='NormHighFail';
+            idxRem = find(contains(indicatorOUT,'contL')==1);
+            indicatorOUT{idxRem(1)}='NormLowFail';
         end
         
     % only yoke up if you have options to pull from, if not then it'll
     % become a 'norm' trial
-    elseif contains(indicatorOUT{triali},'yokeL')  
+    elseif contains(indicatorOUT{triali},'contL')
         
         if isempty(yokL)==0
             % pause for yoked control
             disp(['Pausing for low yoked control of ',num2str(yokL(1))])
             pause(yokL(1));
-            indicatorOUT{triali} = 'yokL_MET';
+            indicatorOUT{triali} = 'yokeL_MET';
             delayLenTrial(triali) = yokL(1);            
             % delete so that next time, 1 is the updated delay
             yokL(1)=[];
         elseif isempty(yokL)==1
             disp(['Normal delay of ',num2str(delayLenTrial(triali))])
             pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokL_FAIL';
+            indicatorOUT{triali} = 'yokeL_FAIL';
         end
         
-    elseif contains(indicatorOUT{triali},'yokeH') && isempty(yokH)==0
+    elseif contains(indicatorOUT{triali},'contH')
         % if you have a yoke to pull from
         if isempty(yokH)==0
             disp(['Pausing for high yoked control of ',num2str(yokH(1))])
             pause(yokH(1));
-            indicatorOUT{triali} = 'yokH_MET';  
+            indicatorOUT{triali} = 'yokeH_MET';  
             delayLenTrial(triali) = yokH(1);
             yokH(1)=[];
         % if you don't have a yoke to pull from
         elseif isempty(yokH)==1
             disp(['Normal delay of ',num2str(delayLenTrial(triali))])
             pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokH_FAIL';          
+            indicatorOUT{triali} = 'yokeH_FAIL';          
         end        
     end    
        
