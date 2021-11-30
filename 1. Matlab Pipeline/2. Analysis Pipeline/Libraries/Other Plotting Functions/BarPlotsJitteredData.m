@@ -97,6 +97,7 @@ if plot_bar == 1 && jitter == 1
             end
 
         end
+        
 
     else   
 
