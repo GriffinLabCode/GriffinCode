@@ -4,11 +4,7 @@
 %% Define data folder manually and add necessary path to working directory
 
 % clear workspace
-clear; clc
-
-% designate folder where session-specfic files are located (most important)
-datafolder = pwd;
-cd(datafolder)
+function [] = convertFiles(datafolder)
 
 % define which CSCs to convert. Maybe you only want to convert CSCs 1 and
 % 3. If you want CSCs 1:16: numCSC = 1:16;

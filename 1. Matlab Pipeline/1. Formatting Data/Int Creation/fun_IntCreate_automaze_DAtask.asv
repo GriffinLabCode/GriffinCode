@@ -48,13 +48,10 @@ for diri = 1:length(rats)
             idxKeep = find(contains(dataINfolder,rats{diri})==1);
             dataINfolder = dataINfolder(idxKeep);
 
-            % convert events
-            convertFiles(datafolder);
-            
             % load in events
             pos_x = []; pos_y = [];  pos_t = []; Events = []; EventStrings = []; TimeStamps = [];
             load('Events','EventStrings','TimeStamps')
-            [pos_x,pos_y,pos_t] = getVTdata(datafolder,'interp','VT1.mat');
+            %[pos_x,pos_y,pos_t] = getVTdata(datafolder,'interp','VT1.mat');
 
             %% get sequence of events
             dataINfolder = dir(datafolder);
