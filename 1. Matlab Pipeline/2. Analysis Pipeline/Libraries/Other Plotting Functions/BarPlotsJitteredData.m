@@ -75,11 +75,12 @@ if plot_bar == 1 && jitter == 1
         for i = 1:length(mean_data)
 
             % make bar graph
-            b                    = bar(num_vars(i),mean_data(i));   
+            b                    = bar(num_vars(i),mean_data(i),'FaceColor',[.6 .6 .6],'LineWidth',1);   
             %b.LineWidth          = 2;
             er                   = errorbar(num_vars(i),mean_data(i),stderr(i));  
             er.Color             = [0 0 0];                            
             er.LineStyle         = 'none'; 
+            er.LineWidth         = 1;
             %er.LineWidth         = 2;
             jitterElements       = unique(jitterIdx); % different values for grouping data
 
@@ -270,5 +271,5 @@ if jitter == 1
     end   
 
     % make font larger
-    set(gca,'FontSize',20);  
+    set(gca,'FontSize',11);  
 end
