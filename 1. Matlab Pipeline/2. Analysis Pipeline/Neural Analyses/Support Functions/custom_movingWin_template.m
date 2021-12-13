@@ -11,55 +11,42 @@
 % -- OUTPUTS -- %
 % you define them
 %
-% written by John Stout
-%
-clear starter ender
+% taken from chronux
 
-% get data
-%data1 = cleaned_lfp_hpc_stem2gz{triali};
-%data2 = cleaned_lfp_pfc_stem2gz{triali};
+function [varargout] = custom_movingWin_template(data1,data2,srate)
+
+% reorient data
+data1 = change_row_to_column(data1);
+data2 = change_row_to_column(data2);
+
+% preparatory steps
+f = [1:.5:20];
+Fs = srate;
+Nwin=round(Fs*movingwin(1)); % number of samples in window
+Nstep=round(movingwin(2)*Fs); % number of samples to step through
+[N,Ch]=check_consistency(data1,data2);
+winstart=1:Nstep:N-Nwin+1;
+nw=length(winstart);
+
+C = [];
+for n=1:nw
     
-function [varargout] = coherencyc_theta_movWinCustom(data1,data2,params)
-
-% first for stem lfp
-winStep   = params.movingwin(2); % 250ms
-winSizeTime = params.movingwin(1); % in sec
-winLength = round((length(data1)/(srate*winSizeTime))/(winStep),1);
-   
-for i = 1:winLength
-    % get 2 sec moving window by .25
-    numSamples2Move = srate*winStep;
-    if i == 1      
-        % define a starter variable that will be saved for each loop and
-        % modified each time
-        starter(i) = 1;
-        ender(i)   = srate*winSizeTime;
-
-        % get data        
-        data_temp1 = []; data_temp2 = [];
-        data_temp1 = data1(starter(i):ender(i));
-        data_temp2 = data2(starter(i):ender(i));
-        
-		% -- enter your code here and save per each loop -- %
-        
-    else
-        starter(i) = starter(i-1)+(numSamples2Move);
-        ender(i)   = starter(i)+(srate*winSizeTime);
-
-        % in the case where you've run out of data, break out of the loop
-        if ender(i) > length(data1)
-            starter(i) = [];
-            ender(i)   = [];
-            break
-        end
-        
-        % get data
-        data_temp1 = []; data_temp2 = [];
-        data_temp1 = data1(starter(i):ender(i));
-        data_temp2 = data2(starter(i):ender(i));        
-           
-		% -- enter your code here and save per each loop -- %
-        
-    end
+    % get data
+    indx     = winstart(n):winstart(n)+Nwin-1;
+    datawin1 = data1(indx,:);
+    datawin2 = data2(indx,:);
+    
+    % detrend
+    %datawin1 = detrend(datawin1,3);
+    %datawin2 = detrend(datawin2,3);
+    
+    % compute coherence
+    %c = mscohere(datawin1,datawin2,[],[],f,srate);  
+    
+    % store coherence
+    %C(n,:)=c;
+end
+% reorient coherence matrix
+%C = C';
 
 end
