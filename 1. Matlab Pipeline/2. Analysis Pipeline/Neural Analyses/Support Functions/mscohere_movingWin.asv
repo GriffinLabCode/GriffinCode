@@ -23,13 +23,13 @@
 %
 % written by John Stout
     
-function [cohMat,dataDet1,dataDet2] = mscohere_movingWin(data1,data2,movingwin,srate,f)
+function [coh,dataDet1,dataDet2] = mscohere_movingWin(data1,data2,movingwin,srate,f)
 clear starter ender coh
 
 % first for stem lfp
 %movingwin = [1.25 .25];
 %srate = 2000;
-f = [1:.5:20];
+%f = [1:.5:20];
 winStep   = movingwin(2); % 250ms
 winSizeTime = movingwin(1); % in sec
 winLength = round((length(data1)/(srate*winSizeTime))/(winStep),1);
@@ -104,13 +104,5 @@ for i = 1:winLength
 
 end
 % get data into freq X time matrix
-cohMat = vertcat(coh{:})';
-totalTime = length(data1)/srate;
-% t might not be correct bc the moving window may not complete the entire
-% signal
-t = linspace(-totalTime/2,totalTime/2,size(cohMat,2));
-%{
-figure('color','w')
-pcolor(t,f,cohMat);
-shading interp
-%}
+cohMat = 
+

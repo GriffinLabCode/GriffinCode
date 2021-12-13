@@ -26,14 +26,44 @@
 function [cohMat,dataDet1,dataDet2] = mscohere_movingWin(data1,data2,movingwin,srate,f)
 clear starter ender coh
 
-% first for stem lfp
-%movingwin = [1.25 .25];
-%srate = 2000;
+% reorient data
+data1 = change_row_to_column(data1);
+data2 = change_row_to_column(data2);
+
+% preparatory steps
 f = [1:.5:20];
-winStep   = movingwin(2); % 250ms
-winSizeTime = movingwin(1); % in sec
-winLength = round((length(data1)/(srate*winSizeTime))/(winStep),1);
-   
+Fs = srate;
+Nwin=round(Fs*movingwin(1)); % number of samples in window
+Nstep=round(movingwin(2)*Fs); % number of samples to step through
+[N,Ch]=check_consistency(data1,data2);
+winstart=1:Nstep:N-Nwin+1;
+nw=length(winstart);
+
+for n=1:nw;
+    indx=winstart(n):winstart(n)+Nwin-1;
+    datawin1=data1(indx,:);datawin2=data2(indx,:);
+    if nargout==10;
+      [c,ph,s12,s1,s2,f,confc,phie,cerr]=coherencyc(datawin1,datawin2,params);
+%       phierr(1,n,:,:)=squeeze(phie(1,:,:));
+%       phierr(2,n,:,:)=squeeze(phie(2,:,:));
+      phistd(n,:,:)=phie;
+      Cerr(1,n,:,:)=squeeze(cerr(1,:,:));
+      Cerr(2,n,:,:)=squeeze(cerr(2,:,:));
+    elseif nargout==9;
+      [c,ph,s12,s1,s2,f,confc,phie]=coherencyc(datawin1,datawin2,params);
+%       phierr(1,n,:,:)=squeeze(phie(1,:,:));
+%       phierr(2,n,:,:)=squeeze(phie(2,:,:));
+       phistd(n,:,:)=phie;
+    else
+      [c,ph,s12,s1,s2,f]=coherencyc(datawin1,datawin2,params);
+    end;
+    C(n,:,:)=c;
+    S12(n,:,:)=s12;
+    S1(n,:,:)=s1;
+    S2(n,:,:)=s2;
+    phi(n,:,:)=ph;
+end
+
 for i = 1:winLength
     % get 2 sec moving window by .25
     numSamples2Move = srate*winStep;
