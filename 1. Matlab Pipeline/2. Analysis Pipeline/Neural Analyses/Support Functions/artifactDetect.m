@@ -11,6 +11,9 @@
 % extract and detect noise events for the purpose of ignoring them in
 % on-line coherence detection
 %
+% IF YOU ARE USING THIS ON YOUR DATA:
+% --> FIRST, RUN get_artifactBaseline for all sessions <--
+%
 % -- INPUTS -- %
 % data: a 2(row) by N (col) array of data. Each row of data is LFP that
 %       should be treated the SAME as it was for baseline detection. If
@@ -33,7 +36,7 @@
 %
 % written by John Stout
 
-function [idxNoise,zArtifact,percentSat] = artifactDetect(data,baselineMean,baselineSTD,noiseThreshold)
+function [percentSat,idxNoise,zArtifact] = artifactDetect(data,baselineMean,baselineSTD,noiseThreshold)
 
 % zscore data against your defined mean and std
 zArtifact = [];
