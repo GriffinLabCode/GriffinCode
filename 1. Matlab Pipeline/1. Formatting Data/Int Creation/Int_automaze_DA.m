@@ -14,7 +14,7 @@ datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
 
-ratName = '21-16';
+ratName = '21-12';
 
 % load in events
 load('Events','EventStrings','TimeStamps')

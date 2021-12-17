@@ -140,6 +140,7 @@ for i = 2:numSamples-1
         stem_entry = [stem_entry t(i)];
         % re-assign startbox as he now was in stem
         whereWasRat = 'stem';
+        %pause;
     end
 
     % if he is not on the stem, but he was previously on the stem, and he

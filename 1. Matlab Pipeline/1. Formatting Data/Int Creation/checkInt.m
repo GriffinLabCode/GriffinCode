@@ -42,13 +42,13 @@ for i = 1:numTrials
                 plot(Int_x,Int_y,'r','Marker','*','MarkerSize',12)
             end
         end
-        disp('Keep? ')
+        %disp('Keep? ')
 
         % correct any issues
-        question = 'Keep trial? [Y/N] / [y/n] ';
+        question = 'Tag trial for removal? [Y/N] / [y/n] ';
         answer   = input(question,'s');
 
-        if contains(answer,[{'N'} {'n'}])
+        if contains(answer,[{'y'} {'Y'}])
             remData(i) = 1;
         else
             remData(i) = 0;

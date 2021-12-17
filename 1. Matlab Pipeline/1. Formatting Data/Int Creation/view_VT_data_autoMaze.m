@@ -15,7 +15,7 @@ datafolder = pwd;
 cd(datafolder);
 
 % Interpolate missing data? Alternatives is to exclude missing data, or ignore missing data.
-missing_data = 'exclude'; % can also be 'exclude' or 'ignore'
+missing_data = 'interp'; % can also be 'exclude' or 'ignore'
 
 % vt_name
 vt_name = 'VT1.mat';
@@ -34,30 +34,29 @@ vt_name = 'VT1.mat';
 %% Create boxes around locations of interest for int creation
 
 % right reward zone (sideways room, R)
-minY = 0;  addY  = 110-minY;
-minX = 200; addX = 375-minX;
+minY = 50;  addY  = 120-minY;
+minX = 380; addX = 450-minX;
 rRW_fld = [minX minY addX addY];
 
 % left reward zone (sideways room, R)
-minY = 300; addY = 400-minY;
-minX = 200; addX = 375-minX;
+minY = 304; addY = 350-minY;
+minX = 380; addX = 450-minX;
 lRW_fld = [minX minY addX addY];
 
 % central stem (sideways room, R)
-minY = 185; addY = abs(185-235);
-minX = 260+35; addX = 30;
+minY = 180; addY = abs(minY-235);
+minX = 355; addX = abs(minX-395);
 STM_fld = [minX minY addX addY]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
 
-% delay pedestal (sideways room, R)
-minY = 185; addY = abs(185-235);
-minX = 325; addX = 115;
-PED_fld = [minX minY addX addY];
-
 % choice point/T-junction (sideways room, R)
-minY = 175; addY = 65;
-minX = 260; addX = 35;
+minY = 120; addY = abs(minY-304);
+minX = 395; addX = abs(minX-440);
 CP_fld = [minX minY addX addY]; %[260 150 30 270];
 
+% delay pedestal (sideways room, R)
+minY = 190; addY = abs(minY-220);
+minX = 260; addX = abs(minX-342);
+PED_fld = [minX minY addX addY];
 
 figure('color','w');
 plot(ExtractedX, ExtractedY);
