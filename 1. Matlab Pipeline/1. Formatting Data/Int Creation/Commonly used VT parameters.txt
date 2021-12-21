@@ -69,6 +69,32 @@ ________________________________________________________
 
 ---------AUTOMAZE RM 154 LSRF - 2021---------
 
+->>> Choice point on the treadmill <<<-
+
+% right reward zone (sideways room, R)
+minY = 300; addY = 425-minY;
+minX = 475; addX = 555-minX;
+rRW_fld = [minX minY addX addY];
+
+% left reward zone (sideways room, R)
+minY = 300; addY = 425-minY;
+minX = 150; addX = 225-minX;
+lRW_fld = [minX minY addX addY];
+
+% central stem (sideways room, R)
+minY = 150; addY = 350-minY;
+minX = 330; addX = 370-minX;
+STM_fld = [minX minY addX addY]; 
+
+% delay pedestal (sideways room, R) OR T-maze base junction
+minY = 20; addY = 135-minY;
+minX = 275; addX = 425-minX;
+PED_fld = [minX minY addX addY];
+
+% choice point/T-junction (sideways room, R)
+minY = 350; addY = 425-minY;
+minX = 320; addX = 380-minX;
+CP_fld = [minX minY addX addY]; %[260 150 30 270];
 
 
 
