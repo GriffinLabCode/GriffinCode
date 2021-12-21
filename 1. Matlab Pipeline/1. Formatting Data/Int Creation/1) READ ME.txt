@@ -21,3 +21,35 @@ CHECK YOUR INT FILE!!!
 
 In the Int_** code, it will ask if you want to check your data.
 Absolutely do this! Sometimes, an extra trial will be logged.
+
+____________________________________________________________
+
+->>>>>> IF USING THE AUTOMAZE <<<<<<<<-
+
+** important ** 
+Old versions of the automaze lack sophistication with the IR beam
+generating the Int file. This just makes us take some extra steps 
+(see below). Automaze needs some hardware updates (eg IR beam additions)
+and software updates (creating the Int file in real time)
+
+1) Run Int_automaze_DA (will need to craft differently for other tasks)
+2) Run Int_hybrid (PLEASE CHECK THAT YOUR DATA IS CORRECT!)
+	-> Red lines indicate stem entry to cp exit
+	-> Black is the rest
+3) Run Int_vs_autoAccuracy to cross-validate
+
+______________________________________________________________
+
+CODE:
+
+checkInt: a Script used to flip through trials and check the int file by plotting trajectories
+identify_trajectory_divergence: A way to manually select the choice divergence point
+Int_automaze_DA: create Int file using IR beams
+Int_DAorCA_bigMaze: used to create Int file on larger, non automated maze
+Int_DNMP_bigMaze: Used to create int file for DNMP task on non-automated maze
+Int_hybrid: Used to create int file on automaze - used in combination with Int_automaze_DA
+Int_vs_autoAccuracy: Used to cross-validate Int file with automaze accuracy variable
+view_VT_data: All variants are to plot boxes around VT data - this is required to generate the Int file
+	as it sets the boundaries (eg what is stem entry vs cp exit)
+whereishe_master: used for the big maze
+

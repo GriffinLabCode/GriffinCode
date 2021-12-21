@@ -14,7 +14,7 @@ datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
 
-ratName = '21-12';
+ratName = '21-21';
 
 % load in events
 load('Events','EventStrings','TimeStamps')
@@ -113,8 +113,8 @@ if contains(answer,'Y') | contains(answer,'y')
         x_trial = pos_x(pos_t >= Int(i,5) & pos_t <= Int(i,6));
         y_trial = pos_y(pos_t >= Int(i,5) & pos_t <= Int(i,6));
         
-        x_trial = pos_x(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
-        y_trial = pos_y(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
+        %x_trial = pos_x(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
+        %y_trial = pos_y(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
         
         plot(x_trial,y_trial,'r','LineWidth',2)
 
