@@ -15,9 +15,12 @@
 %                       containing relative spike times.
 % timeAround: time (seconds) around the data of interest. This should match
 %               your input to "rasterPrep"
+%
+% -- OUTPUTS -- %
+% spkHist: spike histogram, where spike data is binned into 100ms windows
 
 
-function [] = plotRaster(relativeSpikeTimes,timeAround)
+function [spkHist] = plotRaster(relativeSpikeTimes,timeAround)
 
     % define the number of trials
     nTrials = size(relativeSpikeTimes,2);
@@ -29,6 +32,11 @@ function [] = plotRaster(relativeSpikeTimes,timeAround)
     xmax     = timeAround(2);
     tickSize = 0.4;
 
+    % assign 'edges' a variable that provides a resolution for histogram
+    bin   = 0.01; % 0.01 seconds
+    edges = (xmin:bin:xmax);
+
+    spkHist = [];
     figure('color','w');
     for celli = 1:nUnits % loop across each cell
         subplot(nUnits,1,celli); hold on; % create a subplot
@@ -40,8 +48,10 @@ function [] = plotRaster(relativeSpikeTimes,timeAround)
             else
                 line([relativeSpikeTimes{celli,triali} relativeSpikeTimes{celli,triali}],[triali-tickSize triali+tickSize],'Color','k')
             end
+            spkHist{celli}(:,triali) = histc(relativeSpikeTimes{celli,triali},edges);
         end
         ylim(ylimits)
     end
-    %axis([-5 5 0 nTrials])
+    
+    
 end

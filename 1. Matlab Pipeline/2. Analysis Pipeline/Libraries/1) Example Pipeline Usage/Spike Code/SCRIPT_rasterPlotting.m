@@ -41,7 +41,15 @@ spkEvents = spk_sec;
 % spiking data converted to seconds.
 
 % plot raster
-plotRaster(relativeSpikeTimes,timeAround)
+getSpikeRaster(relativeSpikeTimes,timeAround)
+
+% -- now, lets get the peri-stimulus time histogram data -- %
+% this is important for different reasons. While the spike raster and the
+% PETH tell you very similar things, the PETH allows us to bin the data in
+% a very controlled manner
+timeRes = 0.01; % 100ms resolution
+
+
 
 
 
