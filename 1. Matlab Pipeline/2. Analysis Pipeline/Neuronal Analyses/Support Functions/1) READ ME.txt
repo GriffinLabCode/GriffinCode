@@ -34,3 +34,9 @@ rasterPrep: formatting for raster plotting
 plotRaster: plots spike data as raster 
 
 -----------------------
+
+
+if you're looking to make a raster plot, go here and run the code.
+It's a walk through on how to use the above functions to generates raster plots
+
+1. Matlab Pipeline\2. Analysis Pipeline\Libraries\1) Example Pipeline Usage\Spike Code
