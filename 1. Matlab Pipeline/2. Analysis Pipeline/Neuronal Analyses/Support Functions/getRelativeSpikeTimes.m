@@ -46,9 +46,9 @@ function [relativeSpikeTimes] = getRelativeSpikeTimes(spkEvents,anchorTimes)
     % converting spikes to relative seconds requires that you subtract
     % each spike timestamp from some relative time point, called the
     % anchor time
-    for rowi = 1:size(spkEventsCorrected,1)
-        for coli = 1:size(spkEventsCorrected,2)
-            relativeSpikeTimes{rowi,coli} = spkEventsCorrected{rowi,coli}-anchorTimes(triali);
+    for celli = 1:size(spkEventsCorrected,1)
+        for triali = 1:size(spkEventsCorrected,2)
+            relativeSpikeTimes{celli,triali} = spkEventsCorrected{celli,triali}-anchorTimes(triali);
         end
     end
 

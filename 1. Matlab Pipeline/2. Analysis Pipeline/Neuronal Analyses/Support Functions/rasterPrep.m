@@ -18,7 +18,7 @@ function [spk_sec,anchorTimes,clusters] = rasterPrep(datafolder,tt_name,Int,IntL
 cd(datafolder);
 
 % get spike data
-[spikeTimes,clusters] = get_spikeData(datafolder,tt_name);
+[spikeTimes,clusters] = getSpikeData(datafolder,tt_name);
 
 % define number of trials
 numTrials = size(Int,1);
