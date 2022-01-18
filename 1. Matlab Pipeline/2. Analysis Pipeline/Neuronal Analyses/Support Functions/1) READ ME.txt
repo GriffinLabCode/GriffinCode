@@ -1,11 +1,7 @@
 Function descriptions
 
-get_spikeData: this function allows the user to quickly get spike data
+getSpikeData: this function allows the user to quickly get spike data
 		obtained from the cluster cutting procedure on SpikeSort3D
-
-get_spikeTimes: Another variant of get_spikeData. These functions will be combined
-		in future versions. The spikeDuration variable requires a specific method
-		of saving the data in SpikeSort3D that is only recently being implemented
 
 ** If you want to quickly pull in your spike timestamps that you saved, and assuming
 that you have your spike times saved as .txt files from SpikeSort3D, use the
@@ -33,4 +29,8 @@ rate_map2D: this code creates a firing rate map based on the position data in 2 
 
 spatial_coverage: This function is based on work from Jadhavs lab to identify the spread of firing activity.
 
- 
+rasterPrep: formatting for raster plotting
+
+plotRaster: plots spike data as raster 
+
+-----------------------
