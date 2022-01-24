@@ -2,7 +2,7 @@
 
 % example run through of getting spike data
 clear; clc;
-datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Muscimol\Baseline';
+datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Eric2\Muscimol\Baseline';
 int_name     = 'Int_VTE_JS.mat'; % 'Int2_JS'; % 'Int_file.mat';
 vt_name      = 'VT1.mat';
 missing_data = 'interp';

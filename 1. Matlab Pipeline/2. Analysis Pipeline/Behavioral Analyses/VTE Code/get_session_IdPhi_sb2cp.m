@@ -29,9 +29,9 @@ end
 % strange int problems. I should redefine int file using the updated file
 % creation, then do this again.
 for i = 1:numTrials
-    x_data_raw{i}  = ExtractedX(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
-    y_data_raw{i}  = ExtractedY(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
-    ts_data_raw{i} = TimeStamps(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
+    x_data_raw{i}  = ExtractedX(TimeStamps >= (Int(i,1)-(5*1e6)) & TimeStamps <= Int(i,mazeLoc(2)));
+    y_data_raw{i}  = ExtractedY(TimeStamps >= (Int(i,1)-(5*1e6)) & TimeStamps <= Int(i,mazeLoc(2)));
+    ts_data_raw{i} = TimeStamps(TimeStamps >= (Int(i,1)-(5*1e6)) & TimeStamps <= Int(i,mazeLoc(2)));
 end
 
 % middle position of stem
