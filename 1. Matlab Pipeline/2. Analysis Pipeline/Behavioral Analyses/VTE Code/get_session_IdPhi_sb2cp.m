@@ -25,13 +25,12 @@ if exist('mazeLoc') == 0
     mazeLoc = [1 6];
 end
 
-% get data from center of stem to the goal entry - Ratdle baseline 1 has
-% strange int problems. I should redefine int file using the updated file
-% creation, then do this again.
+% get data from sb entry to cp exit - I want to know what they were doing
+% at CP exit
 for i = 1:numTrials
-    x_data_raw{i}  = ExtractedX(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
-    y_data_raw{i}  = ExtractedY(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
-    ts_data_raw{i} = TimeStamps(TimeStamps >= Int(i,mazeLoc(1)) & TimeStamps <= Int(i,mazeLoc(2)));
+    x_data_raw{i}  = ExtractedX(TimeStamps >= (Int(i,1)-(10*1e6)) & TimeStamps <= Int(i,6));
+    y_data_raw{i}  = ExtractedY(TimeStamps >= (Int(i,1)-(10*1e6)) & TimeStamps <= Int(i,6));
+    ts_data_raw{i} = TimeStamps(TimeStamps >= (Int(i,1)-(10*1e6)) & TimeStamps <= Int(i,6));
 end
 
 % middle position of stem
