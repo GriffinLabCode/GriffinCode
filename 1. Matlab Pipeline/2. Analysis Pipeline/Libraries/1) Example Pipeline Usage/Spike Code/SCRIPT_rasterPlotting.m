@@ -2,11 +2,11 @@
 
 % example run through of getting spike data
 clear; clc;
-datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Eric2\Muscimol\Baseline';
-int_name     = 'Int_VTE_JS.mat'; % 'Int2_JS'; % 'Int_file.mat';
-vt_name      = 'VT1.mat';
-missing_data = 'interp';
-vt_srate     = 30; % 30 samples/sec
+datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Eric2\Muscimol\Muscimol';
+int_name     = 'Int_VTE_JS.mat'; % define your int file name
+vt_name      = 'VT1.mat'; % define your video tracking data name
+missing_data = 'interp'; % define how you want to handle missing VT data
+vt_srate     = 30; % 30 samples/sec is the video tracking sampling rate
 tt_name      = 'TT'; % what are the first two letters of your TTs?
 
 % get video tracking data
@@ -17,11 +17,11 @@ tt_name      = 'TT'; % what are the first two letters of your TTs?
 Int = getIntFile(datafolder,int_name);
 
 % you can get spike data like this
-[spikeData,spikeTimes] = getSpikeData(datafolder,tt_name);
+[spikeData,clusterID] = getSpikeData(datafolder,tt_name);
 
 % however, here, we're going to be generating raster plots
-IntLoc     = 5; % define a location defined by timestamps on your int file. For example, Choice point entry
-timeAround = [2 2]; % define time around the choice point. This is in seconds
+IntLoc     = 1; % define a location defined by timestamps on your int file. For example, Choice point entry
+timeAround = [10 5]; % define time around the choice point. This is in seconds
 [spk_sec,anchorTimes,clusters] = rasterPrep(datafolder,tt_name,Int,IntLoc,timeAround);
 
 % "spk_sec" are spike data converted to seconds
@@ -42,6 +42,18 @@ spkEvents = spk_sec;
 
 % plot raster
 getSpikeRaster(relativeSpikeTimes,timeAround)
+
+% -- what if you're interested in a subset of trials? -- %
+
+% correct choices
+correctTrials             = find(Int(:,4)==0); % get correct trials
+relativeSpikeTimesCorrect = relativeSpikeTimes(:,correctTrials); % get correct data
+getSpikeRaster(relativeSpikeTimesCorrect,timeAround) % run raster plot
+
+% incorrect choices
+incorrectTrials             = find(Int(:,4)==1); % get correct trials
+relativeSpikeTimesIncorrect = relativeSpikeTimes(:,incorrectTrials); % get correct data
+getSpikeRaster(relativeSpikeTimesIncorrect,timeAround) % run raster plot
 
 % -- now, lets get the peri-stimulus time histogram data -- %
 % this is important for different reasons. While the spike raster and the

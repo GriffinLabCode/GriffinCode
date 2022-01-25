@@ -2,7 +2,7 @@
 clear; clc
 
 % inputs
-datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Usher\Muscimol\Baseline';
+datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Eric2\Muscimol\Muscimol';
 int_name     = 'Int_VTE_JS.mat'; % 'Int2_JS'; % 'Int_file.mat';
 vt_name      = 'VT1.mat';
 missing_data = 'interp';
@@ -183,8 +183,8 @@ ylabel('Neuron Number'); shading interp; c = colorbar;
 ylabel(c,'Normalized Smoothed Firing Rate');
 
 figure('color','w');
-jetOn = 1; plot_fig = 1;
-[x_sort,idxsort] = SortedRateMap(rateMap_norm,rateMap_norm,plot_fig,jetOn);
+jetOn = 1; plot_fig = 1; smoothFactor = 5; normData = 'n';
+[x_sort,idxsort] = SortedRateMap(rateMap_norm,rateMap_norm,smoothFactor,normData,plot_fig,jetOn);
 
 %% getting a ton of zeros - somethings not right
 
@@ -284,13 +284,21 @@ for triali = 1:numTrials
 end
 
 %% plot - incorporate updates to this
-trial = 1;
-figure('color','w'); 
-imagesc(posterior{trial}');
-colormap hot;
-colorbar();
-set(gca,'YDir','normal');
-hold on;
-plot(actual_pos{trial}, 'b','LineWidth', 2,'LineStyle','--');
-xlabel('time'); ylabel('position');
-plot(decoded_pos{trial}, 'g', 'LineWidth',0.1);
+%trial = 1;
+for triali = 1:numTrials
+    figure('color','w'); 
+    imagesc(posterior{triali}');
+    colormap hot;
+    colorbar();
+    set(gca,'YDir','normal');
+    hold on;
+    plot(actual_pos{triali}, 'b','LineWidth', 2,'LineStyle','--');
+    xlabel('time'); ylabel('position');
+    plot(decoded_pos{triali}, 'g', 'LineWidth',0.1);
+    pause;
+    close;
+end
+
+data = []; data{1} = decoding_error_baseline(2:end); data{2} = decoding_error(2:end);
+multiBarPlot(data,[{'Baseline'} {'Muscimol'}],'Bayesian Decoding Error (cm)','n')
+[h,p]=ttest2(data{1},data{2})

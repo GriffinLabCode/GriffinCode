@@ -58,4 +58,15 @@ data.information.measurements = 'Measurements of actual maze excluding startbox'
 data.information.pos = 'Cartesian coordinates for rat position. Row 1 is X, row 2 is Y';
 data.information.idealTraj = 'Idealized trajectory used for linearizing position ';
 
+% reformat like the Int file
+numTrials = size(Int,1);
+idealTraj = cell([1 numTrials]);
+for triali = 1:numTrials   
+    if Int(triali,3) == 0 % right turn
+        data.idealTrajOrganized{triali} = data.idealTraj.idealR;        
+    elseif Int(triali,3) == 1 % left turn
+        data.idealTrajOrganized{triali} = data.idealTraj.idealL;
+    end
+end
+ 
 end

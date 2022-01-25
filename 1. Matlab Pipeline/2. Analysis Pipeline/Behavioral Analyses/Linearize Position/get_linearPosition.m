@@ -15,12 +15,14 @@
 %                           x position data for all timestamps "(1,:)" in
 %                           trial 1 "{1}"
 % numBins: The number of linear bins
-%
+% vt_srate: video track data srate
+
 % -- OUTPUTS -- %
 % linearPositionSmooth: linearized position smoothed using a gaussian
 %                       weighted moving average
 % linearPosition: linearized positions across all trials
 % position_lin: updated position data
+% trialTime: x-axis component of the figure to plot linear position
 %
 % IMPORTANT: it should be noted that on some trials, you may not get
 %               position data in a linear bin. However, this can be
@@ -31,7 +33,7 @@
 % rest was written by John Stout.
 
 
-function [linearPosition,position_lin] = get_linearPosition(idealTraj,numBins,position_data)
+function [linearPosition,position_lin,trialTime] = get_linearPosition(idealTraj,numBins,position_data,vt_srate)
 
 % clip data based on linear skeleton
 numTrials   = length(idealTraj);
@@ -73,6 +75,13 @@ for i = 1:numTrials
     % get coordinate points between ideal trajectory and real data
     linearPosition{i} = griddata(idealTraj{i}(1,:),idealTraj{i}(2,:),linearBins,position_lin.X{i},position_lin.Y{i},'nearest');
 
+end
+
+% interpolate time for the x axis
+timeStart = 0;
+for i = 1:length(linearPosition)
+    timeEnd(i) = length(linearPosition{i})/vt_srate;
+    trialTime{i} = linspace(0,timeEnd(i),length(linearPosition{i}));
 end
 
 
