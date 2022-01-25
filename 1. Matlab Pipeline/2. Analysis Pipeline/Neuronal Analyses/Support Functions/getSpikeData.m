@@ -30,7 +30,7 @@
 % written by John Stout
 
 
-function [spkTimes,clusterID,spikeDuration] = get_spkTimes(datafolder,tt_name)
+function [spkTimes,clusterID,spikeDuration] = getSpikeData(datafolder,tt_name)
 
     % load TTs
     cd(datafolder);

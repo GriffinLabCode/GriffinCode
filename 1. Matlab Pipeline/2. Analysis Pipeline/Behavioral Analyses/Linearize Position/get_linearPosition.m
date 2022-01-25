@@ -6,7 +6,6 @@
 % *** It is highly recommended that you use a 1cm resolution. ***
 %
 % -- INPUTS -- %
-% datafolder: string containing directory of data
 % idealTraj: the trajectory skeleton obtained from get_linearSkeleton
 % position_data: a cell array where each cell is a trial, and within each
 %                   cell there is a 3xN array. The first row is X data,
@@ -15,11 +14,7 @@
 %                       -> position_data{1}(1,:) would give you the
 %                           x position data for all timestamps "(1,:)" in
 %                           trial 1 "{1}"
-% fix_position: set to 1, 'Y', or 'y' if you want to handle misplaced bins.
-%                   this is only relevant in situations where you have
-%                   overlapping bins, like in the case where return arm
-%                   ends overlap just a little (if the rat sweeps his head
-%                   around) with initial stem behavior
+% numBins: The number of linear bins
 %
 % -- OUTPUTS -- %
 % linearPositionSmooth: linearized position smoothed using a gaussian
@@ -36,7 +31,7 @@
 % rest was written by John Stout.
 
 
-function [linearPosition,position_lin] = get_linearPosition(idealTraj,linearBins,position_data)
+function [linearPosition,position_lin] = get_linearPosition(idealTraj,numBins,position_data)
 
 % clip data based on linear skeleton
 numTrials   = length(idealTraj);
@@ -72,6 +67,7 @@ end
 
 % linear position
 linearPosition = cell([1 numTrials]);
+linearBins = 1:numBins;
 for i = 1:numTrials
     
     % get coordinate points between ideal trajectory and real data

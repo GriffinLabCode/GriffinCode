@@ -72,7 +72,7 @@ end
 
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,int_name,vt_name,missing_data,mazePos);
 clear linearPosition position
-[linearPosition,position] = get_linearPosition(idealTraj,prePosData);
+[linearPosition,position] = get_linearPosition(idealTraj,total_dist,prePosData);
 %[linearPosition,position] = get_linearPosition(datafolder,idealTraj,Int,ExtractedX,ExtractedY,TimeStamps_VT,mazePos,stemOrientation,startStemPos);
 
 %% get spike data
@@ -89,6 +89,12 @@ smooth_cm_res   = bin_size*resolution_pos;
 
 % get linearized fr for all clusters
 smoothFR = []; instFR = []; numSpks = []; sumTime = []; instSpk = []; instTime = [];
+
+%% POTENTIAL PROBLEM
+% I think it is a problem to group spikes. We should instead be
+% interpolating out the position data? For example, in the inst spike data,
+% you have some columns with 3 spikes, but spikes can't possibly happen at
+% the exact same time. So position might need finer resolution.
 for ci = 1:length(clusters)
     
     % spike time stamps

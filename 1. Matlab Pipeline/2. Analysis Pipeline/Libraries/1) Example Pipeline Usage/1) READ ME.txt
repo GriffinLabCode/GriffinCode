@@ -1,0 +1,3 @@
+Code in the following subfolders are not added to the main directories.
+
+There are examples for how you can use the MATLAB pipeline to accomplish your needs

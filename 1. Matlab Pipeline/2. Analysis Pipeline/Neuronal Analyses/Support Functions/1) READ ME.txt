@@ -1,0 +1,42 @@
+Function descriptions
+
+getSpikeData: this function allows the user to quickly get spike data
+		obtained from the cluster cutting procedure on SpikeSort3D
+
+** If you want to quickly pull in your spike timestamps that you saved, and assuming
+that you have your spike times saved as .txt files from SpikeSort3D, use the
+'get_spikeData' function. It will pull all neuron spiking data from your datafolder
+
+
+getRelativeSpikeTimes: This function transforms your spike timestamps into relative seconds. 
+			For example, if you are interested in getting spike times around the
+			choice-point, and you want the spike times centered such that 0 = choice point
+			entry and 1 = 1s from choice point exit, this function is for you. Recall that 
+			the spike times in raw format have an arbitrary 0 point based on the acquisition system
+			
+		-> This is a great function if you want to create a raster plot or peristimulus time histogram!
+
+
+inst_neuronal_activity: This function generates instantaneous firing rates using the video tracking data as the sampling rate.
+			This code is useful if you wanted to comparing spiking activity directly to position data using VT sampling rate
+
+linearizedFR: This function generates firing rate based on linearized position data. Its important to note that the sampling rate is based on VT data
+
+PETH_delay: This code generates peristimulus time histogram around the delay. This code will be deprecated and replaced with a more generalizable function
+
+rate_map2D: this code creates a firing rate map based on the position data in 2 dimensions (X and Y dimensions). The
+		data will be directly mapped to the position data and look like the T-maze.
+
+spatial_coverage: This function is based on work from Jadhavs lab to identify the spread of firing activity.
+
+rasterPrep: formatting for raster plotting
+
+plotRaster: plots spike data as raster 
+
+-----------------------
+
+
+if you're looking to make a raster plot, go here and run the code.
+It's a walk through on how to use the above functions to generates raster plots
+
+1. Matlab Pipeline\2. Analysis Pipeline\Libraries\1) Example Pipeline Usage\Spike Code
