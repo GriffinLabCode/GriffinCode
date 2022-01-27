@@ -1,12 +1,13 @@
-%% 
-% a second filter for VTE
+%% get_oopsTrials
+% this code was designed to get VTE that are back and forth head
+% movements. This is an alternative to IdPhi if it doesn't work for your
+% maze or behavior. 
+%
+% Named after the yamamoto et al 2014 paper
+%
+% JS
 
-% this code identifies trials where the rats enter both goal arms before
-% making a choice
-
-% only works for automaze right now
-
-function [oopsTrial] = oopsTrials(x,y)
+function [oopsTrial] = get_oopsTrials(x,y)
 
 % These are the dimensions selected after checking multiple sessions across
 % multiple rats
@@ -54,8 +55,8 @@ for triali = 1:length(x)
 end
 
 %{
+figure; hold on;
 plot(x,y,'r')
-hold on;
 rectangle ('position', rCP_fld);  % right reward field
 rectangle ('position', lCP_fld);  % left reward field
 %}
