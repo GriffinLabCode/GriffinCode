@@ -1,5 +1,7 @@
 %% Int_hybrid
 %
+% 1) Run Int_automaze_DA
+%
 % This code is used in the situations where you have IR beams that
 % generated some of your int file, but you're missing some places of
 % interest, or maybe you want to change some locations. For example, maybe
