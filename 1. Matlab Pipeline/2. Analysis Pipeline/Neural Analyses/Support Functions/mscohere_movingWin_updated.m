@@ -23,7 +23,7 @@
 %
 % written by John Stout
     
-function [C] = mscohere_movingWin_updated(data1,data2,movingwin,srate,f)
+function [C] = mscohere_movingWin_updated(data1,data2,movingwin,srate)
 clear starter ender coh
 
 % reorient data
