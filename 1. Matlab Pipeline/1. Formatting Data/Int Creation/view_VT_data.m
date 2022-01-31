@@ -34,29 +34,35 @@ vt_name = 'VT1.mat';
 %% Create boxes around locations of interest for int creation
 
 % right reward zone (sideways room, R)
-minY = 300; addY = 425-minY;
-minX = 475; addX = 555-minX;
+minY = -10; addY = abs(55-minY);
+minX = 485; addX = abs(625-minX);
+% [minX,minY,diffX,diffY] = backwardGenViewVT(rRW_fld)
 rRW_fld = [minX minY addX addY];
 
 % left reward zone (sideways room, R)
-minY = 300; addY = 425-minY;
-minX = 150; addX = 225-minX;
+minY = 405; addY = abs(495-minY);
+minX = 510; addX = abs(620-minX);
 lRW_fld = [minX minY addX addY];
+% [minX,minY,diffX,diffY] = backwardGenViewVT(lRW_fld);
+
 
 % central stem (sideways room, R)
-minY = 150; addY = 350-minY;
-minX = 330; addX = 370-minX;
+minY = 180; addY = abs(330-minY);
+minX = 190; addX = abs(575-minX);
 STM_fld = [minX minY addX addY]; 
+% [minX,minY,diffX,diffY] = backwardGenViewVT(STM_fld);
 
 % delay pedestal (sideways room, R) OR T-maze base junction
-minY = 20; addY = 135-minY;
-minX = 275; addX = 425-minX;
+minY = 140; addY = abs(360-minY);
+minX = 15;  addX = abs(190-minX);
 PED_fld = [minX minY addX addY];
+% [minX,minY,diffX,diffY] = backwardGenViewVT(PED_fld);
 
 % choice point/T-junction (sideways room, R)
-minY = 350; addY = 425-minY;
-minX = 320; addX = 380-minX;
+minY = 162; addY = abs(313-minY);
+minX = 575; addX = abs(700-minX);
 CP_fld = [minX minY addX addY]; %[260 150 30 270];
+% [minX,minY,diffX,diffY] = backwardGenViewVT(CP_fld);
 
 figure('color','w');
 plot(ExtractedX, ExtractedY);
