@@ -59,7 +59,7 @@ PED_fld = [minX minY addX addY];
 % [minX,minY,diffX,diffY] = backwardGenViewVT(PED_fld);
 
 % choice point/T-junction (sideways room, R)
-minY = 162; addY = abs(313-minY);
+minY = 160; addY = abs(313-minY);
 minX = 575; addX = abs(700-minX);
 CP_fld = [minX minY addX addY]; %[260 150 30 270];
 % [minX,minY,diffX,diffY] = backwardGenViewVT(CP_fld);
