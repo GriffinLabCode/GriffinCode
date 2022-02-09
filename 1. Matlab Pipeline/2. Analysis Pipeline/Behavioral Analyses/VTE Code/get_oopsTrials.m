@@ -7,7 +7,7 @@
 %
 % JS
 
-function [oopsTrial] = get_oopsTrials(x,y)
+function [oopsTrial] = get_oopsTrials(x,y,lCP_fld,rCP_fld)
 
 % These are the dimensions selected after checking multiple sessions across
 % multiple rats
@@ -16,22 +16,26 @@ function [oopsTrial] = get_oopsTrials(x,y)
 
 %xmin = 390; 
 %xmax = 450;
-
+%{
 % identify parameters for left choice point
 minY = 219; addY = abs(minY-300);
 minX = 410; addX = abs(minX-450);
 lCP_fld = [minX minY addX addY]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
+%}
 
 xv_lCP = [lCP_fld(1)+lCP_fld(3) lCP_fld(1) lCP_fld(1) lCP_fld(1)+lCP_fld(3) lCP_fld(1)+lCP_fld(3)];
 yv_lCP = [lCP_fld(2) lCP_fld(2) lCP_fld(2)+lCP_fld(4) lCP_fld(2)+lCP_fld(4) lCP_fld(2)];
 
+%{
 % same for right choice point
 minY = 105; addY = abs(minY-196);
 minX = 410; addX = abs(minX-450);
 rCP_fld = [minX minY addX addY]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
+%}
 
 xv_rCP = [rCP_fld(1)+rCP_fld(3) rCP_fld(1) rCP_fld(1) rCP_fld(1)+rCP_fld(3) rCP_fld(1)+rCP_fld(3)];
 yv_rCP = [rCP_fld(2) rCP_fld(2) rCP_fld(2)+rCP_fld(4) rCP_fld(2)+rCP_fld(4) rCP_fld(2)];
+
 
 % now for each trial identify if the rat was in one bin before entering the
 % other
