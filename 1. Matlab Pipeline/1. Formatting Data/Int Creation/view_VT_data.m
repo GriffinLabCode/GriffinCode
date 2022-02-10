@@ -36,7 +36,7 @@ vt_name = 'VT1.mat';
 % right reward zone (sideways room, R)
 minY = -10; addY = abs(55-minY);
 minX = 485; addX = abs(625-minX);
-% [minX,minY,diffX,diffY] = backwardGenViewVT(rRW_fld)
+% [minX,minY,diffX,diffY] = backwardGenViewVT(rRW_fld);
 rRW_fld = [minX minY addX addY];
 
 % left reward zone (sideways room, R)
@@ -44,7 +44,6 @@ minY = 405; addY = abs(495-minY);
 minX = 510; addX = abs(620-minX);
 lRW_fld = [minX minY addX addY];
 % [minX,minY,diffX,diffY] = backwardGenViewVT(lRW_fld);
-
 
 % central stem (sideways room, R)
 minY = 180; addY = abs(330-minY);
@@ -56,10 +55,10 @@ STM_fld = [minX minY addX addY];
 minY = 140; addY = abs(360-minY);
 minX = 15;  addX = abs(190-minX);
 PED_fld = [minX minY addX addY];
-% [minX,minY,diffX,diffY] = backwardGenViewVT(PED_fld);
+%[minX,minY,diffX,diffY] = backwardGenViewVT(PED_fld);
 
 % choice point/T-junction (sideways room, R)
-minY = 145; addY = abs(313-minY);
+minY = 158; addY = abs(324-minY);
 minX = 575; addX = abs(700-minX);
 CP_fld = [minX minY addX addY]; %[260 150 30 270];
 % [minX,minY,diffX,diffY] = backwardGenViewVT(CP_fld);
