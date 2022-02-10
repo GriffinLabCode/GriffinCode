@@ -61,7 +61,7 @@ function [IntEvents] = matchInt2Events(datafolder,int_name,events_name)
     
     if sanityCheck == 0
         disp('POTENTIAL ERROR! The sum of Int files does not match the actual Int file')
-        disp('PLEASE INSPECT THIS DATA MANUALLY to pick out which Int to include')
+        disp('PLEASE INSPECT THIS DATA MANUALLY to pic
     end
     
     
