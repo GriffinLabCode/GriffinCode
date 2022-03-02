@@ -14,7 +14,7 @@ cd(datafolder);
 clearvars -except datafolder datafolderNew
 
 % get video tracking data
-missing_data = 'interp'; % this could be 'exclude' or 'ignore'
+missing_data = 'exclude'; % this could be 'exclude' or 'ignore'
 vt_name = 'VT1.mat';
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
@@ -64,7 +64,7 @@ if contains(answer,'Y') | contains(answer,'y')
     [remData] = checkInt(Int,pos_x,pos_y,pos_t);
     
     % remove data selected by user
-    Int(remData,:)=[];
+    Int(remData,9)=1;
 
     numtrials = size(Int,1);
     for i = 1:numtrials-1

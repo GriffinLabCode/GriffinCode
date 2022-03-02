@@ -1,12 +1,13 @@
-%% 
-% a second filter for VTE
+%% get_oopsTrials
+% this code was designed to get VTE that are back and forth head
+% movements. This is an alternative to IdPhi if it doesn't work for your
+% maze or behavior. 
+%
+% Named after the yamamoto et al 2014 paper
+%
+% JS
 
-% this code identifies trials where the rats enter both goal arms before
-% making a choice
-
-% only works for automaze right now
-
-function [oopsTrial] = oopsTrials(x,y)
+function [oopsTrial] = get_oopsTrials(x,y,lCP_fld,rCP_fld)
 
 % These are the dimensions selected after checking multiple sessions across
 % multiple rats
@@ -15,22 +16,26 @@ function [oopsTrial] = oopsTrials(x,y)
 
 %xmin = 390; 
 %xmax = 450;
-
+%{
 % identify parameters for left choice point
 minY = 219; addY = abs(minY-300);
 minX = 410; addX = abs(minX-450);
 lCP_fld = [minX minY addX addY]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
+%}
 
 xv_lCP = [lCP_fld(1)+lCP_fld(3) lCP_fld(1) lCP_fld(1) lCP_fld(1)+lCP_fld(3) lCP_fld(1)+lCP_fld(3)];
 yv_lCP = [lCP_fld(2) lCP_fld(2) lCP_fld(2)+lCP_fld(4) lCP_fld(2)+lCP_fld(4) lCP_fld(2)];
 
+%{
 % same for right choice point
 minY = 105; addY = abs(minY-196);
 minX = 410; addX = abs(minX-450);
 rCP_fld = [minX minY addX addY]; %[180 215 395 50]; % x,y (first corner) , x,y (second right top corner)
+%}
 
 xv_rCP = [rCP_fld(1)+rCP_fld(3) rCP_fld(1) rCP_fld(1) rCP_fld(1)+rCP_fld(3) rCP_fld(1)+rCP_fld(3)];
 yv_rCP = [rCP_fld(2) rCP_fld(2) rCP_fld(2)+rCP_fld(4) rCP_fld(2)+rCP_fld(4) rCP_fld(2)];
+
 
 % now for each trial identify if the rat was in one bin before entering the
 % other
@@ -54,8 +59,8 @@ for triali = 1:length(x)
 end
 
 %{
+figure; hold on;
 plot(x,y,'r')
-hold on;
 rectangle ('position', rCP_fld);  % right reward field
 rectangle ('position', lCP_fld);  % left reward field
 %}

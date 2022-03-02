@@ -27,15 +27,6 @@ minY = 360; addY = 65;
 minX = 335; addX = 37;
 CP_fld = [minX minY addX addY]; %[260 150 30 270];
 
-
-
-________________________________________________________
-
---------RM 153 LSRF WITH STARTBOX---------
-
-
-
-
 _________________________________________________________
 
 --------RM 153 LSRF CA NO STARTBOX---------
@@ -97,7 +88,68 @@ minX = 320; addX = 380-minX;
 CP_fld = [minX minY addX addY]; %[260 150 30 270];
 
 
+____________________________________________---
 
+
+------> FOR rats in LSRF 153 with startbox <-------
+
+% right reward zone (sideways room, R)
+minY = 370; addY = abs(500-minY);
+minX = 200; addX = abs(300-minX);
+rRW_fld = [minX minY addX addY];
+
+% left reward zone (sideways room, R)
+minY = -16; addY = abs(130-minY);
+minX = 216; addX = abs(316-minX);
+lRW_fld = [minX minY addX addY];
+
+% central stem (sideways room, R)
+minY = 200; addY = abs(300-minY);
+minX = 230; addX = abs(510-minX);
+STM_fld = [minX minY addX addY]; 
+
+% delay pedestal (sideways room, R) OR T-maze base junction
+minY = 180; addY = abs(350-minY);
+minX = 510; addX = abs(700-minX);
+PED_fld = [minX minY addX addY];
+
+% choice point/T-junction (sideways room, R)
+minY = 180; addY = abs(320-minY);
+minX = 150; addX = abs(230-minX);
+CP_fld = [minX minY addX addY]; %[260 150 30 270];
+_______________________________________________________________
+
+OLD HENRY ROOM
+
+% right reward zone (sideways room, R)
+minY = -10; addY = abs(55-minY);
+minX = 485; addX = abs(625-minX);
+% [minX,minY,diffX,diffY] = backwardGenViewVT(rRW_fld)
+rRW_fld = [minX minY addX addY];
+
+% left reward zone (sideways room, R)
+minY = 405; addY = abs(495-minY);
+minX = 510; addX = abs(620-minX);
+lRW_fld = [minX minY addX addY];
+% [minX,minY,diffX,diffY] = backwardGenViewVT(lRW_fld);
+
+% central stem (sideways room, R)
+minY = 180; addY = abs(330-minY);
+minX = 190; addX = abs(575-minX);
+STM_fld = [minX minY addX addY]; 
+% [minX,minY,diffX,diffY] = backwardGenViewVT(STM_fld);
+
+% delay pedestal (sideways room, R) OR T-maze base junction
+minY = 140; addY = abs(360-minY);
+minX = 15;  addX = abs(190-minX);
+PED_fld = [minX minY addX addY];
+% [minX,minY,diffX,diffY] = backwardGenViewVT(PED_fld);
+
+% choice point/T-junction (sideways room, R)
+minY = 145; addY = abs(313-minY);
+minX = 575; addX = abs(700-minX);
+CP_fld = [minX minY addX addY]; %[260 150 30 270];
+% [minX,minY,diffX,diffY] = backwardGenViewVT(CP_fld);
 
 
 
