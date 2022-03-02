@@ -88,7 +88,7 @@ irArduino.lGoalZone = 'D2';
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.Delay)
+    readDigitalPin(a,irArduino.rGoalZone)
 end
 %}
 
@@ -193,8 +193,8 @@ for triali = 1:numTrials
 
             pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
-            pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
+            %pause(5)
+            %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
 
             % break while loop
             next = 1;
@@ -211,8 +211,8 @@ for triali = 1:numTrials
 
             pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
-            pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
+            %pause(5)
+            %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
 
             % break out of while loop
             next = 1;
@@ -228,10 +228,10 @@ for triali = 1:numTrials
             % send neuralynx command for timestamp
 
             % close both for audio symmetry
+            pause(0.5)
+            writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.gzLeftClose])
-            pause(0.25)
-            writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
             pause(0.25)
@@ -242,7 +242,7 @@ for triali = 1:numTrials
             % send neuralynx command for timestamp
 
             % close both for audio symmetry
-            pause(0.25)
+            pause(0.5)
             writeline(s,[doorFuns.gzLeftClose])
             pause(0.25)
             writeline(s,[doorFuns.gzRightClose])
@@ -303,7 +303,7 @@ task_name = input(prompt,'s');
 
 save_var = strcat(rat_name,'_',task_name,'_',c_save);
 
-place2store = ['X:\01.Experiments\R21\Experimental Cohort\FR Training Data - No Implant'];
+place2store = ['X:\01.Experiments\R21\Experimental Cohort\Training Data'];
 cd(place2store);
 save(save_var);
 
