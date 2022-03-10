@@ -21,4 +21,4 @@ seed      = 0;      % random seed (0 for unseeded)
 acmaxlags = 1000;   % maximum autocovariance lags (empty for automatic calculation)
 
 fs        = srate;    % sample rate (Hz)
-fres      = 100;     % frequency resolution (empty for automatic calculation)
+fres      = [];     % frequency resolution (empty for automatic calculation)

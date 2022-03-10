@@ -42,5 +42,6 @@ if contains(plotData,[{'y'} {'Y'}]) || plotData == 1
     shading interp
     ylimits = ylim;
     xlabel('Time around ...');
-    ylabel('log10 Power')
+    ylabel('Frequency (Hz)')
+    colorbar
 end
