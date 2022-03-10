@@ -6,7 +6,7 @@
 % this function takes one days worth of data and computes IdPhi across
 % trials. There are many outputs
 
-function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent,x_data_raw,y_data_raw,ts_data_raw,remEmpty] = get_session_IdPhi(datafolder,int_name,vt_name,missing_data,middleStemPosition,stemOrientation,preSmooth,mazeLoc)
+function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent,x_data_raw,y_data_raw,ts_data_raw,remEmpty] = get_session_IdPhi(datafolder,int_name,vt_name,missing_data,middleStemPosition,stemOrientation,preSmooth,mazeLoc,runDirection)
 
 % load vt data
 %missing_data = 'interp';
@@ -35,12 +35,21 @@ end
 
 % middle position of stem
 if contains(stemOrientation,'x') | contains(stemOrientation,'X')
-    %PosMidStem = 500;
-    for i = 1:numTrials
-        idx_mid = []; idx_mid = find(x_data_raw{i} >= middleStemPosition);
-        x_data{i}  = x_data_raw{i}(idx_mid);
-        y_data{i}  = y_data_raw{i}(idx_mid);
-        ts_data{i} = ts_data_raw{i}(idx_mid);
+    if contains(runDirection,[{'r'} {'R'}])
+        %PosMidStem = 500;
+        for i = 1:numTrials
+            idx_mid = []; idx_mid = find(x_data_raw{i} >= middleStemPosition);
+            x_data{i}  = x_data_raw{i}(idx_mid);
+            y_data{i}  = y_data_raw{i}(idx_mid);
+            ts_data{i} = ts_data_raw{i}(idx_mid);
+        end
+    elseif contains(runDirection,[{'l'} {'L'}])
+        for i = 1:numTrials
+            idx_mid = []; idx_mid = find(x_data_raw{i} <= middleStemPosition);
+            x_data{i}  = x_data_raw{i}(idx_mid);
+            y_data{i}  = y_data_raw{i}(idx_mid);
+            ts_data{i} = ts_data_raw{i}(idx_mid);
+        end
     end
 elseif contains(stemOrientation,'y') | contains(stemOrientation,'Y')
     %PosMidStem = 500;

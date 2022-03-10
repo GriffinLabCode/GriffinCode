@@ -5,10 +5,8 @@
 %
 % this function takes one days worth of data and computes IdPhi across
 % trials. There are many outputs
-%
-% int_input: can either be the name of the Int file, or the int file itself
 
-function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent,x_data_raw,y_data_raw,ts_data_raw,remEmpty] = get_session_IdPhi(datafolder,int_input,vt_name,missing_data,middleStemPosition,stemOrientation,preSmooth,mazeLoc,runDirection)
+function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent,x_data_raw,y_data_raw,ts_data_raw,remEmpty] = get_session_IdPhi_provideInt(datafolder,Int,vt_name,missing_data,middleStemPosition,stemOrientation,preSmooth,mazeLoc,runDirection)
 
 % load vt data
 %missing_data = 'interp';
@@ -16,12 +14,8 @@ function [IdPhi,x_data,y_data,ts_data,ExtractedX,ExtractedY,TimeStamps,timeSpent
 [ExtractedX,ExtractedY,TimeStamps] = getVTdata(datafolder,missing_data,vt_name);
 
 % load int
-if ischar(int_input) == 1
-    cd(datafolder);
-    load(int_input);
-else
-    Int = int_input;
-end
+cd(datafolder);
+load(int_name);
 
 % numtrials
 numTrials = size(Int,1);

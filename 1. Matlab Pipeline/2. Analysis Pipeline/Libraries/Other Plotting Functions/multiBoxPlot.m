@@ -17,8 +17,18 @@
 %
 % written by John Stout
 
-function [b] = multiBoxPlot(data,xLabels,yLabel,orient,outliers,saveName)
-
+function [b] = multiBoxPlot(data,xLabels,yLabel,orient,outliers)
+    % check that data is a cell array, if not, convert it. This happens if
+    % you input a vector or matrix
+    if iscell(data) == 0
+        data_og = data; data = [];
+        %data{1} = data_og;
+        for i = 1:size(data_og,2)
+            data{i} = data_og(:,i);
+        end
+        warning('Independent Variables MUST be on the column dimension!')
+    end
+    
     % make sure data is oriented correctly
     outSize = size(data{1});
     
@@ -79,10 +89,6 @@ function [b] = multiBoxPlot(data,xLabels,yLabel,orient,outliers,saveName)
     ax.XTickLabelRotation = 45;
     ylabel(yLabel);
     set(gcf,'Position',[300 250 350 300])
-
-    if exist('saveName') 
-        print('-painters',[saveName,'.eps'],'-depsc','-r0')
-    end    
     
 
     

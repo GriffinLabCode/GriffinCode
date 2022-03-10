@@ -20,7 +20,11 @@ function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
     % you input a vector or matrix
     if iscell(data) == 0
         data_og = data; data = [];
-        data{1} = data_og;
+        %data{1} = data_og;
+        for i = 1:size(data_og,2)
+            data{i} = data_og(:,i);
+        end
+        warning('Independent Variables MUST be on the column dimension!')
     end
 
     % make sure data is oriented correctly
@@ -55,12 +59,13 @@ function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
                 if exist('c')==0 
                     numIn = size(data{i});
                     c = rand(3,numIn(1))';
-                elseif size(c)~=size(data{i})
+                elseif size(c,1)~=size(data{i},1)
                     numIn = size(data{i});
                     c = rand(3,numIn(1))';                     
                 end                    
                 x_axes               = ones(size(data{i})).*(i+((rand(size(data{i}))-0.5)/10));               
-                scat                 = scatter(x_axes,data{i},[],c,'filled'); % multiply by i to follow the bar graph x axes 
+                scat                 = scatter(x_axes,data{i},[],c,'filled'); % multiply by i to follow the bar graph x axes
+                
                % scat.MarkerEdgeColor = 'k';
                % scat.MarkerFaceColor = [.5 .5 0];  
             end
