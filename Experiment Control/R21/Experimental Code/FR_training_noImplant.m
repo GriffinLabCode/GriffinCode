@@ -298,6 +298,9 @@ rat_name = input(prompt,'s');
 prompt   = 'Please enter the task ';
 task_name = input(prompt,'s');
 
+prompt   = 'Enter notes ';
+notes    = input(prompt,'s');
+
 %prompt   = 'Enter the directory to save the data ';
 %dir_name = input(prompt,'s');
 
