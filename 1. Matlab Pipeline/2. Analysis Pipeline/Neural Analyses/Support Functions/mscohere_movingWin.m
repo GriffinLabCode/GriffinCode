@@ -23,7 +23,7 @@
 %
 % written by John Stout
     
-function [cohMat,dataDet1,dataDet2] = mscohere_movingWin(data1,data2,movingwin,srate,f)
+function [cohMat,dataDet1,dataDet2] = mscohere_movingWin(data1,data2,movingwin,srate)
 clear starter ender coh
 
 % first for stem lfp
