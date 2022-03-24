@@ -17,9 +17,14 @@ if ~contains(confirm,[{'y'} {'Y'}])
     error('This code does not match the target rat')
 end
 
+prompt   = ['Define HPC LFP name'];
+LFP1name = input(prompt,'s');
+prompt   = ['Define PFC LFP name'];
+LFP2name = input(prompt,'s');
+
 disp(['Getting baseline data for ' targetRat])
-cd(['C:\Users\jstout\Desktop\Data 2 Move\',targetRat,'\step1-definingBaseline']);
-load('step1_baselineData','LFP1name','LFP2name')
+%cd(['C:\Users\jstout\Desktop\Data 2 Move\',targetRat,'\step1-definingBaseline']);
+%load('step1_baselineData','LFP1name','LFP2name')
 %LFP1name = 'HPC_green';
 %%
 % interface with cheetah setup
@@ -127,5 +132,10 @@ baselineSTD(:,2)  = std(dataALL(2,:));
 cd(['X:\01.Experiments\R21\' targetRat])
 mkdir(['X:\01.Experiments\R21\' targetRat,'\baseline'])
 cd(['X:\01.Experiments\R21\' targetRat,'\baseline'])
-save('baselineData.mat','baselineMean','baselineSTD','LFP1name','LFP2name')
 
+prompt = 'Are you ready to save? (y/n) - DO NOT SAVE OVER OLD DATA!';
+answer = input(prompt,'s');
+if contains(answer,[{'y'} {'Y'}])
+    save('baselineData.mat','baselineMean','baselineSTD','LFP1name','LFP2name')
+else
+end

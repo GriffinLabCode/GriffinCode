@@ -424,6 +424,7 @@ title('Consistency of moving window method')
 pauseTime      = 0.25;
 windowDuration = 1.25;
 
+dataArray = [];
 % Need to approximate idealized window lengths and true window lengths
 % clear stream   
 clearStream(LFP1name,LFP2name);
@@ -508,7 +509,7 @@ savefig(['fig_cohXf_at' num2str(mean(actualDataDuration)) 'sec_step6.fig']);
 % now estimate coherence in the 7-10hz range and test the stability across
 % time
 for i = 1:length(coh)
-    thetaIdx = find(f>7 & f<10);
+    thetaIdx = find(f>6 & f<11); % 7-10hz
     coh_theta(i) = nanmean(coh{i}(thetaIdx));
 end
 figure('color','w')
@@ -517,7 +518,7 @@ histogram(coh_theta)
 data{1}    = coh_theta;
 xRange     = [0:.05:1];
 colors{1}  = 'k';
-dataLabels = '21-12';
+dataLabels = '21-34';
 distType   = 'normal';
 [y,a] = plotCurves(data,xRange,colors,dataLabels,distType);
 
