@@ -12,6 +12,7 @@
 
 function [array,ind2rem] = emptyCellErase(array)
     if size(array,1) == 1 || size(array,2) == 1
+        array2rem = zeros(size(array));
         for rowi = 1:size(array,1)
             for coli = 1:size(array,2)
                 if isempty(array{rowi,coli})
