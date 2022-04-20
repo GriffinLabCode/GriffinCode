@@ -97,7 +97,7 @@ noisePercent = 1; % 5 percent
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 60; % minutes
 
 % pellet count and machine timeout
 pellet_count = 1;
@@ -960,7 +960,13 @@ place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
 save(save_var);
 
+% what trials to exclude
+clear prompt
+prompt   = 'Enter trajectories to exclude ';
+remTraj  = str2num(input(prompt,'s'));
 
+disp('Saving excluded trajectories')
+save('removeTrajectories','remTraj');
 
 %% clean maze
 
