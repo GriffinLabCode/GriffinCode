@@ -15,13 +15,14 @@ clear;
 addpath(getCurrentPath())
 
 % define rat IDs
-ratName = '21-14';
+ratName = '21-33';
 
 % now get data for every session and compute coherence like for 21-13 below
 %Datafolders = 'X:\01.Experiments\R21';
   
 % get datafolders (session names) into a cell array
 Datafolders = ['X:\01.Experiments\R21\',ratName,'\Sessions\DA Habituation\'];
+cd(Datafolders);
 dir_content = [];
 dir_content = dir(Datafolders);
 dir_content = extractfield(dir_content,'name');
@@ -252,13 +253,13 @@ for sessi = 1:length(dir_content)
 end       
 
 f = fSB;
-cd('X:\01.Experiments\R21\Figures\Method parameters')
+cd(['X:\01.Experiments\R21\',ratName])
 mkdir(['X:\01.Experiments\R21\' ratName,'\ThetaFreqDist'])
 
 prompt = 'Are you ready to save? (y/n) - DO NOT SAVE OVER OLD DATA!';
 answer = input(prompt,'s');
-if contains(answer,[{'y'} {'Y'}])
-    save('data_defineFrequencies','cohSB_cache','f')
+if contains(answer,[{'y'} {'Y'}])==1
+    save('data_defineFrequencies','cohSB_cache','f','ratName')
 else
 end
 

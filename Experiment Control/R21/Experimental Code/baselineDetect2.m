@@ -13,10 +13,11 @@ rats{5} = '21-16';
 rats{6} = '21-21';
 rats{7} = '21-22';
 %}
-ratName = '21-14';
+ratName = '21-33';
 
 % get datafolders (session names) into a cell array
 Datafolders = ['X:\01.Experiments\R21\',ratName,'\Sessions\DA Habituation\'];
+cd(Datafolders);
 dir_content = [];
 dir_content = dir(Datafolders);
 dir_content = extractfield(dir_content,'name');
@@ -92,7 +93,7 @@ baselineSTD(1)  = std(dataREADY(1,:));
 baselineSTD(2)  = std(dataREADY(2,:)); 
 
 % info
-info = 'Collapsing bowl recordings per rat to derive at a new threshold';
+info = 'Collapsing SB recordings per rat to derive at a new threshold';
 
 % store data
 cd(['X:\01.Experiments\R21\' ratName])
