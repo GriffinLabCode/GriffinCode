@@ -30,7 +30,7 @@ end
 
 for orderi = 1:orderRuns
     % run GCspectral to get model errors
-    [~, ~, E1, E2] = GCspectral(signal1, signal2, orderi, srate);
+    [~, ~, ~, E1, E2] = GCspectral(signal1, signal2, orderi, srate);
     % calculate the covariance of errors from x2y and y2x regressions
     E=cov(E1,E2);  
     % num data points
