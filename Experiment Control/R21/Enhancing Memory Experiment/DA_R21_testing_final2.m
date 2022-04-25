@@ -988,8 +988,17 @@ while next == 0
 end
 
 
+% look at data
+dataMat1 = horzcat(dataStored{:});
+dataMat2 = horzcat(dataMat1{:});
 
-
+figure('color','w');
+subplot 211
+plot(dataMat2(1,:),'k','LineWidth',0.5)
+title('LFP1 - expect signal spikes, but not complete contamination')
+subplot 212
+plot(dataMat2(2,:),'b','LineWidth',0.5)
+title('LFP2 - expect signal spikes, but not complete contamination')
 
 
 

@@ -1,0 +1,13 @@
+Learning to use coherence experiment
+
+
+-- this experiment will test whether rats can learn to use high theta coherence
+to control the maze -- 
+
+
+---------------------------------------------------------------
+
+1) Get baseline using baselineDetect_LTUC
+2) Run defineThetaThresholds_LTUC (these two only need to be done once)
+
+3) Run LearningToUseCoherence_ForcedRuns
