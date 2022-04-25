@@ -271,10 +271,10 @@ for triali = 1:numTrials
         if readDigitalPin(a,irArduino.lGoalZone) == 0 || readDigitalPin(a,irArduino.Delay) == 0
             
             % close both for audio symmetry
-            pause(0.5)
-            writeline(s,[doorFuns.gzRightClose])
-            pause(0.5)
+            pause(0.25)
             writeline(s,[doorFuns.gzLeftClose])
+            pause(0.25)
+            writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
             pause(0.25)
@@ -285,9 +285,9 @@ for triali = 1:numTrials
         elseif readDigitalPin(a,irArduino.rGoalZone) == 0 || readDigitalPin(a,irArduino.Delay) == 0
             
             % close both for audio symmetry
-            pause(0.5)
+            pause(0.25)
             writeline(s,[doorFuns.gzLeftClose])
-            pause(0.5)
+            pause(0.25)
             writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);

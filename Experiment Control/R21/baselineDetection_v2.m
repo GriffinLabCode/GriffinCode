@@ -50,6 +50,7 @@ while attempt == 0
 end
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 % notch filter
 filtLFP = [];
 filtLFP(1,:) = notchfilt(dataArray(1,:),srate);
@@ -67,6 +68,8 @@ baselineSTD(:,1)  = std(data_det(1,:));
 baselineMean(:,2) = mean(data_det(2,:));
 baselineSTD(:,2)  = std(data_det(2,:));
 =======
+=======
+>>>>>>> Stashed changes
 
 % detrend data - did not clean to improve processing speed
 %data_det = [];
@@ -79,6 +82,9 @@ baselineMean(:,1) = mean(dataArray(1,:));
 baselineSTD(:,1)  = std(dataArray(1,:));
 baselineMean(:,2) = mean(dataArray(2,:));
 baselineSTD(:,2)  = std(dataArray(2,:));
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 end
