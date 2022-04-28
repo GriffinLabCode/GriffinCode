@@ -57,60 +57,51 @@ delayExitTemp  = find(contains(EventStrings,[{'DelayExit'}])==1);
 firstDelayExit = find(contains(EventStrings,[{'TrialStart'}])==1);
 delayExit = vertcat(firstDelayExit,delayExitTemp);
 
-% a novel approach - 
+% a novel approach -
+sequenceTimes = []; sequenceTemp = [];
 sequenceTemp = padcat(delayExit,CPentry,CPexit,Return,delayEntry);
 for rowi = 1:size(sequenceTemp,1)
     for coli = 1:size(sequenceTemp,2)
         try 
             sequenceTimes(rowi,coli) = TimeStamps(sequenceTemp(rowi,coli));
         catch
+            sequenceTimes(rowi,coli) = NaN;
         end
     end
 end
+sequenceTable = array2table(sequenceTimes);
+% Default heading for the columns will be A1, A2 and so on. 
+% You can assign the specific headings to your table in the following manner
+sequenceTable.Properties.VariableNames(1:5) = {'DelayExit','CPentry','CPexit','Return','DelayEntry'};
 
-%% use sequence of events to piece together the int file
-numTrials = length(CPentry);
-if numTrials > numTrials_maze.numTrials
-    numTrials = numTrials_maze.numTrials;
-end
-Int = zeros([numTrials 8]);
-
-for triali = 1:numTrials
-    
-    % delay exit
-    Int(triali,1) = TimeStamps(delayExit(triali));
-    
-    % cp entry
-    Int(triali,5) = TimeStamps(CPentry(triali));
-    
-    % cp exit
-    Int(triali,6) = TimeStamps(CPexit(triali));
-    
-    % delay entry
-    %Int(triali,8) = TimeStamps(Return(triali));\
-    Int(triali,8) = TimeStamps(delayEntry(triali));
-
-
-    % Track left/right
-    if contains(EventStrings(Return(triali)),'ReturnRight')
-        Int(triali,3)=0;
-    elseif contains(EventStrings(Return(triali)),'ReturnLeft')
-        Int(triali,3)=1;
-    else
-        error('Something is wrong with turn direction')
-    end
-    
+% behavioral table - remove 'Return'
+trajData = EventStrings(contains(EventStrings,[{'ReturnLeft'} {'ReturnRight'}]));
+clear trajectories
+for i = 1:length(trajData)
+    trajectories{i,:} = erase(trajData{i},'Return');
 end
 
-for i = 1:numTrials-1
-    if Int(i,3) == 1 && Int(i+1,3) == 0 || Int(i,3) == 0 && Int(i+1,3) == 1
-        Int(i+1,4) = 0;
+% get accuracy
+numTrials = size(sequenceTable,1);
+accuracyTemp = []; accuracy = [];
+for triali = 1:numTrials-1
+    if contains(trajData{triali},'Left') && contains(trajData{triali+1},'Right')
+        accuracyTemp(triali,:) = 0;
+    elseif contains(trajData{triali},'Right') && contains(trajData{triali+1},'Left')
+        accuracyTemp(triali,:) = 0;
     else
-        Int(i+1,4) = 1;
+        accuracyTemp(triali,:) = 1;
     end
 end
-percentCorrect = (((numTrials)-(sum(Int(:,4))))/(numTrials-1))*100;
+accuracy(1)=NaN;
+accuracy(2:numel(accuracyTemp)+1,:) = accuracyTemp;
 
+sequenceTable.Properties.VariableNames(6:7) = {'Trajectory','Accuracy'};
+sequenceTable.Trajectory = trajectories;
+sequenceTable.Accuracy   = accuracy;
+
+% percent correct
+percentCorrect = (1-nanmean(accuracy))*100;
 
 % check Int for timing-position accuracy
 question = 'Would you like to confirm your int file is correct? [Y/N] ';
@@ -119,7 +110,7 @@ answer   = input(question,'s');
 if contains(answer,'Y') | contains(answer,'y')
 
     % number of trials
-    numTrials = size(Int,1);
+    numTrials = size(sequenceTable,1);
 
     p1 = []; p2 = [];
     for i = 1:numTrials-1
@@ -128,9 +119,9 @@ if contains(answer,'Y') | contains(answer,'y')
         p1.Annotation.LegendInformation.IconDisplayStyle = 'off';
 
         % get position data on a trial-by-trial basis
-        x_trial = pos_x(pos_t >= Int(i,5) & pos_t <= Int(i,6));
-        y_trial = pos_y(pos_t >= Int(i,5) & pos_t <= Int(i,6));
-        
+        x_trial = pos_x(pos_t >= sequenceTable.DelayExit(i) & pos_t <= sequenceTable.CPexit(i));
+        y_trial = pos_y(pos_t >= sequenceTable.DelayExit(i) & pos_t <= sequenceTable.CPexit(i));
+
         %x_trial = pos_x(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
         %y_trial = pos_y(pos_t >= Int(i,8) & pos_t <= Int(i+1,1));
         
