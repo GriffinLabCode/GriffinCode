@@ -25,7 +25,7 @@
 % Written by John Stout
 % last edit 10/6/2020
 
-function [speed,vel,acc,instDistance] = kinematics2D(x,y,t,convert2sec)
+function [speed,vel,instDistance] = kinematics2D(x,y,t,convert2sec)
 
 % sampling frequency
 sfreq = ceil(getVTsrate(t,convert2sec)); % rounded to a integer for ease of computation and stuff
@@ -41,10 +41,10 @@ end
 % considering an entire vector, we can just work with the derivatives.
 % To retain the correct length of the vector, we can work with
 % gradient, a centroid method for derivative estimation.
-a2 = (gradient(x)).^2; %(x(jj+1)-x(jj)); - note that this is the same as derivative
-b2 = (gradient(y)).^2; %(y(jj+1)-y(jj));
+a2 = (diff(x)).^2; %(x(jj+1)-x(jj)); - note that this is the same as derivative
+b2 = (diff(y)).^2; %(y(jj+1)-y(jj));
 c  = sqrt(a2+b2);      % c2 = a2+b2, so c = sqrt(a2+b2)
-dt = gradient(t);      % get derivative of time
+dt = diff(t);      % get derivative of time
 
 % velocity should be the hypotenus/change in time
 vel = c./dt;
@@ -53,10 +53,10 @@ vel = c./dt;
 speed = abs(vel);
 
 % get acceleration
-acc = gradient(vel)./dt;
+%acc = diff(vel)./dt;
 
 % instantaneous distance (speed = distance/time, therefore distance =
 % speed*time)
-instDistance = speed.*dt;
+instDistance = c;
 
 end
