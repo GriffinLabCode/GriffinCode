@@ -7,7 +7,7 @@ clear; clc
 codeDir = getCurrentPath();
 addpath(codeDir)
 
-% 'X:\01.Experiments\R21\Learning To Use Coherence Experiment'
+disp('This needs to be tested with 21-34. You will likely run into an error occassionally, so build that into the code')
 
 %% confirm this is the correct code
 prompt = ['What is your rats name? '];
@@ -140,11 +140,10 @@ sound(y);
 pause(5)
 
 %% session
-session_length = 20;
-sStart = tic;
+session_length = 20; % minutes
+rewardLag      = [];
+sStart         = tic;
 while toc(sStart)/60 < session_length
-    
-    dStart = tic;
     for i = 1:1000000000000000000000000000000000 % nearly infinite loop. This is needed for the first loop
 
         if i == 1
@@ -200,8 +199,10 @@ while toc(sStart)/60 < session_length
             % send to neuralynx
             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "Reward" 202 2');
             
-            % need a way to record timing offsets
-            delayDuration(triali) = toc(dStart);
+            % this lag tells you how long (from the start of the session) a
+            % reward was delivered. To determine inter-reward intervals, we
+            % can offline perform a derivative between lags
+            rewardLag = [rewardLag toc(sStart)];
             
             % I don't need what is below for this experiment
             %dataStored{i}  = dataWin;
@@ -221,11 +222,11 @@ session_time = session_time_update-session_start;
 
 % END TIME
 endTime = toc(sStart)/60;
+[succeeded, reply] = NlxSendCommand('-StopRecording');
 
 %% ending noise - a fitting song to end the session
 load handel.mat;
 sound(y, 2*Fs);
-writeline(s,[doorFuns.closeAll])
 
 %% save data
 % save data
@@ -249,11 +250,6 @@ save_var = strcat(rat_name,'_',task_name,'_',c_save);
 place2store = ['X:\01.Experiments\R21\Learning To Use Coherence Experiment\' targetRat,'\ForcedRuns'];
 cd(place2store);
 save(save_var);
-
-%% clean maze
-
-% close doors
-writeline(s,doorFuns.closeAll);            
 
 next = 0;
 while next == 0
