@@ -20,11 +20,12 @@
 %           then pixels/sec^2
 % vel: instantaneous velocity
 % acc: instantaneous acceleration
+% instDistance: in pixels/time, estimated as such: distance = speed*time;
 %
 % Written by John Stout
 % last edit 10/6/2020
 
-function [speed,vel,acc] = kinematics2D(x,y,t,convert2sec)
+function [speed,vel,acc,instDistance] = kinematics2D(x,y,t,convert2sec)
 
 % sampling frequency
 sfreq = ceil(getVTsrate(t,convert2sec)); % rounded to a integer for ease of computation and stuff
@@ -53,5 +54,9 @@ speed = abs(vel);
 
 % get acceleration
 acc = gradient(vel)./dt;
+
+% instantaneous distance (speed = distance/time, therefore distance =
+% speed*time)
+instDistance = speed.*dt;
 
 end

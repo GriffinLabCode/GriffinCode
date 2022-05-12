@@ -1,4 +1,4 @@
-function [GCy2x, GCx2y, frequencies] = GCspectral(datax, datay, order, sfreq)
+function [GCy2x, GCx2y, frequencies, E1, E2] = GCspectral(datax, datay, order, sfreq)
 
 % datax is the signal x which is in 1xN row, N is the length of data x and y;
 % datay is the signal y which is in 1xN row, N is the length of data y and x;
