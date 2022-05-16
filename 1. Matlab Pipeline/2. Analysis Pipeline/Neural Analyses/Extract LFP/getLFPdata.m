@@ -31,7 +31,13 @@ load(csc_name,'Samples','Timestamps');
 try load(csc_name,'SampleFrequencies'); catch; end % try to load sample frequencies for srate
 
 % load events and separate LFP based on the event markers
-load(events_name,'EventStrings','TimeStamps');
+try load(events_name,'EventStrings','TimeStamps');
+    if exist('TimeStamps')==0
+        load(events_name,'TimeStamps_EV');
+        TimeStamps = TimeStamps_EV;
+    end
+end
+    
 evStarts = find(contains(EventStrings,'Starting Recording')==1);
 evEnds   = find(contains(EventStrings,'Stopping Recording')==1);
 evEdges  = [TimeStamps(evStarts);TimeStamps(evEnds)]';

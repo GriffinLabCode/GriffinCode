@@ -9,6 +9,8 @@ addpath(codeDir)
 
 disp('This needs to be tested with 21-34. You will likely run into an error occassionally, so build that into the code')
 
+disp('IR beam MUST BE PLUGGED INTO CHEETAH!!!! ' )
+
 %% confirm this is the correct code
 prompt = ['What is your rats name? '];
 targetRat = input(prompt,'s');
