@@ -27,7 +27,11 @@ function [lfp,lfpTimes,srate,lfpEvents,lfpTimesEvents] = getLFPdata(datafolder,c
 cd(datafolder)
 
 % load data
-load(csc_name,'Samples','Timestamps');
+try load(csc_name,'Samples','Timestamps'); end
+try load(csc_name,'CSC_Samples','CSC_Timestamp');
+    Samples = CSC_Samples;
+    Timestamps = CSC_Timestamp;
+end
 try load(csc_name,'SampleFrequencies'); catch; end % try to load sample frequencies for srate
 
 % load events and separate LFP based on the event markers
@@ -36,10 +40,18 @@ try load(events_name,'EventStrings','TimeStamps');
         load(events_name,'TimeStamps_EV');
         TimeStamps = TimeStamps_EV;
     end
+catch load(events_name,'EV_EventStrings','EV_Timestamps');
+    EventStrings = EV_EventStrings;
+    TimeStamps   = EV_Timestamps;
 end
     
 evStarts = find(contains(EventStrings,'Starting Recording')==1);
 evEnds   = find(contains(EventStrings,'Stopping Recording')==1);
+% if the system was closed before "stopped recording" was selected...
+if isempty(evEnds)==1
+	warning('Recording end was not found. Using the final Event timestamp as the LFP end boundary')
+    evEnds = length(EventStrings);
+end
 evEdges  = [TimeStamps(evStarts);TimeStamps(evEnds)]';
 
 % loop across evnt markers
