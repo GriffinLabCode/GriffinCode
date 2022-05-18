@@ -43,19 +43,46 @@ irArduino.lGoalZone   = 'D2';
 irArduino.choicePoint = 'D6';
 %}
 
+servo1 = 'D4';
+
+sStart = [];
+sStart = tic;
+
 % loop
-lag = 0;
-for i = 1:1000000
+lag = 5;
+for i = 1:10
     % present treat
     writeline(s,rewFuns.right) 
     
     % lag
     pause(lag);
-    if toc(sStart)/60 > 10
+
+    %{
+    if toc(sStart)/60 > 1
+        disp(['time ' num2str(toc(sStart))])
         break
     end
+    %}
+    disp(['iteration ' num2str(i)])
+
 end    
     
 
 
+serv_C = servo(a,"D4");
+serv_C_open   = .2; 
+serv_C_closed = .8; 
+                
+writePosition(serv_C, serv_C_open);
+pause(0.5)
+writePosition(serv_C, serv_C_closed);
+   
+
+lag = 1;
+for i = 1:100
+    pause(lag)
+    writePosition(serv_C, serv_C_open);
+    pause(lag)
+    writePosition(serv_C, serv_C_closed);
+end
 
