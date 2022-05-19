@@ -27,11 +27,15 @@
 % spike_duration: duration of spike (ie time it takes from spike peak to
 %                   spike trough)
 % Interspike Interval (ISI): defined as the mean derivative over spike times
+% firingRate: Session averaged firing rate
+%
+% The ISI, firing rate, and spike_duration can be used with kmeans
+% clustering to separate pyramidal from interneurons like Spellman 2015
 %
 % written by John Stout
 
 
-function [spkTimes,clusterID,spikeDuration,ISI] = getSpikeData(datafolder,tt_name)
+function [spkTimes,clusterID,spikeDuration,ISI,firingRate] = getSpikeData(datafolder,tt_name,events_name)
 
     % load TTs
     cd(datafolder);
@@ -48,6 +52,22 @@ function [spkTimes,clusterID,spikeDuration,ISI] = getSpikeData(datafolder,tt_nam
         % get field names
         clusterID = extractfield(clusters,'name');
 
+        % get events data
+        load(events_name);
+        if exist('Timestamps')
+            TimeStamps = Timestamps;
+        elseif exist('TimeStamps_EV')
+            TimeStamps = TimeStamps_EV;
+        elseif exist('EV_TimeStamps')
+            TimeStamps = EV_TimeStamps;
+        elseif exist('EV_Timestamps')
+            TimeStamps = EV_Timestamps;
+        end
+        
+        if ~exist('TimeStamps')
+            disp('Events timestamps name needs to be updated in the code')
+        end
+        
         % get spike time stamps
         for ci=1:length(clusters)
             try
@@ -55,7 +75,9 @@ function [spkTimes,clusterID,spikeDuration,ISI] = getSpikeData(datafolder,tt_nam
                 spkTimes{ci} = textread(clusters(ci).name);
                 % get interspike interval as the averaged derivative over
                 % spike times
-                ISI{ci} = nanmean(diff(spkTimes{ci}));
+                ISI(ci) = nanmean(diff(spkTimes{ci}));
+                % calculate avg inst. firing rate so that we dont have to 
+                firingRate(ci) = numel(spkTimes{ci})/((TimeStamps(end)-TimeStamps(1))/1e6);
             catch
                 spkTimes{ci}  = NaN;
                 continue
@@ -66,6 +88,7 @@ function [spkTimes,clusterID,spikeDuration,ISI] = getSpikeData(datafolder,tt_nam
         % files
         datafolderMod = [datafolder,'\'];
         clust_ntt = clusters;
+        spikeDuration = [];
         for ci = 1:size(clust_ntt,1)
             try
                 % split name up
@@ -74,16 +97,15 @@ function [spkTimes,clusterID,spikeDuration,ISI] = getSpikeData(datafolder,tt_nam
                 % glue it back together
                 clust_ntt(ci).name = horzcat(splitName{:});
 
-                [Timestamps, ScNumbers, CellNumbers, Features, Samples,...
+                [Timestamps_spk, ScNumbers, CellNumbers, Features, Samples,...
                             Header] = Nlx2MatSpike(strcat(datafolderMod,...
                             clust_ntt(ci).name), [1 1 1 1 1], 1, 1, [] );
 
                 % Calculate spike duration        
-                spikeDuration = [];
-                spikeDuration{ci} = calculate_spike_duration(Samples,Header);   
+                spikeDuration(ci) = calculate_spike_duration(Samples,Header);   
             catch
                 disp('Make sure to save your spike data out as .ntt files')
-                spikeDuration{ci} = NaN;
+                spikeDuration(ci) = NaN;
                 continue
             end
         end 
