@@ -26,11 +26,12 @@
 % clusterID: cluster name
 % spike_duration: duration of spike (ie time it takes from spike peak to
 %                   spike trough)
+% Interspike Interval (ISI): defined as the mean derivative over spike times
 %
 % written by John Stout
 
 
-function [spkTimes,clusterID,spikeDuration] = getSpikeData(datafolder,tt_name)
+function [spkTimes,clusterID,spikeDuration,ISI] = getSpikeData(datafolder,tt_name)
 
     % load TTs
     cd(datafolder);
@@ -50,7 +51,11 @@ function [spkTimes,clusterID,spikeDuration] = getSpikeData(datafolder,tt_name)
         % get spike time stamps
         for ci=1:length(clusters)
             try
+                % get spike times by reading in the data
                 spkTimes{ci} = textread(clusters(ci).name);
+                % get interspike interval as the averaged derivative over
+                % spike times
+                ISI{ci} = nanmean(diff(spkTimes{ci}));
             catch
                 spkTimes{ci}  = NaN;
                 continue
@@ -82,7 +87,6 @@ function [spkTimes,clusterID,spikeDuration] = getSpikeData(datafolder,tt_name)
                 continue
             end
         end 
-        %spikeDuration = NaN;
 
     end
 end
