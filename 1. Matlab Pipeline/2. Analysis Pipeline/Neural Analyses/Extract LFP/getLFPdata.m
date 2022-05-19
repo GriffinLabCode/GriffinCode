@@ -52,15 +52,53 @@ if isempty(evEnds)==1
 	warning('Recording end was not found. Using the final Event timestamp as the LFP end boundary')
     evEnds = length(EventStrings);
 end
-evEdges  = [TimeStamps(evStarts);TimeStamps(evEnds)]';
-
+try
+    evEdges  = [TimeStamps(evStarts);TimeStamps(evEnds)]';
+    correctedEdges = 0;
+catch
+    % sometimes in old data, there could be multiple starting recordings but not a clear stopping recording
+    if numel(evStarts) ~= numel(evEnds)
+        % if there is no true end (eg a "stopping recording")
+        evTrueEnd = find(contains(EventStrings,'Stopping Recording')==1);
+        if isempty(evTrueEnd)
+            % treat the second start as the end
+            if numel(evStarts) > numel(evEnds)
+                evTrueStarts = evStarts;
+                evTrueEnds   = evStarts(2:length(evStarts));
+                evTrueEnds(end+1) = length(EventStrings);
+                evTrueStarts = change_row_to_column(evTrueStarts);
+                evTrueEnds   = change_row_to_column(evTrueEnds);
+                % if the shape of evTrue and evEnds are the same, and if
+                % evEnd comes after evTrue, the issue should be resolved
+                if numel(evTrueStarts) == numel(evTrueEnds) && isempty(find(evTrueEnds-evTrueStarts < 0))
+                    orderEvents = interleave_vars(evTrueStarts',evTrueEnds);
+                    disp(['Issue should be resolved. Order of events = ' EV_EventStrings{orderEvents} ])
+                    evStarts = []; evEnds = [];
+                    evStarts = evTrueStarts;
+                    evEnds   = evTrueEnds;
+                    evStarts = change_row_to_column(evStarts);
+                    evEnds   = change_row_to_column(evEnds);
+                    evEdges  = [TimeStamps(evStarts);TimeStamps(evEnds)]';
+                    correctedEdges = 1;
+                end
+            end
+        end
+    end
+end
 % loop across evnt markers
 for i = 1:size(evEdges,1)
 
      % identify timestamps to keep
-     idxKeep = [];
-     idxKeep = find(Timestamps >= evEdges(i,1) & Timestamps <= evEdges(i,2));
-
+     if correctedEdges == 0
+         idxKeep = [];
+         idxKeep = find(Timestamps >= evEdges(i,1) & Timestamps <= evEdges(i,2));
+     elseif correctedEdges == 1 % if edges were corrected, it means that there was no ending recording. 
+         % Therefore the ending recording of edge 1 may be the start of
+         % edge 2 and you will create interpolation artifacts
+         idxKeep = [];
+         idxKeep = find(Timestamps >= evEdges(i,1) & Timestamps < evEdges(i,2));         
+     end
+     
      % get new samples and times
      SamplesKeep = []; TimestampsKeep = [];
      SamplesKeep    = Samples(:,idxKeep);
