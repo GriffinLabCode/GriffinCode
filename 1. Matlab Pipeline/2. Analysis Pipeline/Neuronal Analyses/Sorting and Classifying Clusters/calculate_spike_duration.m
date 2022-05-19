@@ -21,7 +21,7 @@ ad_bit = strsplit(ad_bit_string);
 for i = 1:length(ad_bit)
     try ad_conv{i} = str2double(ad_bit{i}); catch; end;
 end
-%ad_conv  = cell2mat(ad_conv);
+ad_conv  = cell2mat(ad_conv);
 ad_conv = ad_conv(isnan(ad_conv)==0);
 ad_bit = [];
 ad_bit = ad_conv(1);

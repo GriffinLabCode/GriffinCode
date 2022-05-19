@@ -57,7 +57,6 @@ function [spkTimes,clusterID,spikeDuration] = getSpikeData(datafolder,tt_name)
             end
         end
 
-        %{
         % get spike features, but only for those units where there are .txt
         % files
         datafolderMod = [datafolder,'\'];
@@ -83,8 +82,7 @@ function [spkTimes,clusterID,spikeDuration] = getSpikeData(datafolder,tt_name)
                 continue
             end
         end 
-        %}
-        spikeDuration = NaN;
+        %spikeDuration = NaN;
 
     end
 end

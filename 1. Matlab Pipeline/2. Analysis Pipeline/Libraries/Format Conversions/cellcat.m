@@ -22,9 +22,19 @@ end
 
 for i = 1:looper
     if contains(direction,'row')
-        fun_out{i} = fun_apply(cell_array{:,i});
+        try
+            fun_out{i} = fun_apply(cell_array{:,i});
+        catch
+            warning('Data were concatenated via NaN padding. Try inverting.')
+            fun_out{i} = padcat(cell_array{:,i});
+        end
     elseif contains(direction,'col')
-        fun_out{i} = fun_apply(cell_array{i,:});
+        try
+            fun_out{i} = fun_apply(cell_array{i,:});
+        catch
+            warning('Data were concatenated via NaN padding. Try inverting.')
+            fun_out{i} = padcat(cell_array{i,:});
+        end
     end
 end
     
