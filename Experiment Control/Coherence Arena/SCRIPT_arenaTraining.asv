@@ -2,8 +2,7 @@
 % this code will interface with the coherence arena and deliver a reward
 % following light presentation.
 %
-% Last thing to do is find a way to split the IR beam so that it sends a
-% TTL to cheetah as well as a TTL to matlab
+%
 %
 
 clear; clc
