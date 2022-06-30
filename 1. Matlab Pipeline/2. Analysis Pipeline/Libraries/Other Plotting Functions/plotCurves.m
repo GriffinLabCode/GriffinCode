@@ -44,14 +44,17 @@ for i = 1:length(data)
 end
 
 % make figs
-figure('Color','w'); hold on;
+%figure('Color','w'); 
+hold on;
 for i = 1:length(data)
     %l{i} = line(xRange,y{i},'Color',colors{i},'LineWidth',2);
     p{i} = plot(xRange,y{i},'Color',colors{i},'LineWidth',2); 
 end
-legend(dataLabels);
-
-figure('color','w'); hold on;
+if isempty(dataLabels)==0
+    legend(dataLabels);
+end
+%figure('color','w'); 
+hold on;
 for i = 1:length(data)
     a{i} = area(xRange,y{i});
     a{i}.FaceColor = colors{i};
@@ -59,7 +62,9 @@ for i = 1:length(data)
     a{i}.LineWidth = 0.1;
     a{i}.FaceAlpha = 0.5;
 end
-legend(dataLabels);
+if isempty(dataLabels)==0
+    legend(dataLabels);
+end
 
     
 
