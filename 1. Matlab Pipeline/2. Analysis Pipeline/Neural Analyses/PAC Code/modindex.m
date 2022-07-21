@@ -27,6 +27,15 @@ function [M] = modindex(data,disp,N)
 % hlh wrote? Unclear who og author is.
 % JS modified and wrote shuffled amplitude procedure
 
+% for equation: 
+% 1) averaged gamma amplitude per theta phase bin (k)
+% 2) S = sum of averaged gamma amplitudes across theta phase bins k:N,
+% where N = total number of phase bins (18)
+% 3) Normalized gamma amplitude (P) = averaged gamma amplitude / S
+% 4) uniform distribution (U) = 1/N = 1/18
+% 5) Kullback lieber distance = sum(norm gamma amp*log(P/U))
+% 6) Modulation Index (MI) = kullback liber distance / log(N)
+
 %%
 
 if nargin < 4

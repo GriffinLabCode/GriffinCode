@@ -32,4 +32,19 @@ end
 figure('color','w')
 plot(frequencies,sfc);
 
+% what is below is for constructing the mathematical equation for
+% manuscript purposes:
+% note that this is just an example phase angle at frequency (F)
+theta = anglesHpc; % theta = phase angle (NOT THETA BRAIN WAVE)
+
+% per phase angle k, multiply imaginary number 1i against theta angle, take
+% the exponent of these
+N = length(theta);
+for k = 1:N
+    eulersPartLong(k)=exp(sqrt(-1)*theta(k));
+end
+% get the average from 1:N
+avgEP=sum(eulersPartLong)./numel(eulersPartLong);
+SFClong=abs(avgEP);
+
 
