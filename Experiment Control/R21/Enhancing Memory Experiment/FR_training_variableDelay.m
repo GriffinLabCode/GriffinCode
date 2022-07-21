@@ -105,10 +105,11 @@ irArduino.rGoalArm  = 'D10';
 irArduino.lGoalArm  = 'D12';
 irArduino.rGoalZone = 'D7';
 irArduino.lGoalZone = 'D2';
+irArduino.tjunction = 'D6';
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.rGoalZone)
+    readDigitalPin(a,irArduino.tjunction)
 end
 %}
 

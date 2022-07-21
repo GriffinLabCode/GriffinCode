@@ -44,6 +44,7 @@ numTrials = 100; %max out
 
 prompt = ['Session duration: '];
 sessionDur = str2num(input(prompt,'s'));
+writeDigitalPin(a,arduinoLED,1);
 
 %% prep real time code
 % load in thresholds
@@ -140,6 +141,7 @@ dataNotMet    = [];
 rewLatency    = [];
 trialID       = [];
 trialNum      = [];
+writeDigitalPin(a,arduinoLED,0);
 while isempty(trialNum) || trialNum(end) < numTrials || toc(sStart) < sessionDur
     
     % probe trials occur after every 9 trials (e.g. 10% are probe) 
@@ -295,7 +297,7 @@ while isempty(trialNum) || trialNum(end) < numTrials || toc(sStart) < sessionDur
     
 end
 
-writeDigitalPin(a,arduinoLED,0);
+writeDigitalPin(a,arduinoLED,1);
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 load handel.mat;
 sound(y, 2*Fs);

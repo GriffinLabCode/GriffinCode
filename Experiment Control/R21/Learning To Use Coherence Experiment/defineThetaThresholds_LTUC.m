@@ -104,6 +104,7 @@ figure; histogram(zCoh)
 
 % need to simply generate distribution, zscore for 1std above mean
 cohHighThreshold = nanmean(cohAcc(dsearchn(zscore(cohAcc)',1)));
+cohLowThreshold = nanmean(cohAcc(dsearchn(zscore(cohAcc)',-1)));
 
 % save
 mkdir(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\' targetRat,'\thresholds'])
@@ -112,6 +113,6 @@ cd(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\' targetRat,'\th
 prompt = 'Are you ready to save? (y/n) - DO NOT SAVE OVER OLD DATA!';
 answer = input(prompt,'s');
 if contains(answer,[{'y'} {'Y'}])
-    save('thresholds.mat','cohHighThreshold')
+    save('thresholds.mat','cohHighThreshold','cohLowThreshold')
 else
 end
