@@ -11,7 +11,7 @@ datafolderNew = datafolder;
 cd(datafolder);
 clearvars -except datafolder datafolderNew
 
-ratName = '21-37';
+ratName = '21-36';
 
 % load in events
 load('Events','EventStrings','TimeStamps')
@@ -108,33 +108,63 @@ if contains(answer2check,'Y') | contains(answer2check,'y')
     % number of trials
     numTrials = size(sequenceTable,1);
 
-    p1 = []; p2 = [];
-    for i = 1:numTrials
-        figure('color','w'); hold on;    
-        p1 = plot(pos_x,pos_y,'Color',[.8 .8 .8]); 
-        p1.Annotation.LegendInformation.IconDisplayStyle = 'off';
-
-        % get position data on a trial-by-trial basis
-        x_trial = pos_x(pos_t >= sequenceTable.DelayExit(i) & pos_t <= sequenceTable.CPexit(i));
-        y_trial = pos_y(pos_t >= sequenceTable.DelayExit(i) & pos_t <= sequenceTable.CPexit(i));
-
-        plot(x_trial,y_trial,'r','LineWidth',2)
-
-        % correct any issues
-        question = 'Keep trial? [Y/N] / [y/n] ';
-        answer   = input(question,'s');
-
-        if contains(answer,[{'N'} {'n'}])
-            remData(i,:) = 1;
-        else
-            remData(i,:) = 0;
-        end
-
-        %pause;
-        close;
-    end 
-    %remData = logical(remData);
+    prompt = 'Did this task have a delay phase? ';
+    delayP = input(prompt,'s');
     
+    if contains(delayP,'n')
+
+        p1 = []; p2 = [];
+        for i = 1:numTrials
+            figure('color','w'); hold on;    
+            p1 = plot(pos_x,pos_y,'Color',[.8 .8 .8]); 
+            p1.Annotation.LegendInformation.IconDisplayStyle = 'off';
+
+            % get position data on a trial-by-trial basis
+            x_trial = pos_x(pos_t >= sequenceTable.CPentry(i) & pos_t <= sequenceTable.CPexit(i));
+            y_trial = pos_y(pos_t >= sequenceTable.CPentry(i) & pos_t <= sequenceTable.CPexit(i));
+            plot(x_trial,y_trial,'r','LineWidth',2)
+
+            % correct any issues
+            question = 'Keep trial? [Y/N] / [y/n] ';
+            answer   = input(question,'s');
+
+            if contains(answer,[{'N'} {'n'}])
+                remData(i,:) = 1;
+            else
+                remData(i,:) = 0;
+            end
+
+            %pause;
+            close;
+        end         
+    else
+        p1 = []; p2 = [];
+        for i = 1:numTrials
+            figure('color','w'); hold on;    
+            p1 = plot(pos_x,pos_y,'Color',[.8 .8 .8]); 
+            p1.Annotation.LegendInformation.IconDisplayStyle = 'off';
+
+            % get position data on a trial-by-trial basis
+            x_trial = pos_x(pos_t >= sequenceTable.DelayExit(i) & pos_t <= sequenceTable.CPexit(i));
+            y_trial = pos_y(pos_t >= sequenceTable.DelayExit(i) & pos_t <= sequenceTable.CPexit(i));
+
+            plot(x_trial,y_trial,'r','LineWidth',2)
+
+            % correct any issues
+            question = 'Keep trial? [Y/N] / [y/n] ';
+            answer   = input(question,'s');
+
+            if contains(answer,[{'N'} {'n'}])
+                remData(i,:) = 1;
+            else
+                remData(i,:) = 0;
+            end
+
+            %pause;
+            close;
+        end 
+        %remData = logical(remData);
+    end
     % remove data selected by user
     sequenceTable.Remove = remData;
 
