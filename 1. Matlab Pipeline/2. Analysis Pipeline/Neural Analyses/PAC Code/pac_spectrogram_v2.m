@@ -49,13 +49,13 @@ freq_phase = signal_data.phase_bandpass; %[1 20];
 freq_amp   = signal_data.amplitude_bandpass; % [20 100];
 
 % frequency steps
-phaseStepper = 2; ampStepper = 2;
+phaseStepper = 5; ampStepper = 5;
 step_phase = freq_phase(1):phaseStepper:freq_phase(2);
 step_amp   = freq_amp(1):ampStepper:freq_amp(2);
 
 % bandwidth
-bw_phase = signal_data.phase_bandwidth; % 4;  % 4Hz
-bw_amp   = signal_data.amplitude_bandwidth; %10; % 10 hz
+%bw_phase = signal_data.phase_bandwidth; % 4;  % 4Hz
+%bw_amp   = signal_data.amplitude_bandwidth; %10; % 10 hz
 
 % loop across phase steps
 mod_matrix = [];
@@ -63,15 +63,16 @@ for i = 1:length(step_phase)-1
     
     % define phase bandpass (2Hz step with 4Hz window)
     signal_data.phase_bandpass = [];
-    signal_data.phase_bandpass = [step_phase(i) step_phase(i)+bw_phase];
+    signal_data.phase_bandpass = [step_phase(i) step_phase(i+1)];
     
     % loop across amplitude steps
     for ii = 1:length(step_amp)-1
         
         signal_data.amplitude_bandpass = [];
-        signal_data.amplitude_bandpass = [step_amp(ii) step_amp(ii)+bw_amp];
+        signal_data.amplitude_bandpass = [step_amp(ii) step_amp(ii+1)];
     
         % make datafile
+        signal_data.phase_extraction = 2;
         datafile = [];
         datafile = makedatafile_morlet(signal_data);
         datafile.srate = datafile.FS;
@@ -96,4 +97,5 @@ colormap(jet)
 shading 'interp'
 ylabel('Frequency for Amplitude (Hz)')
 xlabel('Phase')
-
+colorbar
+%caxis([0 .001])
