@@ -57,7 +57,7 @@ for freqPhasei = 1:length(phase_lowpass)
         
         plotMod = 'n';
         shuffle = 'n';
-        [M] = modindex(data,plotMod,shuffle,phase_bins);
+        [M] = modindex(data,plotMod,phase_bins,shuffle);
         
         phase_map_temp(freqPoweri,1:phase_bins) = M.NormAmp;
         

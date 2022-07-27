@@ -288,80 +288,199 @@ for i = 1:length(rtLFP_low_end)
     end
 end
 
-% power analysis
-params = getCustomParams;
-params.Fs = 2000;
-params.pad = 0;
-params.fpass = [6:0.1:11];
+% some definitions
+% Bin definitions
+phase_bins          = 18;
+amplitude_freq_bins = 5;
+phase_freq_bins     = 1;
+signal_data.phase_bandpass = [6 11];
+signal_data.amplitude_bandpass = [30 80];
+signal_data.srate = 2000;
 
+% create phase comodulogram to identify gamma freqs
+phase_map_var = [];
+% is theta-gamma coupling greater on high coh trials?
 for i = 1:length(rtLFP_high_det)
     for ii = 1:length(rtLFP_high_det{i})
-       C_high{i}(ii) = nanmean(coherencyc(rtLFP_high_det{i}{ii}(1,:),rtLFP_high_det{i}{ii}(2,:),params));
-    end
-end
-for i = 1:length(rtLFP_low_det)
-    for ii = 1:length(rtLFP_low_det{i})
-       C_low{i}(ii) = nanmean(coherencyc(rtLFP_low_det{i}{ii}(1,:),rtLFP_low_det{i}{ii}(2,:),params));
-    end
-end
-
-% chronux doesnt really matter, although it does seem to indicate that low
-% coherence was higher than expected when compared to mscohere this is
-% because params.tapers parameters can be subjectively manipulated, which
-% is why I stayed away from them
-C_high_rat = cellfun(@nanmean,C_high);
-C_low_rat = cellfun(@nanmean,C_low);
-[h,p]=ttest(C_high_rat,C_low_rat)
-
-% doesnt matter whether I used matlabs or chronux's power functions
-hpcHigh = []; pfcHigh = [];
-params.fpass = 
-for i = 1:length(rtLFP_high_det)
-    for ii = 1:length(rtLFP_high_det{i})
-        % power
-        tempHpc = []; tempPfc = [];
-        [tempHpc,f] = mtspectrumc(rtLFP_high_det{i}{ii}(1,:),params);
-        [best_freq] = get_bestFrequency(data,f,freq_range);
+        % get temporary data
+        hpcTemp = []; pfcTemp = [];
+        hpcTemp = rtLFP_high_det{i}{ii}(1,:);
+        pfcTemp = rtLFP_high_det{i}{ii}(2,:);
         
-        %[tempHpc] = pspectrum(rtLFP_high_det{i}{ii}(1,:),2000,'FrequencyLimits',[6 11]);
-        hpcHigh{i}(ii) = mean(tempHpc);
-        tempPfc = mtspectrumc(rtLFP_high_det{i}{ii}(2,:),params);
-        %[tempPfc] = pspectrum(rtLFP_high_det{i}{ii}(2,:),2000,'FrequencyLimits',[6 11]);        
-        pfcHigh{i}(ii) = mean(tempPfc);
+        % for visualizing, do morlet
+        % modindex
+        signal_data.phase_EEG = []; signal_data.amplitude_EEG = [];
+        signal_data.phase_EEG     = pfcTemp;%hpcTemp';
+        signal_data.amplitude_EEG = hpcTemp;%pfcTemp';
+        
+        % bc i dont have timestamp data, i need to estimate it
+        amountTime = numel(signal_data.phase_EEG)/signal_data.srate;
+        signal_data.timestamps = linspace(0,amountTime,numel(signal_data.phase_EEG))';
+        
+        % for phase map 
+        signal_data.phase_extraction = 2; % 2 = morlet
+        plot = 1;
+
+        % heat map
+        [phase_map_var{i,ii},M,amplitude_highpass] = phase_comodgram(signal_data, phase_bins, amplitude_freq_bins, phase_freq_bins, plot);
+
+        % get modindex
+        signal_data.phase_extraction = 1; % phase interpolation
+        data = makedatafile(signal_data);
+        data.srate = data.FS;
+        %PhaseBins = 90:10:270;
+        M = modindex(data,'n','n',18);
+        
+        % distance from 180 (preferred phase->180)
+        dist180high{i}(ii) = 180-M.phase;
+        modHigh{i}(ii) = M.MI;
+        
+        % theta x gamma frequency coupling
+        %{
+        signal_data.phase_bandpass = [5 50];
+        signal_data.amplitude_bandpass = [5 50];
+        signal_data.phase_bandwidth     = 5;
+        signal_data.amplitude_bandwidth = 5; 
+        
+        %[mod_matrix] = pac_spectrogram(signal_data)
+        %}
+        
+        %{
+            figure('color','w'); 
+            subplot 211; plot(data.Xg,'r')
+            hold on; plot(data.Xg_env,'k','LineWidth',2)
+            box off
+            axis tight
+            subplot 212; plot(data.Xt,'b')
+            axis tight
+            box off
+        %}
+        
     end
+    disp(['Finished with rat ',num2str(i),'/',num2str(numel(rtLFP_high_det))])
 end
 
-hpcLow = []; pfcLow = [];
+% convert to 3D arrays where each cell element denotes rat. 3rd dimension
+% is session per rat
+for i = 1:size(phase_map_var,1)
+    tempArray = [];
+    tempArray = phase_map_var(i,:);
+    % erase empty arrays
+    tempArray = emptyCellErase(tempArray);
+    % concatenate
+    convPhaseMap{i} = cellTo3D(tempArray);
+end
+% average across each sess
+for i = 1:length(convPhaseMap)
+    convPhaseMapAvg1{i} = nanmean(convPhaseMap{i},3);
+end
+ratPhaseMap = cellTo3D(convPhaseMapAvg1);
+ratPhaseMapAvgHigh = mean(ratPhaseMap,3);
+
+clearvars -except ratPhaseMapAvgHigh rtLFP_high_det rtLFP_low_det M ...
+    amplitude_highpass dist180high phase_bins amplitude_freq_bins phase_freq_bins signal_data ...
+    modHigh
+
+% create phase comodulogram to identify gamma freqs
+phase_map_var = [];
+% is theta-gamma coupling greater on high coh trials?
 for i = 1:length(rtLFP_low_det)
     for ii = 1:length(rtLFP_low_det{i})
-        % power
-        tempHpc = []; tempPfc = [];
-        tempHpc = mtspectrumc(rtLFP_low_det{i}{ii}(1,:),params);
-        %[tempHpc] = pspectrum(rtLFP_low_det{i}{ii}(1,:),2000,'FrequencyLimits',[6 11]);
-        hpcLow{i}(ii) = mean(tempHpc);
-        %[tempPfc] = pspectrum(rtLFP_low_det{i}{ii}(2,:),2000,'FrequencyLimits',[6 11]);        
-        tempPfc = mtspectrumc(rtLFP_low_det{i}{ii}(2,:),params);
-        pfcLow{i}(ii) = mean(tempPfc);
+        % get temporary data
+        hpcTemp = []; pfcTemp = [];
+        hpcTemp = rtLFP_low_det{i}{ii}(1,:);
+        pfcTemp = rtLFP_low_det{i}{ii}(2,:);
+        
+        % for visualizing, do morlet
+        % modindex
+        signal_data.phase_EEG = []; signal_data.amplitude_EEG = [];
+        signal_data.phase_EEG     = pfcTemp';%hpcTemp';
+        signal_data.amplitude_EEG = hpcTemp';%pfcTemp';
+        
+        % bc i dont have timestamp data, i need to estimate it
+        amountTime = numel(signal_data.phase_EEG)/signal_data.srate;
+        signal_data.timestamps = linspace(0,amountTime,numel(signal_data.phase_EEG));
+        
+        % for phase map 
+        signal_data.phase_extraction = 2; % 2 = morlet
+        plot = 1;
+      
+        % heat map
+        [phase_map_var{i,ii},M,amplitude_highpass] = phase_comodgram(signal_data, phase_bins, amplitude_freq_bins, phase_freq_bins, plot);        
+    
+        % get modindex
+        signal_data.phase_extraction = 1; % phase interpolation
+        data = makedatafile(signal_data);
+        data.srate = data.FS;
+        %PhaseBins = 90:10:270;
+        M = modindex(data,'n','n',18);
+        
+        % distance from 180 (preferred phase->180)
+        dist180low{i}(ii) = 180-M.phase;
+        modLow{i}(ii) = M.MI;            
+        
     end
+    disp(['Finished with rat ',num2str(i),'/',num2str(numel(rtLFP_high_det))])
 end
+% convert to 3D arrays where each cell element denotes rat. 3rd dimension
+% is session per rat
+for i = 1:size(phase_map_var,1)
+    tempArray = [];
+    tempArray = phase_map_var(i,:);
+    % erase empty arrays
+    tempArray = emptyCellErase(tempArray);
+    % concatenate
+    convPhaseMap{i} = cellTo3D(tempArray);
+end
+% average across each sess
+for i = 1:length(convPhaseMap)
+    convPhaseMapAvg1{i} = nanmean(convPhaseMap{i},3);
+end
+ratPhaseMap = cellTo3D(convPhaseMapAvg1);
+ratPhaseMapAvgLow = mean(ratPhaseMap,3);
 
+% plot data
+amplitude_lowpass = (signal_data.amplitude_bandpass(:,1):amplitude_freq_bins:(signal_data.amplitude_bandpass(:,2))-amplitude_freq_bins);
+amplitude_highpass = ((signal_data.amplitude_bandpass(:,1))+amplitude_freq_bins:amplitude_freq_bins:signal_data.amplitude_bandpass(:,2));
+amplitude_plot = mean([amplitude_lowpass;amplitude_highpass]);
+figure('color','w'); 
+subplot 121
+    pcolor(M.PhaseAxis,amplitude_plot,ratPhaseMapAvgHigh)
+    colormap(jet)
+    shading 'interp'
+    ylabel('Frequency for Amplitude (Hz)')
+    xlabel('Phase')
+    title('High coh')
+    axisScaleHigh = caxis;
+    ylimits = ylim;
+    colorbar
+subplot 122
+    pcolor(M.PhaseAxis,amplitude_plot,ratPhaseMapAvgLow)
+    colormap(jet)
+    shading 'interp'
+    ylabel('Frequency for Amplitude (Hz)')
+    xlabel('Phase')
+    title('Low coh') 
+    caxis(axisScaleHigh)
+    colorbar
+    
+% now clear vars and perform actual analysis
+%clearvars -except ratPhaseMapAvgHigh ratPhaseMapAvgLow rtLFP_high_det rtLFP_low_det M amplitude_highpass
 
-% cellfun
-hpcHigh_avg = cellfun(@nanmean,hpcHigh);
-hpcLow_avg = cellfun(@nanmean,hpcLow);
-pfcHigh_avg = cellfun(@nanmean,pfcHigh);
-pfcLow_avg = cellfun(@nanmean,pfcLow);
+% now perform analysis
+rat_dist180high = cellfun(@nanmean,dist180high);
+rat_dist180low  = cellfun(@nanmean,dist180low);
+mat = horzcat(rat_dist180high'+180,rat_dist180low'+180);
+multiBarPlot(mat,[{'High coh'} {'Low coh'}],'180-preferred Phase')
+[h,p]=ttest(mat(:,1),0)
+[h,p]=ttest(mat(:,2),0)
+ttest(mat(:,1),mat(:,2))
 
-normDiffHpc = (hpcHigh_avg-hpcLow_avg)./(hpcHigh_avg+hpcLow_avg);
-normDiffPfc = (pfcHigh_avg-pfcLow_avg)./(pfcHigh_avg+pfcLow_avg);
+rat_modhigh = cellfun(@mean,modHigh);
+rat_modlow = cellfun(@mean,modLow);
 
-mat = [];
-mat = horzcat(normDiffHpc',normDiffPfc');
-multiBarPlot(mat,[{'HPC'} {'PFC'}],'Norm 6-11Hz Power (High-Low)')
-ylim([-0.1 0.25])
-[h,p]=ttest(mat(:,1))
-[h,p]=ttest(mat(:,2))
-[h,p]=ttest(mat(:,1),mat(:,2))
+mat = horzcat(rat_modhigh',rat_modlow');
+multiBarPlot(mat,[{'High coh'} {'Low coh'}],'MI')
 
-
-
+save('data_thetaGamma_pfcSlow','rat_modhigh','rat_modlow','signal_data')
+[h,p]=ttest(rat_modhigh,rat_modlow)

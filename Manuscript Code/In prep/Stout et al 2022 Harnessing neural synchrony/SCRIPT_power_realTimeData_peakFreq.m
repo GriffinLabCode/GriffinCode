@@ -315,53 +315,64 @@ C_low_rat = cellfun(@nanmean,C_low);
 
 % doesnt matter whether I used matlabs or chronux's power functions
 hpcHigh = []; pfcHigh = [];
-params.fpass = 
+params.fpass = linspace(4,12,100);
+params.tapers = [2 3];
+
+bestFreq_hpcHigh = [];
+bestFreq_pfcHigh = [];
 for i = 1:length(rtLFP_high_det)
     for ii = 1:length(rtLFP_high_det{i})
         % power
         tempHpc = []; tempPfc = [];
+        tempHpcSmooth=[]; tempPfcSmooth=[];        
         [tempHpc,f] = mtspectrumc(rtLFP_high_det{i}{ii}(1,:),params);
-        [best_freq] = get_bestFrequency(data,f,freq_range);
-        
-        %[tempHpc] = pspectrum(rtLFP_high_det{i}{ii}(1,:),2000,'FrequencyLimits',[6 11]);
-        hpcHigh{i}(ii) = mean(tempHpc);
+        % smooth data
+        tempHpcSmooth=smoothdata(tempHpc,'gaussian');
+        %figure; plot(f,tempHpcSmooth)
+        %hold on; plot(f,tempHpc,'r')
+        bestFreq_hpcHigh{i}(ii) = get_bestFrequency(tempHpcSmooth,f,[4 12]);
+
         tempPfc = mtspectrumc(rtLFP_high_det{i}{ii}(2,:),params);
-        %[tempPfc] = pspectrum(rtLFP_high_det{i}{ii}(2,:),2000,'FrequencyLimits',[6 11]);        
-        pfcHigh{i}(ii) = mean(tempPfc);
+        tempPfcSmooth=smoothdata(tempPfc,'gaussian');    
+        bestFreq_pfcHigh{i}(ii) = get_bestFrequency(tempPfcSmooth,f,[4 12]);
+        
     end
 end
 
-hpcLow = []; pfcLow = [];
+bestFreq_hpcLow = [];
+bestFreq_pfcLow = [];
 for i = 1:length(rtLFP_low_det)
     for ii = 1:length(rtLFP_low_det{i})
         % power
         tempHpc = []; tempPfc = [];
-        tempHpc = mtspectrumc(rtLFP_low_det{i}{ii}(1,:),params);
-        %[tempHpc] = pspectrum(rtLFP_low_det{i}{ii}(1,:),2000,'FrequencyLimits',[6 11]);
-        hpcLow{i}(ii) = mean(tempHpc);
-        %[tempPfc] = pspectrum(rtLFP_low_det{i}{ii}(2,:),2000,'FrequencyLimits',[6 11]);        
+        tempHpcSmooth=[]; tempPfcSmooth=[];                
+        [tempHpc,f] = mtspectrumc(rtLFP_low_det{i}{ii}(1,:),params);
+        % smooth data
+        tempHpcSmooth=smoothdata(tempHpc,'gaussian');
+        %figure; plot(f,tempHpcSmooth)
+        %hold on; plot(f,tempHpc,'r')
+        bestFreq_hpcLow{i}(ii) = get_bestFrequency(tempHpcSmooth,f,[4 12]);
+
         tempPfc = mtspectrumc(rtLFP_low_det{i}{ii}(2,:),params);
-        pfcLow{i}(ii) = mean(tempPfc);
+        tempPfcSmooth=smoothdata(tempPfc,'gaussian');    
+        bestFreq_pfcLow{i}(ii) = get_bestFrequency(tempPfcSmooth,f,[4 12]);
+
     end
 end
 
-
 % cellfun
-hpcHigh_avg = cellfun(@nanmean,hpcHigh);
-hpcLow_avg = cellfun(@nanmean,hpcLow);
-pfcHigh_avg = cellfun(@nanmean,pfcHigh);
-pfcLow_avg = cellfun(@nanmean,pfcLow);
+hpcHigh_avg = cellfun(@nanmean,bestFreq_hpcHigh);
+hpcLow_avg = cellfun(@nanmean,bestFreq_hpcLow);
+pfcHigh_avg = cellfun(@nanmean,bestFreq_pfcHigh);
+pfcLow_avg = cellfun(@nanmean,bestFreq_pfcLow);
 
 normDiffHpc = (hpcHigh_avg-hpcLow_avg)./(hpcHigh_avg+hpcLow_avg);
 normDiffPfc = (pfcHigh_avg-pfcLow_avg)./(pfcHigh_avg+pfcLow_avg);
 
 mat = [];
 mat = horzcat(normDiffHpc',normDiffPfc');
-multiBarPlot(mat,[{'HPC'} {'PFC'}],'Norm 6-11Hz Power (High-Low)')
-ylim([-0.1 0.25])
-[h,p]=ttest(mat(:,1))
-[h,p]=ttest(mat(:,2))
-[h,p]=ttest(mat(:,1),mat(:,2))
-
-
-
+multiBarPlot(mat,[{'HPC'} {'PFC'}],'Max Theta Freq. (high-low)')
+ylim([-0.025 0.1])
+[h,p,ci,stat]=ttest(mat(:,1)); p=p*3;
+[h,p,ci,stat]=ttest(mat(:,2)); p=p*3;
+[h,p,ci,stat]=ttest(mat(:,1),mat(:,2)); p=p*3;

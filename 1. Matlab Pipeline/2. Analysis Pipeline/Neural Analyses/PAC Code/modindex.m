@@ -1,4 +1,4 @@
-function [M] = modindex(data,disp,N)
+function [M] = modindex(data,disp,shuffle,N,PhaseBins)
 
 %   This function calculates the degree of phase-amplitude coupling between 
 %   two filtered signals by using the Kullback-Leibler distance between an 
@@ -27,18 +27,9 @@ function [M] = modindex(data,disp,N)
 % hlh wrote? Unclear who og author is.
 % JS modified and wrote shuffled amplitude procedure
 
-% for equation: 
-% 1) averaged gamma amplitude per theta phase bin (k)
-% 2) S = sum of averaged gamma amplitudes across theta phase bins k:N,
-% where N = total number of phase bins (18)
-% 3) Normalized gamma amplitude (P) = averaged gamma amplitude / S
-% 4) uniform distribution (U) = 1/N = 1/18
-% 5) Kullback lieber distance = sum(norm gamma amp*log(P/U))
-% 6) Modulation Index (MI) = kullback liber distance / log(N)
-
 %%
 
-if nargin < 4
+if exist('N')==0 
    N = 18;
 end
 
@@ -46,7 +37,9 @@ end
 totalTime = length(data.Xg_env)/data.srate;
 
 % phase bins for theta
-PhaseBins = 0 : 360/N : 360-(360/N);
+if exist('PhaseBins')==0
+    PhaseBins = 0 : 360/N : 360-(360/N);
+end
 
 if contains(shuffle,'y') 
     for k = 1:N

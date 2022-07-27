@@ -72,9 +72,12 @@ ylim([-0.1 0.4])
         
 % theta gamma coupling
 clear; clc;
-load('data_thetaGamma')
-mat = horzcat(rat_modhigh',rat_modlow');
-multiBarPlot(mat,[{'High coh'} {'Low coh'}],'Theta-gamma coupling (MI)')
+hpcSlow=load('data_thetaGamma');
+pfcSlow=load('data_thetaGamma_pfcSlow');
+diffScorePAC1 = (hpcSlow.rat_modhigh-hpcSlow.rat_modlow)./(hpcSlow.rat_modhigh+hpcSlow.rat_modlow);
+diffScorePAC2 = (pfcSlow.rat_modhigh-pfcSlow.rat_modlow)./(pfcSlow.rat_modhigh+pfcSlow.rat_modlow);
+mat = horzcat(diffScorePAC1',diffScorePAC2');
+multiBarPlot(mat,[{'HPCtheta-PFCgamma'} {'PFCtheta-HPCgamma'}],'MI diff (high-low)')
 [h,p,ci,stat]=ttest(mat(:,1),mat(:,2))
 
 % power
