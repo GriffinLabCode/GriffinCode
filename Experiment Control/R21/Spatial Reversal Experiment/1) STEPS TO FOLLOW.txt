@@ -1,0 +1,12 @@
+Steps from pretraining to experimentation
+
+1) handle
+2) goal box (manual)
+3) forced runs variable delay (FR_training_variableDelay.m)
+4) Spatial reversal training (3days, two reversals; SpatialReversalTask)
+5) Spatial delayed reversal training (3days, two reversals; DelayedSpatialReversalTask)
+
+Same day (prior to testing)
+6) baselineDetect_SRT
+7) defineThetaThresholds_SRT
+6) Coherence triggered reversal training

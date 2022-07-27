@@ -38,10 +38,6 @@ FRday  = str2num(input(prompt,'s'));
 % how long should the session be?
 session_length = 30; % minutes
 
-% pellet count and machine timeout
-pellet_count = 1;
-timeout_len  = 60*15;
-
 % define a looping time - this is in minutes
 amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
 
@@ -88,6 +84,7 @@ for i = 1:10000000
     readDigitalPin(a,irArduino.choicePoint)
 end
 %}
+%writeline(s,doorFuns.tRightClose)
 
 %% randomly select whether first arm will be left rewarded or right rewarded
 % considered doing probabilistic, but maybe lets determine whether a fully
@@ -102,17 +99,6 @@ end
 
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
-next = 0; % set while loop variable
-while next == 0
-   irTemp = read(s,4,"uint8"); % look for stored data
-   if isempty(irTemp) == 1     % if there are no stored ir beam breaks
-       next = 1;               % break out of the while loop
-       disp('IR record empty - ignore the warning')
-   else
-       disp('IR record not empty')
-       disp(irTemp)
-   end
-end
 
 % close all maze doors - this gives problems with solenoid box
 pause(0.25)
@@ -402,7 +388,7 @@ end
 idxRev=(find(reversalTraj==1));
 
 figure('color','w'); hold on;
-xVar = 1:91;
+xVar = 1:length(movingAcc);
 xVar = xVar+9;
 plot(xVar,smoothdata(movingAcc,'gauss',5),'b','LineWidth',2)
 plot(xVar,movingAcc,'k','LineWidth',1)
@@ -417,6 +403,19 @@ title('Spatial Reversal Task')
 yyaxis right;
 plot(xVar,time2ChoiceMov,'Color',[0.9100 0.4100 0.1700],'LineWidth',1)
 ylabel('Time 2 choice')
+
+cd(place2store)
+% trials 2 criterion - initial rule learning and reversal learning
+d1_idxRev=load('21-36_SRT_7_25_2022_EndTime1416','idxRev');
+d2_idxRev=load('21-36_SRT_7_26_2022_EndTime104','idxRev');
+d1_t2r = [d1_idxRev.idxRev(1) d1_idxRev.idxRev(2)-d1_idxRev.idxRev(1)];
+d2_t2r = [d2_idxRev.idxRev(1) d2_idxRev.idxRev(2)-d2_idxRev.idxRev(1)];
+d_t2r = vertcat(d1_t2r,d2_t2r);
+figure('color','w')
+bar(d_t2r)
+box off
+ylabel('Trials 2 criterion')
+title('SRT')
 
 %% ending noise - a fitting song to end the session
 load handel.mat;
