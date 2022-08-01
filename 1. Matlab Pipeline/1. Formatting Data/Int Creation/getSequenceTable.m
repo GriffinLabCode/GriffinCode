@@ -120,8 +120,8 @@ if contains(answer2check,'Y') | contains(answer2check,'y')
             p1.Annotation.LegendInformation.IconDisplayStyle = 'off';
 
             % get position data on a trial-by-trial basis
-            x_trial = pos_x(pos_t >= sequenceTable.CPentry(i) & pos_t <= sequenceTable.CPexit(i));
-            y_trial = pos_y(pos_t >= sequenceTable.CPentry(i) & pos_t <= sequenceTable.CPexit(i));
+            x_trial = pos_x(pos_t >= (sequenceTable.CPentry(i)-(5*1e6)) & pos_t <= sequenceTable.Return(i));
+            y_trial = pos_y(pos_t >= (sequenceTable.CPentry(i)-(5*1e6)) & pos_t <= sequenceTable.Return(i));
             plot(x_trial,y_trial,'r','LineWidth',2)
 
             % correct any issues
