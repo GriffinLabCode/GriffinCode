@@ -12,7 +12,7 @@ end
 
 % load baseline data for real time detection on "clean" data
 disp(['Getting baseline data for ' targetRat])
-cd(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\',targetRat,'\baseline']);
+cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
 load('baselineData')
 
 % interface with cheetah setup
@@ -107,12 +107,12 @@ cohHighThreshold = nanmean(cohAcc(dsearchn(zscore(cohAcc)',1)));
 cohLowThreshold = nanmean(cohAcc(dsearchn(zscore(cohAcc)',-1)));
 
 % save
-mkdir(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\' targetRat,'\thresholds'])
-cd(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\' targetRat,'\thresholds'])
+mkdir(['X:\01.Experiments\R21\' targetRat,'\thresholds'])
+cd(['X:\01.Experiments\R21\' targetRat,'\thresholds'])
 
 prompt = 'Are you ready to save? (y/n) - DO NOT SAVE OVER OLD DATA!';
 answer = input(prompt,'s');
 if contains(answer,[{'y'} {'Y'}])
-    save('thresholds.mat','cohHighThreshold','cohLowThreshold')
+    save('thresholds.mat','cohHighThreshold','cohLowThreshold','cohAcc','cohRej')
 else
 end

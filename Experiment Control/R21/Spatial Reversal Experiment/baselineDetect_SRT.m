@@ -130,8 +130,8 @@ baselineSTD(:,2)  = std(dataALL(2,:));
 %% save outputs
 % store data
 cd(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\'])
-mkdir(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\' targetRat,'\baseline'])
-cd(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\' targetRat,'\baseline'])
+mkdir(['X:\01.Experiments\R21\' targetRat,'\baseline'])
+cd(['X:\01.Experiments\R21\' targetRat,'\baseline'])
 
 prompt = 'Are you ready to save? (y/n) - DO NOT SAVE OVER OLD DATA!';
 answer = input(prompt,'s');

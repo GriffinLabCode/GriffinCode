@@ -9,4 +9,11 @@ Steps from pretraining to experimentation
 Same day (prior to testing)
 6) baselineDetect_SRT
 7) defineThetaThresholds_SRT
-6) Coherence triggered reversal training
+8) Run RandomizeConditions
+9) If day 1, run testingCoherence_DelayedSpatialReversalTask
+->>>> you MUST know the previous days "traj" variable. Just look in their folder
+
+
+IMPORTANT:::::
+Testing MUST occur exactly 1 day after the final training day.
+Testing MUST occur in a consecutive 8 day streak.

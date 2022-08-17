@@ -86,18 +86,46 @@ end
 %}
 %writeline(s,doorFuns.tRightClose)
 
+%% delay lenghts
+numTrials  = 200;
+
+maxDelay = 30;
+minDelay = 5;
+delayDur = minDelay:1:maxDelay; % 5-45 seconds
+rng('shuffle')
+
+delayDuration = [];
+next = 0;
+while next == 0
+
+    if numel(delayDuration) >= numTrials
+        next = 1;
+    else
+        shortDuration  = randsample(minDelay:15,5,'true');
+        longDuration   = randsample(16:maxDelay,5,'true');
+
+        % used for troubleshooting ->
+        %shortDuration  = randsample(1:5,5,'true');
+        %longDuration   = randsample(6:10,5,'true');        
+
+        allDurations   = [shortDuration longDuration];
+        interleaved    = allDurations(randperm(length(allDurations)));
+        delayDuration = [delayDuration interleaved];
+    end
+end  
+
 %% randomly select whether first arm will be left rewarded or right rewarded
+%{
 % considered doing probabilistic, but maybe lets determine whether a fully
 % deterministic RLT works
-%{
 daySRT = input('Is this your first day of SRT? ','s');
 if contains(daySRT,'n')
     prompt = ['What was "traj" on your last session? '];
     traj   = input(prompt,'s');
-    if contains(traj,'L') % this is what the reversal WOULD have been
+    if contains(traj,'L')
         traj = 'L'; 
     elseif contains(traj,'R')
-        traj = 'R';
+        traj = 'R'; 
     end
 elseif contains(daySRT,'y')
     rng('shuffle');
@@ -116,6 +144,7 @@ if randArm == 1
 elseif randArm == 2
     traj='L';
 end
+
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
 
@@ -170,14 +199,14 @@ writeline(s,doorFuns.centralOpen);
 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TrialStart" 700 2');
  
 % make this array ready to track amount of time spent at choice
-time2choice = []; numRev = [];
+time2choice = []; numRev = traj;
 for triali = 1:numTrials    
     disp(['Rewarded Trajectory: ',traj])
     trajRewarded{triali} = traj;
 
     % start out with this as a way to make sure you don't exceed 30
     % minutes of the session
-    if numel(numRev)==2
+    if numel(numRev)==3
         break % break out of for loop
     end      
 
@@ -290,6 +319,9 @@ for triali = 1:numTrials
         % if reversaltraj is trajectory 15, it means that trajectory 15 was
         % the last rewarded trajectory for say, right sequences. And that
         % trajectory 16 will only be rewarded for left turns
+        
+        % once rats reach 80%, have them execute the rule for 10 additional
+        % trials?
         if propCorrect >= 0.8
             if contains(traj,'R')
                 traj = 'L';
@@ -360,21 +392,19 @@ for triali = 1:numTrials
             next = 1;
         end
     end
-   
+    writeline(s,doorFuns.centralClose);  
+    
     next = 0;
     while next == 0   
         % track choice entry
         if readDigitalPin(a,irArduino.Delay)==0 
-            disp('StemEntry')
-            % neuralynx timestamp command
-            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "StemEntry" 102 2');              
-            %tEntry = [];
-            %tEntry = tic;
+            writeline(s,doorFuns.closeAll);
+            pause(delayDuration(triali));
             next = 1;
         end
-    end     
+    end  
     
-    if numel(numRev)==2
+    if numel(numRev)==3
         break % break out of for loop
     end      
 end 

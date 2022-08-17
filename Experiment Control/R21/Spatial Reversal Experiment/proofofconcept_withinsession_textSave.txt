@@ -1,0 +1,82 @@
+What is your rats name? 21-36
+Confirm that your rat is 21-36 [y/Y OR n/N] y
+Is today testing or a reset day? enter "E" or "R" E
+copy/paste the datafolder of the previous days testing session with the MATLAB data saved: X:\01.Experiments\R21\21-36\SRT\Testing
+copy/paste the title of the previous days MATLAB data saved out: 21-36_SRT_control_NA_8_10_2022_EndTime1053
+Is today day1 of testing? [Y/N] y
+Getting rat-specific data
+Connecting with NetCom. This may take a few minutes...
+Connected to NetCom Server - Ready to run session.
+Netcom succesfully controlling cheetah.
+Successfully opened a stream with HPC_red and PFC_black
+Successfully opened a stream with HPC_red and PFC_black
+CSC real-time acquisition up and running!
+Setup successful
+Connecting with NetCom. This may take a few minutes...
+Connected to NetCom Server.
+Netcom succesfully controlling cheetah.
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: L
+DelayEntry
+Coh detect high end at 5.4297
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Coh detect high end at 5.6978
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Normal delay of 18
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Coh detect high end at 14.0165
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Pausing for high yoked control of 5.4297
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Pausing for high yoked control of 5.6978
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Coh detect high end at 15.7448
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Pausing for high yoked control of 14.0165
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Pausing for high yoked control of 15.7448
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Normal delay of 5
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+DelayEntry
+Normal delay of 27
+Rewarded Trajectory: R
+Choice-entry
+Chosen Trajectory: R
+Proportion correct: 0.91667
+DelayEntry
+Normal delay of 23
+Rewarded Trajectory: L
+Choice-entry
+Chosen Trajectory: L
+Proportion correct: 0.083333
