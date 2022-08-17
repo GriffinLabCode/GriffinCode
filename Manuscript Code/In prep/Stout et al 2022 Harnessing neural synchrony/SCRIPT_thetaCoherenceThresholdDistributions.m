@@ -31,12 +31,28 @@ for i = 1:length(cohSB_cache)
     %thetaCoh{i} = nanmean(cohSB_cache{i}.clean_cXf_mat_all(:,idxTheta),2);
 end
 
+deltaEventsD = []; thetaEventsD = [];
+for i = 1:length(cohSB_cache)
+    for sessi = 1:length(cohSB_cache{i}.dirty_cXf_mat)
+        try
+            deltaEventsD{i}{sessi} = nanmean(cohSB_cache{i}.dirty_cXf_mat{sessi}(:,idxDelta),2);
+            thetaEventsD{i}{sessi} = nanmean(cohSB_cache{i}.dirty_cXf_mat{sessi}(:,idxTheta),2);
+            % find epochs where theta is greater than delta
+            theta2deltaIDXD{i}{sessi} = find(thetaEventsD{i}{sessi} > deltaEventsD{i}{sessi});
+        end
+    end
+    %deltaCoh{i} = nanmean(cohSB_cache{i}.clean_cXf_mat_all(:,idxDelta),2);
+    %thetaCoh{i} = nanmean(cohSB_cache{i}.clean_cXf_mat_all(:,idxTheta),2);
+end
+
 % use the theta2deltaIDX to get coherence data to keep from clean
 for i = 1:length(theta2deltaIDX)
     for sessi = 1:length(theta2deltaIDX{i})
         cleanKeep{i}{sessi} = cohSB_cache{i}.clean_cXf_mat{sessi}(theta2deltaIDX{i}{sessi},:);
         deltaKeep{i}{sessi} = cohSB_cache{i}.clean_cXf_mat{sessi};   
-        deltaKeep{i}{sessi}(theta2deltaIDX{i}{sessi},:)=[];        
+        deltaKeep{i}{sessi}(theta2deltaIDX{i}{sessi},:)=[];  
+        
+        dirtyKeep{i}{sessi} = cohSB_cache{i}.dirty_cXf_mat{sessi}(theta2deltaIDX{i}{sessi},:);
     end
 end
 

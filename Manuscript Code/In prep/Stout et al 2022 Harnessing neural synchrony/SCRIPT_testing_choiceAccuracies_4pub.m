@@ -85,6 +85,8 @@ for i = 1:length(dataIN)
             remChoices = remData{i}{ii}.remTraj-1;                  
         catch
         end
+        % introduce environmental distractor trials
+        remChoices = [];
         
         % indicatorOUT temp
         tempInd = [];

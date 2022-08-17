@@ -51,24 +51,35 @@ ylim([50 100]);
 title(['N = ',num2str(length(rats)),' rats']);
 [h,p,ci,stat]=ttest(ratHigh,ratHighY)
 p*2
-
 [h,p,ci,stat]=ttest(ratLow,ratLowY)
 p*2
 
 % granger
+clearvars -except rats
 load('data_granger')
 diffP2Htheta = (p2hthetaHigh-p2hthetaLow)./(p2hthetaHigh+p2hthetaLow);
 diffH2Ptheta = (h2pthetaHigh-h2pthetaLow)./(h2pthetaHigh+h2pthetaLow);
+mat = [];
+mat = horzcat(diffH2Ptheta,diffP2Htheta);
+multiBarPlot(mat,[{'HPC -> PFC'} {'PFC -> HPC'}],'Norm. Diff Granger Prediction (High - Low)')
+ylim([-0.1 0.4])
 [h,p,ci,stat]=ttest(diffP2Htheta,0)
 p*3
 [h,p,ci,stat]=ttest(diffH2Ptheta,0)
 p*3
 [h,p,ci,stat]=ttest(diffH2Ptheta,diffP2Htheta)
 p*3
+
+% max theta freq
+clearvars -except rats
+load('data_bestFreq')
 mat = [];
-mat = horzcat(diffH2Ptheta,diffP2Htheta);
-multiBarPlot(mat,[{'HPC -> PFC'} {'PFC -> HPC'}],'Norm. Diff Granger Prediction (High - Low)')
-ylim([-0.1 0.4])
+mat = horzcat(normDiffHpc',normDiffPfc');
+multiBarPlot(mat,[{'HPC'} {'PFC'}],'Max Theta Freq. (high-low)')
+ylim([-0.025 0.1])
+[h,p,ci,stat]=ttest(mat(:,1)); p=p*3;
+[h,p,ci,stat]=ttest(mat(:,2)); p=p*3;
+[h,p,ci,stat]=ttest(mat(:,1),mat(:,2)); p=p*3;
         
 % theta gamma coupling
 clear; clc;
@@ -79,6 +90,8 @@ diffScorePAC2 = (pfcSlow.rat_modhigh-pfcSlow.rat_modlow)./(pfcSlow.rat_modhigh+p
 mat = horzcat(diffScorePAC1',diffScorePAC2');
 multiBarPlot(mat,[{'HPCtheta-PFCgamma'} {'PFCtheta-HPCgamma'}],'MI diff (high-low)')
 [h,p,ci,stat]=ttest(mat(:,1),mat(:,2))
+[h,p,ci,stat]=ttest(mat(:,1),0)
+[h,p,ci,stat]=ttest(mat(:,2),0)
 
 % power
 clear; clc;
