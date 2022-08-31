@@ -879,6 +879,8 @@ end
 dlYokeHigh(logical(remData))=[];
 accuracyYokeHigh(logical(remData))=[];
 ttYokeHigh(logical(remData))=[];
+idxYmet(logical(remData))=[];
+remData1 = remData;
 
 remData = [];
 for i = 1:length(dlHigh)
@@ -893,18 +895,93 @@ end
 dlHigh(logical(remData))=[];
 accuracyHigh(logical(remData))=[];
 ttHigh(logical(remData))=[];
+idxHmet(logical(remData))=[];
+remData2 = remData;
+remAll = horzcat(remData1, remData2);
 
 % split by reversal
 % split data by rule 1 and rule 2 according to testing day
-idxHmet1 = idxHmet(find(idxHmet <= idxRev(1)));
-idxHmet2 = idxHmet(find(idxHmet > idxRev(1)));
-idxYmet1 = idxYmet(find(idxYmet <= idxRev(1)));
-idxYmet2 = idxYmet(find(idxYmet > idxRev(1)));  
+idxHmet1 = find(idxHmet <= idxRev(1));
+idxHmet2 = find(idxHmet > idxRev(1));
+idxYmet1 = find(idxYmet <= idxRev(1));
+idxYmet2 = find(idxYmet > idxRev(1)); 
+
+% get times out of the variables above
+dlHmet1 = dlHigh(idxHmet1);
+dlHmet2 = dlHigh(idxHmet2);
+dlYmet1 = dlYokeHigh(idxYmet1);
+dlYmet2 = dlYokeHigh(idxYmet2);
+
+remData = [];
+for i = 1:length(dlHmet1)
+    idxFind = [];
+    idxFind = find(dlYmet1 == dlHmet1(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
+    end
+end
+dlHmet1(logical(remData))=[];
+idxHmet1(logical(remData))=[];
+
+remData = [];
+for i = 1:length(dlYmet1)
+    idxFind = [];
+    idxFind = find(dlHmet1 == dlYmet1(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
+    end
+end
+dlYmet1(logical(remData))=[];
+idxYmet1(logical(remData))=[];
+
+% now do it for post reversal
+remData = [];
+for i = 1:length(dlHmet2)
+    idxFind = [];
+    idxFind = find(dlYmet2 == dlHmet2(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
+    end
+end
+dlHmet2(logical(remData))=[];
+idxHmet2(logical(remData))=[];
+
+remData = [];
+for i = 1:length(dlYmet2)
+    idxFind = [];
+    idxFind = find(dlHmet2 == dlYmet2(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
+    end
+end
+dlYmet2(logical(remData))=[];
+idxYmet2(logical(remData))=[];
+
+% now we have to backwards index
+idxHmet1bi = idxHmet(idxHmet1);
+idxYmet1bi = idxYmet(idxYmet1);
+idxHmet2bi = idxHmet(idxHmet2);
+idxYmet2bi = idxYmet(idxYmet2);
+% now check
+trialType(idxHmet1bi)
+trialType(idxHmet2bi)
+trialType(idxYmet1bi)
+trialType(idxYmet2bi)
+% now because trial type and accuracy are the same dimensions, we get
+% accuracy as such:
 if contains(testingCond,'MW')
-    memoryRuleHighAcc   = accuracy2use(idxHmet1);
-    memoryRuleYokeAcc   = accuracy2use(idxYmet1);
-    withinRevHighAcc    = accuracy2use(idxHmet2);
-    withinRevYokeAcc    = accuracy2use(idxYmet2); 
+    memoryRuleHighAcc   = accuracy2use(idxHmet1bi);
+    memoryRuleYokeAcc   = accuracy2use(idxYmet1bi);
+    withinRevHighAcc    = accuracy2use(idxHmet2bi);
+    withinRevYokeAcc    = accuracy2use(idxYmet2bi); 
     % calculate prop correct
     memoryRuleHighPerf = 1-nanmean(memoryRuleHighAcc);
     memoryRuleYokePerf = 1-nanmean(memoryRuleYokeAcc);
@@ -923,10 +1000,10 @@ if contains(testingCond,'MW')
     ax.XTickLabelRotation = 45;
     ylabel('Proportion Correct');
 elseif contains(testingCond,'BW')
-    betweenRevHighAcc   = accuracy2use(idxHmet1);
-    betweenRevYokeAcc   = accuracy2use(idxYmet1);
-    withinRevHighAcc    = accuracy2use(idxHmet2);
-    withinRevYokeAcc    = accuracy2use(idxYmet2);   
+    betweenRevHighAcc   = accuracy2use(idxHmet1bi);
+    betweenRevYokeAcc   = accuracy2use(idxYmet1bi);
+    withinRevHighAcc    = accuracy2use(idxHmet2bi);
+    withinRevYokeAcc    = accuracy2use(idxYmet2bi);   
     % calculate prop correct
     betweenRevHighPerf = 1-nanmean(betweenRevHighAcc);
     betweenRevYokePerf = 1-nanmean(betweenRevYokeAcc);     

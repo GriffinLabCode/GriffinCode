@@ -73,36 +73,43 @@ p*3
 % max theta freq
 clearvars -except rats
 load('data_bestFreq')
-mat = [];
-mat = horzcat(normDiffHpc',normDiffPfc');
-multiBarPlot(mat,[{'HPC'} {'PFC'}],'Max Theta Freq. (high-low)')
-ylim([-0.025 0.1])
-[h,p,ci,stat]=ttest(mat(:,1)); p=p*3;
-[h,p,ci,stat]=ttest(mat(:,2)); p=p*3;
-[h,p,ci,stat]=ttest(mat(:,1),mat(:,2)); p=p*3;
-        
-% theta gamma coupling
-clear; clc;
-hpcSlow=load('data_thetaGamma');
-pfcSlow=load('data_thetaGamma_pfcSlow');
-diffScorePAC1 = (hpcSlow.rat_modhigh-hpcSlow.rat_modlow)./(hpcSlow.rat_modhigh+hpcSlow.rat_modlow);
-diffScorePAC2 = (pfcSlow.rat_modhigh-pfcSlow.rat_modlow)./(pfcSlow.rat_modhigh+pfcSlow.rat_modlow);
-mat = horzcat(diffScorePAC1',diffScorePAC2');
-multiBarPlot(mat,[{'HPCtheta-PFCgamma'} {'PFCtheta-HPCgamma'}],'MI diff (high-low)')
-[h,p,ci,stat]=ttest(mat(:,1),mat(:,2))
-[h,p,ci,stat]=ttest(mat(:,1),0)
-[h,p,ci,stat]=ttest(mat(:,2),0)
+
+% get averages
+hpcHigh_avg = cellfun(@nanmean,bestFreq_hpcHigh);
+hpcLow_avg = cellfun(@nanmean,bestFreq_hpcLow);
+pfcHigh_avg = cellfun(@nanmean,bestFreq_pfcHigh);
+pfcLow_avg = cellfun(@nanmean,bestFreq_pfcLow);
+
+% figure
+data = [];
+data{1} = pfcHigh_avg; data{2} = pfcLow_avg;
+data{3} = hpcHigh_avg; data{4} = hpcLow_avg;
+multiBarPlot(data,[{'PFC high'} {'PFC low'} {'HPC high'} {'HPC low'}],'Theta Frequency')
+ylim([5 8])
+[h,p,ci,stat]=ttest(data{1},data{2}) 
+p=p*2
+[h,p,ci,stat]=ttest(data{3},data{4}) 
+p=p*2 
 
 % power
 clear; clc;
-load('data_powerAnalysis')
+load('data_powerAnalysis6to9hz')
+hpcHigh_avg = cellfun(@nanmean,hpcHigh);
+hpcLow_avg  = cellfun(@nanmean,hpcLow);
+pfcHigh_avg = cellfun(@nanmean,pfcHigh);
+pfcLow_avg  = cellfun(@nanmean,pfcLow);
+normDiffHpc = (hpcHigh_avg-hpcLow_avg)./(hpcHigh_avg+hpcLow_avg);
+normDiffPfc = (pfcHigh_avg-pfcLow_avg)./(pfcHigh_avg+pfcLow_avg);
 mat = [];
 mat = horzcat(normDiffHpc',normDiffPfc');
 multiBarPlot(mat,[{'HPC'} {'PFC'}],'Norm 6-11Hz Power (High-Low)')
-ylim([-0.1 0.25])
-[h,p,ci,stat]=ttest(mat(:,1),0)
-[h,p,ci,stat]=ttest(mat(:,2),0)
+%ylim([-0.1 0.25])
+[h,p,ci,stat]=ttest(mat(:,1)) 
+p*3
+[h,p,ci,stat]=ttest(mat(:,2)) 
+p=p*3
 [h,p,ci,stat]=ttest(mat(:,1),mat(:,2))
+p=p*3
 
 % behavioral analyses
 load('data_offlineBehavior')
@@ -226,6 +233,40 @@ multiBarPlot(mat,[{'PFC'} {'HPC'}],'Norm. SFC (high-low)','n');
 [h,p1,ci,stat]=ttest(mat(:,1),0); p1=p1*3;
 [h,p2,ci,stat]=ttest(mat(:,2),0); p2=p2*3;
 [h,p3,ci,stat]=ttest(mat(:,1),mat(:,2)); p3=p3*3;
+
+%% classifier
+clearvars -except rats
+load('data_svm2016');
+
+% classifier trained to predict high vs low states
+figure('color','w'); hold on;
+bar(1,nanmean(svmPerformance.DA.trueAvg),'FaceColor',[.6 .6 .6]);
+errorbar(1,nanmean(svmPerformance.DA.trueAvg),nanstd(svmPerformance.DA.trueAvg),'color','k','LineWidth',2)
+line([0.6 1.4],[nanmean(svmPerformance.DA.shuffAvg) nanmean(svmPerformance.DA.shuffAvg)],'Color','w','LineWidth',2,'LineStyle','--')
+ylabel('Classifier Accuracy')
+title('Predict high vs low')
+
+% neunuebel style
+[h,p,ci,z] = ztest(nanmean(svmPerformance.DA.shuffAvg),nanmean(svmPerformance.DA.trueAvg),std(svmPerformance.DA.trueAvg))
+
+% classifier trained to predict cd from da
+figure('color','w'); hold on;
+bar(1,nanmean(svmPerformance.High.daVScd_trueAvg),'FaceColor','b');
+errorbar(1,nanmean(svmPerformance.High.daVScd_trueAvg),nanstd(svmPerformance.High.daVScd_trueAvg),'color','k','LineWidth',2)
+line([0.6 1.4],[svmPerformance.Low.daVScd_shuffAvg svmPerformance.Low.daVScd_shuffAvg],'Color','w','LineWidth',2,'LineStyle','--')
+bar(2,nanmean(svmPerformance.Low.daVScd_trueAvg),'FaceColor','r');
+errorbar(2,nanmean(svmPerformance.Low.daVScd_trueAvg),nanstd(svmPerformance.Low.daVScd_trueAvg),'color','k','LineWidth',2)
+line([1.6 2.4],[svmPerformance.Low.daVScd_shuffAvg svmPerformance.Low.daVScd_shuffAvg],'Color','w','LineWidth',2,'LineStyle','--')
+ylabel('Classifier Accuracy')
+title('Predict Task')
+
+% neunuebel style
+[h,p,ci,z] = ztest(nanmean(svmPerformance.High.daVScd_shuffAvg),nanmean(svmPerformance.High.daVScd_trueAvg),std(svmPerformance.High.daVScd_trueAvg))
+p*3
+[h,p,ci,z] = ztest(nanmean(svmPerformance.Low.daVScd_shuffAvg),nanmean(svmPerformance.Low.daVScd_trueAvg),std(svmPerformance.Low.daVScd_trueAvg))
+p*3
+[h,p,ci,z] = ztest(nanmean(svmPerformance.High.daVScd_trueAvg),nanmean(svmPerformance.Low.daVScd_trueAvg),std(svmPerformance.Low.daVScd_trueAvg))
+p*3
 
 %% extended figs
 clear;

@@ -553,6 +553,7 @@ for i = 1:length(rtLFP_low_det)
 end
 
 % cellfun
+clear hpcHigh_avg hpcLow_avg pfcHigh_avg pfcLow_avg
 hpcHigh_avg = cellfun(@nanmean,hpcHigh);
 hpcLow_avg = cellfun(@nanmean,hpcLow);
 pfcHigh_avg = cellfun(@nanmean,pfcHigh);
