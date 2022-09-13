@@ -12,6 +12,7 @@
 
 % clear/clc
 clear; clc
+SetUp;
 
 % get directory that houses this code
 codeDir = getCurrentPath();

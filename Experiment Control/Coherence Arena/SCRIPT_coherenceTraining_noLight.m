@@ -47,7 +47,7 @@ sessionDur = str2num(input(prompt,'s'));
 % load in thresholds
 disp('Getting threshold data')
 cd(['X:\01.Experiments\R21\',targetRat,'\thresholds']);
-load('thresholdData');
+load('thresholds');
 
 % load in baselines
 disp(['Getting baseline data for ' targetRat])
