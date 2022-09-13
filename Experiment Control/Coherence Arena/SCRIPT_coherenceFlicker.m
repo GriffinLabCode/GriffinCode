@@ -45,17 +45,15 @@ sessionDur = str2num(input(prompt,'s'));
 
 %% prep real time code
 % load in thresholds
+% load in thresholds
 disp('Getting threshold data')
-cd(['X:\01.Experiments\R21\',targetRat,'\thresholds']);
-load('thresholdData');
+cd(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\',targetRat,'\thresholds']);
+load('thresholds');
 
 % load in baselines
 disp(['Getting baseline data for ' targetRat])
-cd(['X:\01.Experiments\R21\',targetRat,'\baseline alternative']);
+cd(['X:\01.Experiments\R21\Learning To Use Coherence Experiment\',targetRat,'\baseline']);
 load('baselineData')
-disp(['Getting LFP names for ' targetRat])
-cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
-load('baselineData','LFP1name','LFP2name')
 
 % interface with cheetah setup
 threshold.coh_duration = 0.5;
