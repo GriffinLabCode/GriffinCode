@@ -288,15 +288,111 @@ for i = 1:length(rtLFP_low_end)
     end
 end
 
+% get phase coherence
+phaseCohHigh = []; phaseCohLow = [];
+freqs = [6:11];
 for i = 1:length(rtLFP_high_det)
     for ii = 1:length(rtLFP_high_det{i})
-       C_high{i}(ii) = nanmean(coherencyc(rtLFP_high_det{i}{ii}(1,:),rtLFP_high_det{i}{ii}(2,:),params));
-    end
-end
-for i = 1:length(rtLFP_low_det)
-    for ii = 1:length(rtLFP_low_det{i})
-       C_low{i}(ii) = nanmean(coherencyc(rtLFP_low_det{i}{ii}(1,:),rtLFP_low_det{i}{ii}(2,:),params));
+        for fi = 1:length(freqs)
+            phaseCohHigh{i}{ii}(fi) = PhaseCoherence(freqs(fi),rtLFP_high_det{i}{ii},2000);
+        end
     end
 end
 
+
+
+for i = 1:length(rtLFP_low_det)
+    for ii = 1:length(rtLFP_low_det{i})
+        for fi = 1:length(freqs)
+            phaseCohLow{i}{ii}(fi) = PhaseCoherence(freqs(fi),rtLFP_low_det{i}{ii},2000);
+        end
+    end
+end
+
+% now lets take a look at this data
+
+% first off, phase synchrony should be stronger on high coh than low coh
+% trials
+for i = 1:length(phaseCohHigh)
+    phaseCohRatHigh{i}=vertcat(phaseCohHigh{i}{:});
+    phaseCohRatLow{i}=vertcat(phaseCohLow{i}{:});
+end
+
+% average within rats
+phaseCohRatHigh_avg = cellfun2(phaseCohRatHigh,'nanmean',{'1'});
+phaseCohRatLow_avg  = cellfun2(phaseCohRatLow,'nanmean',{'1'});
+
+phaseCohMatHigh = vertcat(phaseCohRatHigh_avg{:});
+phaseCohMatLow  = vertcat(phaseCohRatLow_avg{:});
+
+% figure
+figure('color','w'); hold on;
+shadedErrorBar(freqs,mean(phaseCohMatHigh,1),stderr(phaseCohMatHigh,1),'k',0);
+shadedErrorBar(freqs,mean(phaseCohMatLow,1),stderr(phaseCohMatLow,1),'r',0);
+axis tight;
+
+% collapse signals
+freqs = [1:20];
+clear lfpColHigh phaseCohHigh
+for i = 1:length(rtLFP_high_det)
+    % collapse data
+    lfpColHigh{i} = horzcat(rtLFP_high_det{i}{:});
+    % phase coh
+    for fi = 1:length(freqs)
+        phaseCohHigh{i}(fi) = PhaseCoherence(freqs(fi),lfpColHigh{i},2000);
+    end
+end
+clear lfpColLow phaseCohLow
+for i = 1:length(rtLFP_low_det)
+    % collapse data
+    lfpColLow{i} = horzcat(rtLFP_low_det{i}{:});
+    % phase coh
+    for fi = 1:length(freqs)
+        phaseCohLow{i}(fi) = PhaseCoherence(freqs(fi),lfpColLow{i},2000);
+    end
+end
+
+% sort data
+phaseCohHighMat = vertcat(phaseCohHigh{:});
+phaseCohLowMat = vertcat(phaseCohLow{:});
+
+% normalize to account for variability in sample size
+phaseNormHigh = []; phaseNormLow = [];
+for i = 1:length(phaseCohHigh)
+    phaseNormHigh(i,:) = normalize(phaseCohHigh{i},'range');
+    phaseNormLow(i,:)  = normalize(phaseCohLow{i},'range');
+end
+
+% smooth data
+phaseNormHighS = []; phaseNormLowS = [];
+for i = 1:length(phaseCohHigh)
+    phaseNormHighS(i,:) = smoothdata(phaseNormHigh(i,:),'gaussian',2);
+    phaseNormLowS(i,:)  = smoothdata(phaseNormLow(i,:),'gaussian',2);
+end
+
+figure('color','w'); hold on;
+shadedErrorBar(freqs,mean(phaseCohHighMat,1),stderr(phaseCohHighMat,1),'k',0);
+shadedErrorBar(freqs,mean(phaseCohLowMat,1),stderr(phaseCohLowMat,1),'r',0);
+ylabel('Phase Coherence')
+xlabel('Frequency')
+axis tight
+
+% between the 6-11Hz range is what we're interested in
+idxTheta = find(freqs == 7);
+phaseCohMatHigh_theta = mean(phaseCohHighMat(:,idxTheta),2);
+phaseCohMatLow_theta  = mean(phaseCohLowMat(:,idxTheta),2);
+figure('color','w')
+multiBarPlot(horzcat(phaseCohMatHigh_theta,phaseCohMatLow_theta),[{'HighCoh'},{'LowCoh'}],'Phase Coherence','n');
+[h,p]=ttest(phaseCohMatHigh_theta,phaseCohMatLow_theta)
+
+
+% between the 6-11Hz range is what we're interested in
+idxTheta = find(freqs == 7);
+phaseCohMatHigh_theta = mean(phaseCohMatHigh(:,idxTheta),2);
+phaseCohMatLow_theta  = mean(phaseCohMatLow(:,idxTheta),2);
+
+% bar graph
+figure('color','w')
+multiBarPlot(horzcat(phaseCohMatHigh_theta,phaseCohMatLow_theta),[{'HighCoh'},{'LowCoh'}],'Phase Coherence','n');
+[h,p]=ttest(phaseCohMatHigh_theta,phaseCohMatLow_theta)
 
