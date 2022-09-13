@@ -27,6 +27,14 @@ if ~contains(confirm,[{'y'} {'Y'}])
 end
 prompt = ['Is today testing or a reset day? enter "E" or "R" '];
 testingType = input(prompt,'s');
+prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
+datafolder = input(prompt,'s');
+prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
+data2load  = input(prompt,'s'); 
+cd(datafolder);
+prevTrajData = load(data2load,'traj');
+prevTraj = prevTrajData.traj; 
+clear traj
 
 % randomize MW and BW, then use previous days to offset
 numTrials = 12*20;
@@ -54,15 +62,6 @@ while next == 0
 end  
 
 if contains(testingType,[{'E'} {'e'}])
-    prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
-    datafolder = input(prompt,'s');
-    prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
-    data2load  = input(prompt,'s'); 
-    cd(datafolder);
-    prevTrajData = load(data2load,'traj');
-    prevTraj = prevTrajData.traj; 
-    clear traj    
-    
     % interface with user
     prompt     = ['Is today day1 of testing? [Y/N] '];
     testingDay1 = input(prompt,'s');
@@ -141,7 +140,6 @@ elseif contains(testingType,[{'R'} {'r'}])
     end
     k = numTrials;
     delayDuration = randsample(5:30,k,true);  
-    testingCond = 'NA';
 end
 
 % load in thresholds
@@ -495,262 +493,258 @@ for triali = 1:numTrials
         break % break out of for loop
     end        
     
-    if contains(testingType,[{'R'} {'r'}])    
-        pause(delayLenTrial(triali))
-    else
-        % the meat
-        if contains(indicatorOUT{triali},'Norm') || contains(indicatorOUT{triali},'NormHighFail') || contains(indicatorOUT{triali},'NormLowFail')
+    % the meat
+    if contains(indicatorOUT{triali},'Norm') || contains(indicatorOUT{triali},'NormHighFail') || contains(indicatorOUT{triali},'NormLowFail')
+        disp(['Normal delay of ',num2str(delayLenTrial(triali))])
+        pause(delayLenTrial(triali));
+
+    elseif contains(indicatorOUT{triali},'high')
+        dStart = [];
+        dStart = tic;        
+        pause(3.5);
+        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
+
+            if i == 1
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;
+            end
+
+            % 3) pull in 0.25 seconds of data
+            % pull in data at shorter resolution   
+            pause(pauseTime)
+            [succeeded, dataArray, timeStampArray, ~, ~, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+            % 4) apply it to the initial array, remove what was there
+            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+            dataWin = [dataWin dataArray]; % add data
+
+            % detrend by removing third degree polynomial
+            data_det=[];
+            data_det(1,:) = detrend(dataWin(1,:),3);
+            data_det(2,:) = detrend(dataWin(2,:),3);
+
+            % calculate coherence
+            coh = [];
+            [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+
+            % perform logical indexing of theta and delta ranges to improve
+            % performance speed
+            %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            percSat = (length(idxNoise)/length(zArtifact))*100;                
+            
+            % only include if theta coherence is higher than delta. Reject
+            % if delta is greater than theta or if saturation exceeds
+            % threshold
+            if cohDelta > cohTheta || percSat > noisePercent
+                detected{triali}(i)=1;
+                rejected = 1;
+                %disp('Rejected')  
+            % accept if theta > delta and if minimal saturation
+            elseif cohTheta > cohDelta && percSat < noisePercent
+                rejected = 0;
+                detected{triali}(i)=0;
+            end
+
+            % store data
+            dataZStored{triali}{i} = zArtifact;
+            dataStored{triali}{i}  = dataWin;
+            cohOUT{triali}{i}      = coh;
+
+            % if coherence is higher than your threshold, and the data is
+            % accepted, then let the rat make a choice
+            if cohTheta > cohHighThreshold && rejected == 0
+                met_high = 1;
+                indicatorOUT{triali} = 'highMET';                
+                break 
+            % if you exceed 30s, break out
+            elseif toc(dStart) > maxDelay
+                met_high = 0;
+                indicatorOUT{triali} = 'highFAIL'; 
+                break
+            end  
+        end
+
+        % IMPORTANT: Storing this for later
+        cohEnd = toc(dStart);
+        disp(['Coh detect high end at ', num2str(cohEnd)])
+
+        % now replace the delayLenTrial with coherence delay
+        %delayLenTrial(triali) = cohEnd;
+   
+        % now identify yoked high, and replace with control delay        
+        if met_high == 1
+            % if coherence was met, replace the delay trial time with the
+            % amount of time it took to finish the delay
+            delayLenTrial(triali) = cohEnd; 
+            yokH = [yokH cohEnd];
+        elseif met_high == 0
+            % if coherence wasn't met, replace the next yokeH with a 'Norm'
+            % replace the next high with a 'norm'
+            delayLenTrial(triali) = cohEnd; 
+            idxRem = find(contains(indicatorOUT,'contH')==1);
+            indicatorOUT{idxRem(1)}='NormHighFail';
+        end
+        
+            %yokH = [yokH NaN];
+        
+    elseif contains(indicatorOUT{triali},'low')
+        dStart = [];
+        dStart = tic;
+        pause(3.5);        
+        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
+
+            if i == 1
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;
+            end
+
+            % 3) pull in 0.25 seconds of data
+            % pull in data at shorter resolution   
+            pause(pauseTime)
+            [succeeded, dataArray, timeStampArray, ~, ~, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+            % 4) apply it to the initial array, remove what was there
+            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+            dataWin = [dataWin dataArray]; % add data
+
+            % detrend by removing third degree polynomial
+            data_det=[];
+            data_det(1,:) = detrend(dataWin(1,:),3);
+            data_det(2,:) = detrend(dataWin(2,:),3);
+
+            % calculate coherence
+            coh = [];
+            [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+
+            % identify theta > delta or delta > theta
+            % take averages
+            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
+            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
+            
+            % perform logical indexing of theta and delta ranges to improve
+            % performance speed
+            %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+
+            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            percSat = (length(idxNoise)/length(zArtifact))*100;                
+            
+            % only include if theta coherence is higher than delta. Reject
+            % if delta is greater than theta or if saturation exceeds
+            % threshold
+            if cohDelta > cohTheta || percSat > noisePercent
+                detected{triali}(i)=1;
+                rejected = 1;
+                %disp('Rejected')  
+            % accept if theta > delta and if minimal saturation
+            elseif cohTheta > cohDelta && percSat < noisePercent
+                rejected = 0;
+                detected{triali}(i)=0;
+            end            
+
+            % store data
+            dataZStored{triali}{i} = zArtifact;
+            dataStored{triali}{i}  = dataWin;
+            cohOUT{triali}{i}      = coh;
+
+            % if coherence is less than your threshold, and the data is
+            % accepted, then let the rat make a choice
+            if cohTheta < cohLowThreshold && rejected == 0
+                %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]); 
+                met_low = 1;
+                indicatorOUT{triali} = 'lowMET';
+                break
+            % if you exceed 30s, break out
+            elseif toc(dStart) > maxDelay
+                met_low = 0;
+                indicatorOUT{triali} = 'lowFAIL';
+                break
+            end
+                
+        end
+        
+        % IMPORTANT: Storing this for later
+        cohEnd = toc(dStart);
+        disp(['Coh detect low end at ', num2str(cohEnd)])
+
+        % now replace the delayLenTrial with coherence delay
+        %delayLenTrial(triali) = cohEnd;
+   
+        % now identify yoked high, and replace with control delay
+        if met_low == 1
+            % if coherence was met, replace the delay trial time with the
+            % amount of time it took to finish the delay
+            delayLenTrial(triali) = cohEnd; 
+            yokL = [yokL cohEnd];
+        elseif met_low == 0
+            % if coherence wasn't met, replace the next yokeH with a 'Norm'
+            % replace the next high with a 'norm'
+            delayLenTrial(triali) = cohEnd; 
+            idxRem = find(contains(indicatorOUT,'contL')==1);
+            indicatorOUT{idxRem(1)}='NormLowFail';
+        end
+        
+    % only yoke up if you have options to pull from, if not then it'll
+    % become a 'norm' trial
+    elseif contains(indicatorOUT{triali},'contL')
+        
+        if isempty(yokL)==0
+            % pause for yoked control
+            disp(['Pausing for low yoked control of ',num2str(yokL(1))])
+            pause(yokL(1));
+            indicatorOUT{triali} = 'yokeL_MET';
+            delayLenTrial(triali) = yokL(1);            
+            % delete so that next time, 1 is the updated delay
+            yokL(1)=[];
+        elseif isempty(yokL)==1
             disp(['Normal delay of ',num2str(delayLenTrial(triali))])
             pause(delayLenTrial(triali));
-
-        elseif contains(indicatorOUT{triali},'high')
-            dStart = [];
-            dStart = tic;        
-            pause(3.5);
-            for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
-
-                if i == 1
-                    clearStream(LFP1name,LFP2name);
-                    pause(windowDuration)
-                    [succeeded, dataArray, timeStampArray, ~, ~, ...
-                    numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                    % 2) store the data
-                    % now add and remove data to move the window
-                    dataWin    = dataArray;
-                end
-
-                % 3) pull in 0.25 seconds of data
-                % pull in data at shorter resolution   
-                pause(pauseTime)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 4) apply it to the initial array, remove what was there
-                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-                dataWin = [dataWin dataArray]; % add data
-
-                % detrend by removing third degree polynomial
-                data_det=[];
-                data_det(1,:) = detrend(dataWin(1,:),3);
-                data_det(2,:) = detrend(dataWin(2,:),3);
-
-                % calculate coherence
-                coh = [];
-                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
-
-                % perform logical indexing of theta and delta ranges to improve
-                % performance speed
-                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-
-                % determine if data is noisy
-                zArtifact = [];
-                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-                percSat = (length(idxNoise)/length(zArtifact))*100;                
-
-                % only include if theta coherence is higher than delta. Reject
-                % if delta is greater than theta or if saturation exceeds
-                % threshold
-                if cohDelta > cohTheta || percSat > noisePercent
-                    detected{triali}(i)=1;
-                    rejected = 1;
-                    %disp('Rejected')  
-                % accept if theta > delta and if minimal saturation
-                elseif cohTheta > cohDelta && percSat < noisePercent
-                    rejected = 0;
-                    detected{triali}(i)=0;
-                end
-
-                % store data
-                dataZStored{triali}{i} = zArtifact;
-                dataStored{triali}{i}  = dataWin;
-                cohOUT{triali}{i}      = coh;
-
-                % if coherence is higher than your threshold, and the data is
-                % accepted, then let the rat make a choice
-                if cohTheta > cohHighThreshold && rejected == 0
-                    met_high = 1;
-                    indicatorOUT{triali} = 'highMET';                
-                    break 
-                % if you exceed 30s, break out
-                elseif toc(dStart) > maxDelay
-                    met_high = 0;
-                    indicatorOUT{triali} = 'highFAIL'; 
-                    break
-                end  
-            end
-
-            % IMPORTANT: Storing this for later
-            cohEnd = toc(dStart);
-            disp(['Coh detect high end at ', num2str(cohEnd)])
-
-            % now replace the delayLenTrial with coherence delay
-            %delayLenTrial(triali) = cohEnd;
-
-            % now identify yoked high, and replace with control delay        
-            if met_high == 1
-                % if coherence was met, replace the delay trial time with the
-                % amount of time it took to finish the delay
-                delayLenTrial(triali) = cohEnd; 
-                yokH = [yokH cohEnd];
-            elseif met_high == 0
-                % if coherence wasn't met, replace the next yokeH with a 'Norm'
-                % replace the next high with a 'norm'
-                delayLenTrial(triali) = cohEnd; 
-                idxRem = find(contains(indicatorOUT,'contH')==1);
-                indicatorOUT{idxRem(1)}='NormHighFail';
-            end
-
-                %yokH = [yokH NaN];
-
-        elseif contains(indicatorOUT{triali},'low')
-            dStart = [];
-            dStart = tic;
-            pause(3.5);        
-            for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
-
-                if i == 1
-                    clearStream(LFP1name,LFP2name);
-                    pause(windowDuration)
-                    [succeeded, dataArray, timeStampArray, ~, ~, ...
-                    numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                    % 2) store the data
-                    % now add and remove data to move the window
-                    dataWin    = dataArray;
-                end
-
-                % 3) pull in 0.25 seconds of data
-                % pull in data at shorter resolution   
-                pause(pauseTime)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 4) apply it to the initial array, remove what was there
-                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-                dataWin = [dataWin dataArray]; % add data
-
-                % detrend by removing third degree polynomial
-                data_det=[];
-                data_det(1,:) = detrend(dataWin(1,:),3);
-                data_det(2,:) = detrend(dataWin(2,:),3);
-
-                % calculate coherence
-                coh = [];
-                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
-
-                % identify theta > delta or delta > theta
-                % take averages
-                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-
-                % perform logical indexing of theta and delta ranges to improve
-                % performance speed
-                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-
-                % determine if data is noisy
-                zArtifact = [];
-                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-
-                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-                percSat = (length(idxNoise)/length(zArtifact))*100;                
-
-                % only include if theta coherence is higher than delta. Reject
-                % if delta is greater than theta or if saturation exceeds
-                % threshold
-                if cohDelta > cohTheta || percSat > noisePercent
-                    detected{triali}(i)=1;
-                    rejected = 1;
-                    %disp('Rejected')  
-                % accept if theta > delta and if minimal saturation
-                elseif cohTheta > cohDelta && percSat < noisePercent
-                    rejected = 0;
-                    detected{triali}(i)=0;
-                end            
-
-                % store data
-                dataZStored{triali}{i} = zArtifact;
-                dataStored{triali}{i}  = dataWin;
-                cohOUT{triali}{i}      = coh;
-
-                % if coherence is less than your threshold, and the data is
-                % accepted, then let the rat make a choice
-                if cohTheta < cohLowThreshold && rejected == 0
-                    %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]); 
-                    met_low = 1;
-                    indicatorOUT{triali} = 'lowMET';
-                    break
-                % if you exceed 30s, break out
-                elseif toc(dStart) > maxDelay
-                    met_low = 0;
-                    indicatorOUT{triali} = 'lowFAIL';
-                    break
-                end
-
-            end
-
-            % IMPORTANT: Storing this for later
-            cohEnd = toc(dStart);
-            disp(['Coh detect low end at ', num2str(cohEnd)])
-
-            % now replace the delayLenTrial with coherence delay
-            %delayLenTrial(triali) = cohEnd;
-
-            % now identify yoked high, and replace with control delay
-            if met_low == 1
-                % if coherence was met, replace the delay trial time with the
-                % amount of time it took to finish the delay
-                delayLenTrial(triali) = cohEnd; 
-                yokL = [yokL cohEnd];
-            elseif met_low == 0
-                % if coherence wasn't met, replace the next yokeH with a 'Norm'
-                % replace the next high with a 'norm'
-                delayLenTrial(triali) = cohEnd; 
-                idxRem = find(contains(indicatorOUT,'contL')==1);
-                indicatorOUT{idxRem(1)}='NormLowFail';
-            end
-
-        % only yoke up if you have options to pull from, if not then it'll
-        % become a 'norm' trial
-        elseif contains(indicatorOUT{triali},'contL')
-
-            if isempty(yokL)==0
-                % pause for yoked control
-                disp(['Pausing for low yoked control of ',num2str(yokL(1))])
-                pause(yokL(1));
-                indicatorOUT{triali} = 'yokeL_MET';
-                delayLenTrial(triali) = yokL(1);            
-                % delete so that next time, 1 is the updated delay
-                yokL(1)=[];
-            elseif isempty(yokL)==1
-                disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-                pause(delayLenTrial(triali));
-                indicatorOUT{triali} = 'yokeL_FAIL';
-            end
-
-        elseif contains(indicatorOUT{triali},'contH')
-            % if you have a yoke to pull from
-            if isempty(yokH)==0
-                disp(['Pausing for high yoked control of ',num2str(yokH(1))])
-                pause(yokH(1));
-                indicatorOUT{triali} = 'yokeH_MET';  
-                delayLenTrial(triali) = yokH(1);
-                yokH(1)=[];
-            % if you don't have a yoke to pull from
-            elseif isempty(yokH)==1
-                disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-                pause(delayLenTrial(triali));
-                indicatorOUT{triali} = 'yokeH_FAIL';          
-            end        
-        end   
-    end
+            indicatorOUT{triali} = 'yokeL_FAIL';
+        end
+        
+    elseif contains(indicatorOUT{triali},'contH')
+        % if you have a yoke to pull from
+        if isempty(yokH)==0
+            disp(['Pausing for high yoked control of ',num2str(yokH(1))])
+            pause(yokH(1));
+            indicatorOUT{triali} = 'yokeH_MET';  
+            delayLenTrial(triali) = yokH(1);
+            yokH(1)=[];
+        % if you don't have a yoke to pull from
+        elseif isempty(yokH)==1
+            disp(['Normal delay of ',num2str(delayLenTrial(triali))])
+            pause(delayLenTrial(triali));
+            indicatorOUT{triali} = 'yokeH_FAIL';          
+        end        
+    end     
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 
@@ -843,115 +837,190 @@ clear prompt
 prompt   = 'Enter trajectories to exclude. For example: 1 4 5 20 45: ';
 remTraj  = str2num(input(prompt,'s'));
 
-if contains(testingType,[{'E'} {'e'}])
-    % clean up variables
-    accuracy2use = accuracy;
-    accuracy2use(1)=[]; % remove first trajectory
-    % to account for traj1 removal, subtract 1 from remTraj
-    remTrajFix = remTraj-1;
-    % correct the trialType variable
-    trialType = indicatorOUT;
-    trialType(numel(accuracy2use)+1:end)=[];
-    % correct delay length
-    delayLength = delayLenTrial;
-    delayLength(numel(accuracy2use)+1:end)=[];
-    % remove trajectories
-    accuracy2use(remTrajFix)=[];
-    trialType(remTrajFix)=[];
-    delayLength(remTrajFix)=[];
+% clean up variables
+accuracy2use = accuracy;
+accuracy2use(1)=[]; % remove first trajectory
+% to account for traj1 removal, subtract 1 from remTraj
+remTrajFix = remTraj-1;
+% correct the trialType variable
+trialType = indicatorOUT;
+trialType(numel(accuracy2use)+1:end)=[];
+% correct delay length
+delayLength = delayLenTrial;
+delayLength(numel(accuracy2use)+1:end)=[];
+% remove trajectories
+accuracy2use(remTrajFix)=[];
+trialType(remTrajFix)=[];
+delayLength(remTrajFix)=[];
 
-    % split data
-    idxHmet = find(contains(trialType,'highMET'));
-    idxYmet = find(contains(trialType,'yokeH_MET'));
+% split data
+idxHmet = find(contains(trialType,'highMET'));
+idxYmet = find(contains(trialType,'yokeH_MET'));
 
-    % get accuracy
-    accuracyHigh     = accuracy2use(idxHmet);
-    accuracyYokeHigh = accuracy2use(idxYmet);
-    % get trial type and delay length
-    ttHigh     = trialType(idxHmet);
-    ttYokeHigh = trialType(idxYmet);
-    dlHigh     = delayLength(idxHmet);
-    dlYokeHigh = delayLength(idxYmet);
-    % identify mismatches in delay duration
-    remData = [];
-    for i = 1:length(dlYokeHigh)
-        idxFind = [];
-        idxFind = find(dlHigh == dlYokeHigh(i));
-        if isempty(idxFind)
-            remData(i)=1;
-        else 
-            remData(i)=0;
-        end
+% get accuracy
+accuracyHigh     = accuracy2use(idxHmet);
+accuracyYokeHigh = accuracy2use(idxYmet);
+% get trial type and delay length
+ttHigh     = trialType(idxHmet);
+ttYokeHigh = trialType(idxYmet);
+dlHigh     = delayLength(idxHmet);
+dlYokeHigh = delayLength(idxYmet);
+% identify mismatches in delay duration
+remData = [];
+for i = 1:length(dlYokeHigh)
+    idxFind = [];
+    idxFind = find(dlHigh == dlYokeHigh(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
     end
-    dlYokeHigh(logical(remData))=[];
-    accuracyYokeHigh(logical(remData))=[];
-    ttYokeHigh(logical(remData))=[];
+end
+dlYokeHigh(logical(remData))=[];
+accuracyYokeHigh(logical(remData))=[];
+ttYokeHigh(logical(remData))=[];
+idxYmet(logical(remData))=[];
+remData1 = remData;
 
-    remData = [];
-    for i = 1:length(dlHigh)
-        idxFind = [];
-        idxFind = find(dlYokeHigh == dlHigh(i));
-        if isempty(idxFind)
-            remData(i)=1;
-        else 
-            remData(i)=0;
-        end
+remData = [];
+for i = 1:length(dlHigh)
+    idxFind = [];
+    idxFind = find(dlYokeHigh == dlHigh(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
     end
-    dlHigh(logical(remData))=[];
-    accuracyHigh(logical(remData))=[];
-    ttHigh(logical(remData))=[];
+end
+dlHigh(logical(remData))=[];
+accuracyHigh(logical(remData))=[];
+ttHigh(logical(remData))=[];
+idxHmet(logical(remData))=[];
+remData2 = remData;
+remAll = horzcat(remData1, remData2);
 
-    % split by reversal
-    % split data by rule 1 and rule 2 according to testing day
-    idxHmet1 = idxHmet(find(idxHmet <= idxRev(1)));
-    idxHmet2 = idxHmet(find(idxHmet > idxRev(1)));
-    idxYmet1 = idxYmet(find(idxYmet <= idxRev(1)));
-    idxYmet2 = idxYmet(find(idxYmet > idxRev(1)));  
-    if contains(testingCond,'MW')
-        memoryRuleHighAcc   = accuracy2use(idxHmet1);
-        memoryRuleYokeAcc   = accuracy2use(idxYmet1);
-        withinRevHighAcc    = accuracy2use(idxHmet2);
-        withinRevYokeAcc    = accuracy2use(idxYmet2); 
-        % calculate prop correct
-        memoryRuleHighPerf = 1-nanmean(memoryRuleHighAcc);
-        memoryRuleYokePerf = 1-nanmean(memoryRuleYokeAcc);
-        withinRevHighPerf  = 1-nanmean(withinRevHighAcc);
-        withinRevYokePerf  = 1-nanmean(withinRevYokeAcc); 
-        % figure
-        figure('color','w'); hold on;
-        bar([1 2 3 4],[memoryRuleYokePerf memoryRuleHighPerf withinRevYokePerf withinRevHighPerf]);
-        name = {'MemoryYoke';'MemoryHigh';'WithinRevYoke';'WithinRevHigh'};
-        %set(gca,'xticklabel',name)
-        %xtickangle(45)
-        box off
-        ax = gca;
-        ax.XTick = [1:4];
-        ax.XTickLabel = name;
-        ax.XTickLabelRotation = 45;
-        ylabel('Proportion Correct');
-    elseif contains(testingCond,'BW')
-        betweenRevHighAcc   = accuracy2use(idxHmet1);
-        betweenRevYokeAcc   = accuracy2use(idxYmet1);
-        withinRevHighAcc    = accuracy2use(idxHmet2);
-        withinRevYokeAcc    = accuracy2use(idxYmet2);   
-        % calculate prop correct
-        betweenRevHighPerf = 1-nanmean(betweenRevHighAcc);
-        betweenRevYokePerf = 1-nanmean(betweenRevYokeAcc);     
-        withinRevHighPerf  = 1-nanmean(withinRevHighAcc);
-        withinRevYokePerf  = 1-nanmean(withinRevYokeAcc);  
-        % figure
-        figure('color','w'); hold on;
-        bar([1 2 3 4],[betweenRevYokePerf betweenRevHighPerf withinRevYokePerf withinRevHighPerf]);
-        name = {'BetweenReversal';'BetweenReversalHigh';'WithinReversalYoke';'WithinReversalHigh'};
-        %set(gca,'xticklabel',name)
-        %xtickangle(45)
-        box off
-        ax = gca;
-        ax.XTick = [1:4];
-        ax.XTickLabel = name;
-        ax.XTickLabelRotation = 45;
-        ylabel('Proportion Correct');
+% split by reversal
+% split data by rule 1 and rule 2 according to testing day
+idxHmet1 = find(idxHmet <= idxRev(1));
+idxHmet2 = find(idxHmet > idxRev(1));
+idxYmet1 = find(idxYmet <= idxRev(1));
+idxYmet2 = find(idxYmet > idxRev(1)); 
+
+% get times out of the variables above
+dlHmet1 = dlHigh(idxHmet1);
+dlHmet2 = dlHigh(idxHmet2);
+dlYmet1 = dlYokeHigh(idxYmet1);
+dlYmet2 = dlYokeHigh(idxYmet2);
+
+remData = [];
+for i = 1:length(dlHmet1)
+    idxFind = [];
+    idxFind = find(dlYmet1 == dlHmet1(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
     end
+end
+dlHmet1(logical(remData))=[];
+idxHmet1(logical(remData))=[];
+
+remData = [];
+for i = 1:length(dlYmet1)
+    idxFind = [];
+    idxFind = find(dlHmet1 == dlYmet1(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
+    end
+end
+dlYmet1(logical(remData))=[];
+idxYmet1(logical(remData))=[];
+
+% now do it for post reversal
+remData = [];
+for i = 1:length(dlHmet2)
+    idxFind = [];
+    idxFind = find(dlYmet2 == dlHmet2(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
+    end
+end
+dlHmet2(logical(remData))=[];
+idxHmet2(logical(remData))=[];
+
+remData = [];
+for i = 1:length(dlYmet2)
+    idxFind = [];
+    idxFind = find(dlHmet2 == dlYmet2(i));
+    if isempty(idxFind)
+        remData(i)=1;
+    else 
+        remData(i)=0;
+    end
+end
+dlYmet2(logical(remData))=[];
+idxYmet2(logical(remData))=[];
+
+% now we have to backwards index
+idxHmet1bi = idxHmet(idxHmet1);
+idxYmet1bi = idxYmet(idxYmet1);
+idxHmet2bi = idxHmet(idxHmet2);
+idxYmet2bi = idxYmet(idxYmet2);
+% now check
+trialType(idxHmet1bi)
+trialType(idxHmet2bi)
+trialType(idxYmet1bi)
+trialType(idxYmet2bi)
+% now because trial type and accuracy are the same dimensions, we get
+% accuracy as such:
+if contains(testingCond,'MW')
+    memoryRuleHighAcc   = accuracy2use(idxHmet1bi);
+    memoryRuleYokeAcc   = accuracy2use(idxYmet1bi);
+    withinRevHighAcc    = accuracy2use(idxHmet2bi);
+    withinRevYokeAcc    = accuracy2use(idxYmet2bi); 
+    % calculate prop correct
+    memoryRuleHighPerf = 1-nanmean(memoryRuleHighAcc);
+    memoryRuleYokePerf = 1-nanmean(memoryRuleYokeAcc);
+    withinRevHighPerf  = 1-nanmean(withinRevHighAcc);
+    withinRevYokePerf  = 1-nanmean(withinRevYokeAcc); 
+    % figure
+    figure('color','w'); hold on;
+    bar([1 2 3 4],[memoryRuleYokePerf memoryRuleHighPerf withinRevYokePerf withinRevHighPerf]);
+    name = {'MemoryYoke';'MemoryHigh';'WithinRevYoke';'WithinRevHigh'};
+    %set(gca,'xticklabel',name)
+    %xtickangle(45)
+    box off
+    ax = gca;
+    ax.XTick = [1:4];
+    ax.XTickLabel = name;
+    ax.XTickLabelRotation = 45;
+    ylabel('Proportion Correct');
+elseif contains(testingCond,'BW')
+    betweenRevHighAcc   = accuracy2use(idxHmet1bi);
+    betweenRevYokeAcc   = accuracy2use(idxYmet1bi);
+    withinRevHighAcc    = accuracy2use(idxHmet2bi);
+    withinRevYokeAcc    = accuracy2use(idxYmet2bi);   
+    % calculate prop correct
+    betweenRevHighPerf = 1-nanmean(betweenRevHighAcc);
+    betweenRevYokePerf = 1-nanmean(betweenRevYokeAcc);     
+    withinRevHighPerf  = 1-nanmean(withinRevHighAcc);
+    withinRevYokePerf  = 1-nanmean(withinRevYokeAcc);  
+    % figure
+    figure('color','w'); hold on;
+    bar([1 2 3 4],[betweenRevYokePerf betweenRevHighPerf withinRevYokePerf withinRevHighPerf]);
+    name = {'BetweenReversal';'BetweenReversalHigh';'WithinReversalYoke';'WithinReversalHigh'};
+    %set(gca,'xticklabel',name)
+    %xtickangle(45)
+    box off
+    ax = gca;
+    ax.XTick = [1:4];
+    ax.XTickLabel = name;
+    ax.XTickLabelRotation = 45;
+    ylabel('Proportion Correct');
 end
 
 place2store = ['X:\01.Experiments\R21\',targetRat,'\SRT\Testing'];

@@ -327,13 +327,13 @@ for i = 1:length(rtLFP_high_det)
         tempHpcSmooth=[]; tempPfcSmooth=[];        
         [tempHpc,f] = mtspectrumc(rtLFP_high_det{i}{ii}(1,:),params);
         % smooth data
-        tempHpcSmooth=smoothdata(tempHpc,'gaussian');
+        tempHpcSmooth=smoothdata(log10(tempHpc),'gaussian');
         %figure; plot(f,tempHpcSmooth)
         %hold on; plot(f,tempHpc,'r')
         bestFreq_hpcHigh{i}(ii) = get_bestFrequency(tempHpcSmooth,f,[4 12]);
 
         tempPfc = mtspectrumc(rtLFP_high_det{i}{ii}(2,:),params);
-        tempPfcSmooth=smoothdata(tempPfc,'gaussian');    
+        tempPfcSmooth=smoothdata(log10(tempPfc),'gaussian');    
         bestFreq_pfcHigh{i}(ii) = get_bestFrequency(tempPfcSmooth,f,[4 12]);
         
     end
@@ -348,13 +348,13 @@ for i = 1:length(rtLFP_low_det)
         tempHpcSmooth=[]; tempPfcSmooth=[];                
         [tempHpc,f] = mtspectrumc(rtLFP_low_det{i}{ii}(1,:),params);
         % smooth data
-        tempHpcSmooth=smoothdata(tempHpc,'gaussian');
+        tempHpcSmooth=smoothdata(log10(tempHpc),'gaussian');
         %figure; plot(f,tempHpcSmooth)
         %hold on; plot(f,tempHpc,'r')
         bestFreq_hpcLow{i}(ii) = get_bestFrequency(tempHpcSmooth,f,[4 12]);
 
         tempPfc = mtspectrumc(rtLFP_low_det{i}{ii}(2,:),params);
-        tempPfcSmooth=smoothdata(tempPfc,'gaussian');    
+        tempPfcSmooth=smoothdata(log10(tempPfc),'gaussian');    
         bestFreq_pfcLow{i}(ii) = get_bestFrequency(tempPfcSmooth,f,[4 12]);
 
     end
