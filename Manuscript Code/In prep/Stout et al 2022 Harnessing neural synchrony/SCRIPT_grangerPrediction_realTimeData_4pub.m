@@ -394,7 +394,7 @@ shadedErrorBar(frequencies(freqIdx),nanmean(gcH2Phigh_mat(:,freqIdx),1),stderr(g
 shadedErrorBar(frequencies(freqIdx),nanmean(gcH2Plow_mat(:,freqIdx),1),stderr(gcH2Plow_mat(:,freqIdx),1),'r',0);
 title('HPC2PFC')
 
-idxTheta = find(f >= 6 & f <= 11);
+idxTheta = find(f >= 6 & f <= 9);
 % get data for excel - this extraction makes more sense than above
 p2hthetaHigh=nanmean(gcP2Hhigh_mat(:,idxTheta),2);
 h2pthetaHigh=nanmean(gcH2Phigh_mat(:,idxTheta),2);

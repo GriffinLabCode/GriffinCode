@@ -356,18 +356,15 @@ end
 phaseCohHighMat = vertcat(phaseCohHigh{:});
 phaseCohLowMat = vertcat(phaseCohLow{:});
 
-% normalize to account for variability in sample size
-phaseNormHigh = []; phaseNormLow = [];
-for i = 1:length(phaseCohHigh)
-    phaseNormHigh(i,:) = normalize(phaseCohHigh{i},'range');
-    phaseNormLow(i,:)  = normalize(phaseCohLow{i},'range');
-end
-
 % smooth data
+phaseMatHigh = []; phaseMatLow = [];
+phaseMatHigh = vertcat(phaseCohHigh{:});
+phaseMatLow  = vertcat(phaseCohLow{:});
+
 phaseNormHighS = []; phaseNormLowS = [];
 for i = 1:length(phaseCohHigh)
-    phaseNormHighS(i,:) = smoothdata(phaseNormHigh(i,:),'gaussian',10);
-    phaseNormLowS(i,:)  = smoothdata(phaseNormLow(i,:),'gaussian',10);
+    phaseNormHighS(i,:) = smoothdata(phaseMatHigh(i,:),'gaussian',10);
+    phaseNormLowS(i,:)  = smoothdata(phaseMatLow(i,:),'gaussian',10);
 end
 
 figure('color','w'); hold on;
@@ -379,13 +376,13 @@ axis tight
 xlim([1 20])
 
 % between the 6-11Hz range is what we're interested in
-idxTheta = find(freqs > 4 & freqs < 12);
+idxTheta = find(freqs >= 6 & freqs <= 9);
 phaseCohThetaH = phaseNormHighS(:,idxTheta);
 phaseCohThetaL = phaseNormLowS(:,idxTheta);
 
 % difference
-phaseDiff = phaseCohThetaH-phaseCohThetaL;
-multiBarPlot(phaseDiff,[{'4'} {'5'} {'6'} {'7'} {'8'} {'9'} {'10'} {'11'} {'12'}],'Norm. Phase coherence (high - low)','n')
+phaseDiff = (phaseCohThetaH-phaseCohThetaL);
+multiBarPlot(phaseDiff,[{'6'} {'7'} {'8'} {'9'}],'Norm. Phase coherence (high - low)','n')
 xlabel('Frequency (Hz)')
 
 phaseCohMatHigh_theta = mean(phaseNormHighS(:,idxTheta),2);
@@ -393,15 +390,3 @@ phaseCohMatLow_theta  = mean(phaseNormLowS(:,idxTheta),2);
 figure('color','w')
 multiBarPlot(horzcat(phaseCohMatHigh_theta,phaseCohMatLow_theta),[{'HighCoh'},{'LowCoh'}],'Phase Coherence','n');
 [h,p]=ttest(phaseCohMatHigh_theta,phaseCohMatLow_theta)
-
-
-% between the 6-11Hz range is what we're interested in
-idxTheta = find(freqs == 7);
-phaseCohMatHigh_theta = mean(phaseCohMatHigh(:,idxTheta),2);
-phaseCohMatLow_theta  = mean(phaseCohMatLow(:,idxTheta),2);
-
-% bar graph
-figure('color','w')
-multiBarPlot(horzcat(phaseCohMatHigh_theta,phaseCohMatLow_theta),[{'HighCoh'},{'LowCoh'}],'Phase Coherence','n');
-[h,p]=ttest(phaseCohMatHigh_theta,phaseCohMatLow_theta)
-
