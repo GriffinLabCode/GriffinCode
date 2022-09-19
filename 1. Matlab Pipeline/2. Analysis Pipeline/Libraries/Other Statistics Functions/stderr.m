@@ -17,14 +17,20 @@ function [sem] = stderr(mat,fun_arg)
     if fun_arg == 1
         % loop over columns, computing sem over rows
         for i = 1:size(mat,2)
+            % numobs
             numObs = size(mat(:,i),1) - sum(isnan(mat(:,i)));
-            sem(:,i) = (nanstd(mat))./(sqrt(numObs)); % if mat is a vector        
+            % sem
+            sem(:,i) = (nanstd(mat(:,i)))./(sqrt(numObs)); % if mat is a vector        
         end
     elseif fun_arg == 2
         % loop over rows
         for i = 1:size(mat,1)
+            % transpose
+            mat = mat';
+            % numObs
             numObs = size(mat(i,:),2) - sum(isnan(mat(i,:)));
-            sem(i,:) = (nanstd(mat'))./(sqrt(numObs)); % if mat is a vector                  
+            % sem
+            sem(i,:) = (nanstd(mat(i,:)))./(sqrt(numObs)); % if mat is a vector                  
         end
     end
     

@@ -6,6 +6,9 @@
 % this script was not written by me
 clear; clc
 
+% play back
+playBack = 1;
+
 % datafolder directory - stopped on baseline 1 need to do baseline 2 -
 % 9-2-2020 at 2:19
 datafolder = pwd;
@@ -61,7 +64,14 @@ question = 'Would you like to confirm your int file is correct? [Y/N] ';
 answer   = input(question,'s');
 
 if contains(answer,'Y') | contains(answer,'y')
-    [remData] = checkInt(Int,pos_x,pos_y,pos_t);
+    
+    % check int file or play back and check
+    if playBack == 0
+        [remData] = checkInt(Int,pos_x,pos_y,pos_t);
+    elseif playBack == 1
+        % position playback
+        [remData] = position_playBack(Int,pos_x,pos_y,pos_t);
+    end
     
     % remove data selected by user
     Int(remData,9)=1;
