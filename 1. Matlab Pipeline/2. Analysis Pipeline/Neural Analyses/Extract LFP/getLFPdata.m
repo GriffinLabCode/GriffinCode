@@ -42,11 +42,29 @@ elseif isempty(find(contains(varNames,'CSC_Samples')==1))==0 && isempty(find(con
     Samples = CSC_Samples;
     Timestamps = CSC_Timestamp;
 end
-try load(csc_name,'SampleFrequencies'); catch; end % try to load sample frequencies for srate
+if isempty(find(contains(varNames,'SampleFrequencies')==1))==0
+    load(csc_name,'SampleFrequencies');
+else
+    disp('SampleFrequencies not detected - will calculate srate')
+end
 
 % load events and separate LFP based on the event markers
 varNames = [];
 varNames = who('-file', events_name);
+idxEventTS = find(contains(varNames,'TimeStamps'));
+idxEvents  = find(contains(varNames,'EventStrings'));
+load(events_name,varNames{idxEventTS},varNames{idxEvents})
+if exist('TimeStamps_EV')
+    TimeStamps = TimeStamps_EV;
+elseif exist('EV_TimeStamps')
+    TimeStamps = EV_TimeStamps;
+end
+if exist('EventStrings_EV')
+    EventStrings = EventStrings_EV;
+elseif exist('EV_EventStrings')
+    EventStrings = EV_EventStrings;
+end
+%{
 if isempty(find(contains(varNames,'EventStrings')==1))==0 && isempty(find(contains(varNames,'TimeStamps')==1))==0
     load(events_name,'EventStrings','TimeStamps');
 elseif isempty(find(contains(varNames,'EventStrings_EV')==1))==0 && isempty(find(contains(varNames,'TimeStamps_EV')==1))==0
@@ -58,6 +76,7 @@ elseif isempty(find(contains(varNames,'EV_EventStrings')==1))==0 && isempty(find
     EventStrings = EV_EventStrings;
     TimeStamps   = EV_TimeStamps;    
 end
+%}
     
 if exist('event_boundaries')
     evEdges = event_boundaries;
