@@ -51,12 +51,16 @@ if isempty(find(contains(varNames,'EventStrings')==1))==0 && isempty(find(contai
     load(events_name,'EventStrings','TimeStamps');
 elseif isempty(find(contains(varNames,'EventStrings_EV')==1))==0 && isempty(find(contains(varNames,'TimeStamps_EV')==1))==0
     load(events_name,'EventStrings_EV','TimeStamps_EV');
-    EventStrings = EventStrings_EV;
-    TimeStamps   = TimeStamps_EV;
-elseif isempty(find(contains(varNames,'EV_EventStrings')==1))==0 && isempty(find(contains(varNames,'EV_TimeStamps')==1))==0
-    load(events_name,'EV_EventStrings','EV_TimeStamps');
+
+
+try load(events_name,'EventStrings','TimeStamps');
+    if exist('TimeStamps')==0
+        load(events_name,'TimeStamps_EV');
+        TimeStamps = TimeStamps_EV;
+    end
+catch load(events_name,'EV_EventStrings','EV_Timestamps');
     EventStrings = EV_EventStrings;
-    TimeStamps   = EV_TimeStamps;    
+    TimeStamps   = EV_Timestamps;
 end
     
 if exist('event_boundaries')
