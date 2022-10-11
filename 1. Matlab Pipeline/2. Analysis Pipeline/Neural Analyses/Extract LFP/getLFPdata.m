@@ -35,9 +35,31 @@ cd(datafolder)
 % load data
 varNames = [];
 varNames = who('-file', csc_name);
+cand_samples = varNames(contains(varNames,'Samples'));
+
+% remove variables that are messing with loading
+remData = [];
+remData = contains(cand_samples,[{'umber'} {'quencies'} {'alid'}]);
+cand_samples(remData)=[];
+if length(cand_samples) > 1
+    error('Need to specificy which samples variable to use')
+end
+
+% get timestamps
+cand_times = varNames(contains(varNames,'tamp'));
+if length(cand_times) > 1
+    error('Need to specify which timestamp variable to use')
+end
+dataIn = []; dataNames = [];
+dataIn = load(csc_name,cand_times{1},cand_samples{1});
+dataNames = fieldnames(dataIn);
+lfp_timestamps = dataIn.(dataNames{1});
+lfp_samples    = dataIn.(dataNames{2});
+
+%{
 if isempty(find(contains(varNames,'Samples')==1))==0 && isempty(find(contains(varNames,'Timestamps')==1))==0
     load(csc_name,'Samples','Timestamps');
-elseif isempty(find(contains(varNames,'CSC_Samples')==1))==0 && isempty(find(contains(varNames,'CSC_Timestamps')==1))==0
+elseif isempty(find(contains(varNames,'CSC_Samples')==1))==0 && isempty(find(contains(varNames,'CSC_Timestamp')==1))==0
     load(csc_name,'CSC_Samples','CSC_Timestamp');
     Samples = CSC_Samples;
     Timestamps = CSC_Timestamp;
@@ -47,23 +69,25 @@ if isempty(find(contains(varNames,'SampleFrequencies')==1))==0
 else
     disp('SampleFrequencies not detected - will calculate srate')
 end
+%}
 
 % load events and separate LFP based on the event markers
 varNames = [];
 varNames = who('-file', events_name);
-idxEventTS = find(contains(varNames,'TimeStamps'));
-idxEvents  = find(contains(varNames,'EventStrings'));
-load(events_name,varNames{idxEventTS},varNames{idxEvents})
-if exist('TimeStamps_EV')
-    TimeStamps = TimeStamps_EV;
-elseif exist('EV_TimeStamps')
-    TimeStamps = EV_TimeStamps;
-end
-if exist('EventStrings_EV')
-    EventStrings = EventStrings_EV;
-elseif exist('EV_EventStrings')
-    EventStrings = EV_EventStrings;
-end
+idxEventTS = find(contains(varNames,[{'TimeStamps'} {'EV_Timestamps'} {'Timestamps'} {'TimeStamps_EV'}]));
+idxEvents  = find(contains(varNames,[{'EventStrings'} {'EV_Eventstrings'} {'Eventstrings'} {'EventStrings_EV'}]));
+
+% read data into a struct, get the names of the variables and generally
+% store data as a general variable name
+dataIn = []; dataNames = [];
+dataIn = load(events_name,varNames{idxEventTS},varNames{idxEvents});
+dataNames = fieldnames(dataIn);
+
+% timestamps are pulled in first and are therefore the firstly extracted
+% data
+TimeStamps   = dataIn.(dataNames{1});
+EventStrings = dataIn.(dataNames{2});
+
 %{
 if isempty(find(contains(varNames,'EventStrings')==1))==0 && isempty(find(contains(varNames,'TimeStamps')==1))==0
     load(events_name,'EventStrings','TimeStamps');
@@ -132,18 +156,18 @@ for i = 1:size(evEdges,1)
      % identify timestamps to keep
      if correctedEdges == 0
          idxKeep = [];
-         idxKeep = find(Timestamps >= evEdges(i,1) & Timestamps <= evEdges(i,2));
+         idxKeep = find(lfp_timestamps >= evEdges(i,1) & lfp_timestamps <= evEdges(i,2));
      elseif correctedEdges == 1 % if edges were corrected, it means that there was no ending recording. 
          % Therefore the ending recording of edge 1 may be the start of
          % edge 2 and you will create interpolation artifacts
          idxKeep = [];
-         idxKeep = find(Timestamps >= evEdges(i,1) & Timestamps < evEdges(i,2));         
+         idxKeep = find(lfp_timestamps >= evEdges(i,1) & lfp_timestamps < evEdges(i,2));         
      end
      
      % get new samples and times
      SamplesKeep = []; TimestampsKeep = [];
-     SamplesKeep    = Samples(:,idxKeep);
-     TimestampsKeep = Timestamps(idxKeep);
+     SamplesKeep    = lfp_samples(:,idxKeep);
+     TimestampsKeep = lfp_timestamps(idxKeep);
 
      % linspacing this works great as long as you do not have multiple
      % starting recording epochs
@@ -168,5 +192,5 @@ lfpTimes = horzcat(lfpTimesEvents{:});
 if exist('SampleFrequencies')
     srate = mean(SampleFrequencies);
 else
-    srate = getLFPsrate(Timestamps,Samples);
+    srate = getLFPsrate(lfp_timestamps,lfp_samples);
 end
