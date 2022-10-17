@@ -33,9 +33,7 @@ figure('color','w')
 plot(frequencies,sfc);
 
 % built into a function
-[sfc,freq] = getSpikeFieldCoherence(lfp,sidx,[],[],srate);
-figure('color','w')
-plot(freq,sfc);
+sfc = getSpikeFieldCoherence(lfp,si,[],[],srate);
 
 % what is below is for constructing the mathematical equation for
 % manuscript purposes:

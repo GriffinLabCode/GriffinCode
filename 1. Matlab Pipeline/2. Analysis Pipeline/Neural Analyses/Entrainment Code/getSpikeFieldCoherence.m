@@ -19,11 +19,12 @@
 %
 % -- OUTPUTS -- %
 % sfc: spike field coherence across the range of frequencies provided
+% freq: frequencies output
 %
 % This code was adopted from MxC: MATLAB for brain and cognitive
 % scientists by John Stout and confirmed for accuracy with their data.
 
-function [sfc] = getSpikeFieldCoherence(lfp,spikeLFPidx,freq,nCycle,srate)
+function [sfc,freq] = getSpikeFieldCoherence(lfp,spikeLFPidx,freq,nCycle,srate)
 % convert data to single
 lfp = single(lfp);
 
