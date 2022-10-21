@@ -25,8 +25,6 @@ function [sem] = stderr(mat,fun_arg)
     elseif fun_arg == 2
         % loop over rows
         for i = 1:size(mat,1)
-            % transpose
-            mat = mat';
             % numObs
             numObs = size(mat(i,:),2) - sum(isnan(mat(i,:)));
             % sem
