@@ -9,8 +9,7 @@
 % -- INPUTS -- %
 % lfp: vector of LFP used for spike indexing
 % spikeLFPidx: an index, pointing to LFP values (lfp variable) that
-%               correspond to spike timestamps. This is tricky and time
-%               consuming. Needs to be done outside of this code.
+%               correspond to spike timestamps. Run getSpkLFPidx
 % freq: range of frequencies
 % nCycle: number of cycles for morlet wavelet convolution. Should be
 %           between 4 and 12. Higher values = greater frequency precision

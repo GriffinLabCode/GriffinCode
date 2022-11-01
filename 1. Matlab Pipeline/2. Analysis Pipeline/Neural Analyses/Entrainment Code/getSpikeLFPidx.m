@@ -12,7 +12,7 @@
 % you a lot of processing time.
 %
 % -- INPUTS -- %
-% lfp: vector of lfp
+% lfpTimes: vector of lfp timestamps
 % spikeTimes: spike timestamps that you want to get LFP values for
 %
 % -- OUTPUTS -- %
@@ -21,17 +21,18 @@
 %
 % written by John Stout
 
-function [spikeLFPidx,spikeLFPval] = getSpikeLFPidx(lfp,spikeTimes)
+function [spikeLFPidx,spikeLFPval] = getSpikeLFPidx(lfpTimes,spikeTimes)
+
 % do some reorienting
-lfp = change_row_to_column(lfp);
+lfpTimes = change_row_to_column(lfpTimes);
 spikeTimes = change_row_to_column(spikeTimes)';
 
 % get index of LFP
 spikeLFPidx = [];
-spikeLFPidx = dsearchn(lfp,spikeTimes);
+spikeLFPidx = dsearchn(lfpTimes,spikeTimes);
 
 % Get lfp
-spikeLFPval = lfp(spikeTimes);
+spikeLFPval = lfpTimes(spikeTimes);
 
 
 
