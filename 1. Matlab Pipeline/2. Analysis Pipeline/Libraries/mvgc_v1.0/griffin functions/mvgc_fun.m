@@ -201,9 +201,47 @@ ptoc;
 assert(~isbad(f,false),'spectral GC calculation failed');
 
 % Plot spectral causal graph.
+freqs = sfreqs(fres,fs);
 
-figure(3); clf;
-plot_spw(f,fs);
+if nvars == 2
+    % f bottom value in table is row 1->2 (x2y), f top right is row 2->1 (y2x)
+    f_new = reshape(f,[2 length(f)*2]);
+    % bottom is x2y, top is y2x. this is because top row is X or 1 and the top
+    % row of the f_new variable is 2->1 - figured this out by running their
+    % demo and looking at the plot/ finding which values corresponded to which.
+    % Also Re leading HPC was a good sign that I'm correct since all methods
+    % have shown this.
+    fy2x = f_new(1,:);
+    fy2x(isnan(fy2x))=[];
+    fx2y = f_new(2,:);
+    fx2y(isnan(fx2y))=[];
+    
+    fz2x = NaN;
+    fz2y = NaN;
+    fx2z = NaN;
+    fy2z = NaN;
+end
+
+% x is 1, y is 2, z is 3. If you want to confirm for yourself ->
+% cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data\Triple site');
+% load('proof_data_GC_triplesite.mat');
+% load('fig_proof_data_GC_triplesite.fig'); and follow each plot
+
+if nvars == 3
+    for i = 1:size(f,3)
+        fx2y(i) = f(2,1,i);
+        fx2z(i) = f(3,1,i);
+        
+        fy2x(i) = f(1,2,i);
+        fy2z(i) = f(3,2,i);
+        
+        fz2x(i) = f(1,3,i);
+        fz2y(i) = f(2,3,i);      
+    end
+end
+
+%figure(3); clf;
+%plot_spw(f,fs);
 
 %% Granger causality calculation: frequency domain -> time-domain  (<mvgc_schema.html#3 |A15|>)
 

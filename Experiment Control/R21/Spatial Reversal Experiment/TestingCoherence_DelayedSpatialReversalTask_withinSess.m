@@ -840,14 +840,18 @@ remTraj  = str2num(input(prompt,'s'));
 % clean up variables
 accuracy2use = accuracy;
 accuracy2use(1)=[]; % remove first trajectory
+
 % to account for traj1 removal, subtract 1 from remTraj
 remTrajFix = remTraj-1;
+
 % correct the trialType variable
 trialType = indicatorOUT;
 trialType(numel(accuracy2use)+1:end)=[];
+
 % correct delay length
 delayLength = delayLenTrial;
 delayLength(numel(accuracy2use)+1:end)=[];
+
 % remove trajectories
 accuracy2use(remTrajFix)=[];
 trialType(remTrajFix)=[];
@@ -860,11 +864,13 @@ idxYmet = find(contains(trialType,'yokeH_MET'));
 % get accuracy
 accuracyHigh     = accuracy2use(idxHmet);
 accuracyYokeHigh = accuracy2use(idxYmet);
+
 % get trial type and delay length
 ttHigh     = trialType(idxHmet);
 ttYokeHigh = trialType(idxYmet);
 dlHigh     = delayLength(idxHmet);
 dlYokeHigh = delayLength(idxYmet);
+
 % identify mismatches in delay duration
 remData = [];
 for i = 1:length(dlYokeHigh)
@@ -970,11 +976,13 @@ idxHmet1bi = idxHmet(idxHmet1);
 idxYmet1bi = idxYmet(idxYmet1);
 idxHmet2bi = idxHmet(idxHmet2);
 idxYmet2bi = idxYmet(idxYmet2);
+
 % now check
 trialType(idxHmet1bi)
 trialType(idxHmet2bi)
 trialType(idxYmet1bi)
 trialType(idxYmet2bi)
+
 % now because trial type and accuracy are the same dimensions, we get
 % accuracy as such:
 if contains(testingCond,'MW')
@@ -1000,15 +1008,18 @@ if contains(testingCond,'MW')
     ax.XTickLabelRotation = 45;
     ylabel('Proportion Correct');
 elseif contains(testingCond,'BW')
+    
     betweenRevHighAcc   = accuracy2use(idxHmet1bi);
     betweenRevYokeAcc   = accuracy2use(idxYmet1bi);
     withinRevHighAcc    = accuracy2use(idxHmet2bi);
-    withinRevYokeAcc    = accuracy2use(idxYmet2bi);   
+    withinRevYokeAcc    = accuracy2use(idxYmet2bi); 
+    
     % calculate prop correct
     betweenRevHighPerf = 1-nanmean(betweenRevHighAcc);
     betweenRevYokePerf = 1-nanmean(betweenRevYokeAcc);     
     withinRevHighPerf  = 1-nanmean(withinRevHighAcc);
-    withinRevYokePerf  = 1-nanmean(withinRevYokeAcc);  
+    withinRevYokePerf  = 1-nanmean(withinRevYokeAcc);
+    
     % figure
     figure('color','w'); hold on;
     bar([1 2 3 4],[betweenRevYokePerf betweenRevHighPerf withinRevYokePerf withinRevHighPerf]);
@@ -1022,7 +1033,6 @@ elseif contains(testingCond,'BW')
     ax.XTickLabelRotation = 45;
     ylabel('Proportion Correct');
 end
-
 place2store = ['X:\01.Experiments\R21\',targetRat,'\SRT\Testing'];
 cd(place2store);
 save(save_var);

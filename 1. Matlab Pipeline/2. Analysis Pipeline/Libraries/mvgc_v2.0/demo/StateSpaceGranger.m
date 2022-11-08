@@ -22,7 +22,7 @@ fs        = data.srate;            % sample rate (Hz) is actually
 nvars     = size(data.signals,1);  % number of variables
 
 % SS model order estimation
-ssmosel   = 'SVC';  % SS model order selection ('ACT', 'SVC', 'AIC', 'BIC', 'HQC', 'LRT', or supplied numerical value)
+ssmosel   = 'BIC';  % SS model order selection ('ACT', 'SVC', 'AIC', 'BIC', 'HQC', 'LRT', or supplied numerical value)
 
 % MVGC (frequency domain)
 fres      = [];     % spectral MVGC frequency resolution (empty for automatic calculation)
@@ -36,7 +36,6 @@ if ~exist('plotm',  'var'), plotm    = 0;    end % plot mode (figure number offs
 % Remove temporal mean and normalise by temporal variance.
 % Not strictly necessary, but may help numerical stability
 % if data has very large or very small values.
-
 X = demean(data.signals,true);
 
 %% VAR model order estimation

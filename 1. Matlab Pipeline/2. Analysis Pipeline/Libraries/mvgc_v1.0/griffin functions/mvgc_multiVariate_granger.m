@@ -1,4 +1,4 @@
-%% MVGC demo
+%% MVGC fun
 %
 % Demonstrates typical usage of the MVGC toolbox on generated VAR data for a
 % 5-node network with known causal structure (see <var5_test.html |var5_test|>).
@@ -53,95 +53,37 @@
 % (C) Lionel Barnett and Anil K. Seth, 2012. See file license.txt in
 % installation directory for licensing terms.
 %
+function []=mvgc_fun(data,freq)
 %% Parameters
 
-ntrials   = 10;     % number of trials
-nobs      = 1000;   % number of observations per trial
+ntrials   = size(data.signals,3);  % number of trials
+nobs      = size(data.signals,2);  % number of observations per trial
 
 regmode   = 'OLS';  % VAR model estimation regression mode ('OLS', 'LWR' or empty for default)
 icregmode = 'LWR';  % information criteria regression mode ('OLS', 'LWR' or empty for default)
 
-morder    = 'AIC';  % model order to use ('actual', 'AIC', 'BIC' or supplied numerical value)
-momax     = 20;     % maximum model order for model order estimation
+morder    = 'BIC';  % model order to use ('actual', 'AIC', 'BIC' or supplied numerical value)
+momax     = 100;    % maximum model order for model order estimation
 
-acmaxlags = 1000;   % maximum autocovariance lags (empty for automatic calculation)
+acmaxlags = [];   % maximum autocovariance lags (empty for automatic calculation)
 
 tstat     = '';     % statistical test for MVGC:  'F' for Granger's F-test (default) or 'chi2' for Geweke's chi2 test
 alpha     = 0.05;   % significance level for significance test
 mhtc      = 'FDR';  % multiple hypothesis test correction (see routine 'significance')
 
-fs        = 200;    % sample rate (Hz)
+fs        = data.srate;    % sample rate (Hz)
 fres      = [];     % frequency resolution (empty for automatic calculation)
 
 seed      = 0;      % random seed (0 for unseeded)
 
-%% Generate VAR test data (<mvgc_schema.html#3 |A3|>)
-%
-% _*Note:*_ This is where you would read in your own time series data; it should
-% be assigned to the variable |X| (see below and <mvgchelp.html#4 Common
-% variable names and data structures>).
-
-% Seed random number generator.
-
-rng_seed(seed);
-
-% Get VAR coefficients for 5-node test network.
-
-AT = var5_test;
-nvars = size(AT,1); % number of variables
-
-% Residuals covariance matrix.
-
-SIGT = eye(nvars);
-
-% Generate multi-trial VAR time series data with normally distributed residuals
-% for specified coefficients and covariance matrix.
-
-ptic('\n*** var_to_tsdata... ');
-X = var_to_tsdata(AT,SIGT,nobs,ntrials);
-ptoc;
-
-%% Model order estimation (<mvgc_schema.html#3 |A2|>)
-
-% Calculate information criteria up to specified maximum model order.
-
-ptic('\n*** tsdata_to_infocrit\n');
-[AIC,BIC,moAIC,moBIC] = tsdata_to_infocrit(X,momax,icregmode);
-ptoc('*** tsdata_to_infocrit took ');
-
-% Plot information criteria.
-
-figure(1); clf;
-plot_tsdata([AIC BIC]',{'AIC','BIC'},1/fs);
-title('Model order estimation');
-
-amo = size(AT,3); % actual model order
-
-fprintf('\nbest model order (AIC) = %d\n',moAIC);
-fprintf('best model order (BIC) = %d\n',moBIC);
-fprintf('actual model order     = %d\n',amo);
-
-% Select model order.
-
-if     strcmpi(morder,'actual')
-    morder = amo;
-    fprintf('\nusing actual model order = %d\n',morder);
-elseif strcmpi(morder,'AIC')
-    morder = moAIC;
-    fprintf('\nusing AIC best model order = %d\n',morder);
-elseif strcmpi(morder,'BIC')
-    morder = moBIC;
-    fprintf('\nusing BIC best model order = %d\n',morder);
-else
-    fprintf('\nusing specified model order = %d\n',morder);
-end
+X         = data.signals;
 
 %% VAR model estimation (<mvgc_schema.html#3 |A2|>)
 
 % Estimate VAR model of selected order from data.
 
 ptic('\n*** tsdata_to_var... ');
-[A,SIG] = tsdata_to_var(X,amo,regmode);
+[A,SIG] = tsdata_to_var(X,morder,regmode);
 ptoc;
 
 % Check for failed regression
@@ -183,9 +125,9 @@ ptoc;
 
 assert(~isbad(F,false),'GC calculation failed');
 
+%{
 % Significance test using theoretical null distribution, adjusting for multiple
 % hypotheses.
-
 pval = mvgc_pval(F,morder,nobs,ntrials,1,1,nvars-2,tstat); % take careful note of arguments!
 sig  = significance(pval,alpha,mhtc);
 
@@ -201,6 +143,7 @@ title('p-values');
 subplot(1,3,3);
 plot_pw(sig);
 title(['Significant at p = ' num2str(alpha)])
+%}
 
 % For good measure we calculate Seth's causal density (cd) measure - the mean
 % pairwise-conditional causality. We don't have a theoretical sampling
@@ -224,9 +167,51 @@ ptoc;
 assert(~isbad(f,false),'spectral GC calculation failed');
 
 % Plot spectral causal graph.
+%freqs = sfreqs(fres,fs);
 
-figure(3); clf;
-plot_spw(f,fs);
+% what you need to do is run through data that is the type you will run
+% your granger prediction analysis on, then figure this out. The f matrix
+% is in the format of a covariance matrix (1->2 is col1/row2, 2->1 is
+% col2/row1
+if nvars == 2
+    % f bottom value in table is row 1->2 (x2y), f top right is row 2->1 (y2x)
+    f_new = reshape(f,[2 length(f)*2]);
+    % bottom is x2y, top is y2x. this is because top row is X or 1 and the top
+    % row of the f_new variable is 2->1 - figured this out by running their
+    % demo and looking at the plot/ finding which values corresponded to which.
+    % Also Re leading HPC was a good sign that I'm correct since all methods
+    % have shown this.
+    fy2x = f_new(1,:);
+    fy2x(isnan(fy2x))=[];
+    fx2y = f_new(2,:);
+    fx2y(isnan(fx2y))=[];
+    
+    fz2x = NaN;
+    fz2y = NaN;
+    fx2z = NaN;
+    fy2z = NaN;
+end
+
+% x is 1, y is 2, z is 3. If you want to confirm for yourself ->
+% cd('X:\07. Manuscripts\In preparation\Stout - JNeuro\Data\Triple site');
+% load('proof_data_GC_triplesite.mat');
+% load('fig_proof_data_GC_triplesite.fig'); and follow each plot
+
+if nvars == 3
+    for i = 1:size(f,3)
+        fx2y(i) = f(2,1,i);
+        fx2z(i) = f(3,1,i);
+        
+        fy2x(i) = f(1,2,i);
+        fy2z(i) = f(3,2,i);
+        
+        fz2x(i) = f(1,3,i);
+        fz2y(i) = f(2,3,i);      
+    end
+end
+
+%figure(3); clf;
+%plot_spw(f,fs);
 
 %% Granger causality calculation: frequency domain -> time-domain  (<mvgc_schema.html#3 |A15|>)
 

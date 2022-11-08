@@ -1,24 +1,30 @@
 %% Parameters
 %
-% this script gets parameters based on your data variable. For info on how
-% to format 'data' see mvgc_GCCA_estimateModelOrder
+% this function provides some basic parameters for mvgc
+%
+% -- INPUTS -- %
+% data: matrix of data (rows = brain region, col = signal)
+% srate: sampling rate
+% 
+% -- OUTPUTS -- %
+% mvgc_params: a set of parameters that can be used as default for mvgc
+%               toolbox granger prediction analysis
+%
+% JS 11/8/22
 
-ntrials   = size(data,3);     % number of trials
-nobs      = size(data,2);   % number of observations per trial
+function [mvgc_params] = get_mvgc_parameters(data,srate)
 
-regmode   = 'OLS';  % VAR model estimation regression mode ('OLS', 'LWR' or empty for default)
-icregmode = 'LWR';  % information criteria regression mode ('OLS', 'LWR' or empty for default)
+mvgc_params.ntrials   = size(data,3); % number of trials
+mvgc_params.nobs      = size(data,2); % number of observations per trial
 
-morder    = 'BIC';  % model order to use ('actual', 'AIC', 'BIC' or supplied numerical value)
-momax     = 100;     % maximum model order for model order estimation
+% model order - you would want to do this across all of your datasets, then
+% take the rounded average to use across all data for granger prediction
+% (Cohen 2014)
+mvgc_params.momax     = 100;    % number of orders to test for
+mvgc_params.icregmode = 'LWR';  % information criteria regression mode ('OLS', 'LWR' or empty for default)
+mvgc_params.regmode   = 'OLS';  % VAR model estimation regression mode ('OLS', 'LWR' or empty for default)
+mvgc_params.morder    = 'BIC';  % model order to use ('actual', 'AIC', 'BIC' or supplied numerical value)
 
-tstat     = '';     % statistical test for MVGC:  'chi2' for Geweke's chi2 test (default) or'F' for Granger's F-test
-alpha     = 0.05;   % significance level for significance test
-mhtc      = 'FDR';  % multiple hypothesis test correction (see routine 'significance')
-
-seed      = 0;      % random seed (0 for unseeded)
-
-acmaxlags = 1000;   % maximum autocovariance lags (empty for automatic calculation)
-
-fs        = srate;    % sample rate (Hz)
-fres      = [];     % frequency resolution (empty for automatic calculation)
+mvgc_params.acmaxlags = [];% 1324; % maximum autocovariance lags (empty for automatic calculation)
+mvgc_params.fs        = srate;   % sample rate (Hz)
+mvgc_params.fres      = [];     % max frequency to calculate to. You should leave this empty for automatic calculation.

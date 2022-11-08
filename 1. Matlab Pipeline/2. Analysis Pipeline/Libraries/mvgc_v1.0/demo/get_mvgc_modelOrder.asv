@@ -1,0 +1,17 @@
+%
+
+function [moBIC] = get_mvgc_modelOrder(data,mvgc_params,plotFig)
+
+    % AIC reflects information lost by the model. Lower values indicate less
+    % information lost. BIC is like AIC, but generally preferred in our field.
+    ptic('\n*** tsdata_to_infocrit\n');
+    [AIC,BIC,moAIC,moBIC] = tsdata_to_infocrit(data,mvgc_params.momax,mvgc_params.icregmode);
+    ptoc('*** tsdata_to_infocrit took ');
+
+    if exist('plotFig')
+        if plotFig == 1
+            figure('color','w'); clf;
+            plot_tsdata([AIC BIC]',{'AIC','BIC'},1/mvgc_params.fs);
+            title('Model order estimation');
+        end
+    end
