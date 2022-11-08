@@ -41,6 +41,7 @@ addpath(fullfile(mvgc_root,'demo'));
 addpath(fullfile(mvgc_root,'mex'));
 addpath(fullfile(mvgc_root,'experimental'));
 addpath(fullfile(mvgc_root,'docs')); % don't add the 'html' subdirectory
+addpath(fullfile(mvgc_root,'griffin functions')); % don't add the 'html' subdirectory
 
 % comment out for release
 % addpath(fullfile(mvgc_root,'testing'));
