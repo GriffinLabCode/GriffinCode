@@ -109,6 +109,6 @@ disp('In gp_cell, COLUMN IS ALWAYS YOUR PREDICTOR, row is always receiving. (col
 if exist(mvgc_params.fres) == 0 | isempty(mvgc_paramsfres) == 1
     fres  = size(f,3) - 1;
 end
-freqs = sfreqs(fres,fs);
+freqs = sfreqs(fres,mvgc_params.fs);
 disp('Please reference SCRIPT_mvgc_granger in the Libraries>Example Pipline Usage>LFP_code folder');
 
