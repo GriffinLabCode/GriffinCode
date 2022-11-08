@@ -14,6 +14,9 @@
 
 function [mvgc_params] = get_mvgc_parameters(data,srate)
 
+% ensure data is of type double
+data = double(data);
+
 mvgc_params.ntrials   = size(data,3); % number of trials
 mvgc_params.nobs      = size(data,2); % number of observations per trial
 

@@ -14,6 +14,10 @@
 
 function [moBIC] = get_mvgc_modelOrder(data,mvgc_params,plotFig)
 
+    % convert data to type double (this doesn't actually matter for this
+    % step)
+    data = double(data);
+
     % AIC reflects information lost by the model. Lower values indicate less
     % information lost. BIC is like AIC, but generally preferred in our field.
     ptic('\n*** tsdata_to_infocrit\n');
