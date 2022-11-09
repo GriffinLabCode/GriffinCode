@@ -40,7 +40,7 @@ pause(2);
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 25; % minutes
 
 % pellet count and machine timeout
 pellet_count = 1;

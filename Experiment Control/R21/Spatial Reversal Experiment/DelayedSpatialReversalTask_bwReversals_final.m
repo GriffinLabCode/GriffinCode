@@ -5,11 +5,6 @@
 
 %______________________________________________________
 
-%% 
-% sometimes if the session is not exceeding the time limit of 30 minutes,
-% then the code will continue performing trials, but not save the data.
-% Cheetah w%%
-
 % clear/clc
 clear; clc
 
@@ -20,47 +15,23 @@ addpath(codeDir)
 %% confirm this is the correct code
 prompt = ['What is your rats name? '];
 targetRat = input(prompt,'s');
+
 prompt   = ['Confirm that your rat is ' targetRat,' [y/Y OR n/N] '];
 confirm  = input(prompt,'s');
+
 if ~contains(confirm,[{'y'} {'Y'}])
     error('This code does not match the target rat')
 end
-prompt = ['Is today experimental, control, or a reset testing day? enter "E" or "C" or "R" '];
-testingDay = input(prompt,'s');
-prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
-datafolder = input(prompt,'s');
-prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
-data2load  = input(prompt,'s'); 
-cd(datafolder);
-prevTrajData = load(data2load,'traj');
-prevTraj = prevTrajData.traj; 
-clear traj
 
-prompt     = ['If today is memory->within type "MW", if today is between->within type "BW", if reset type "NA" '];
-testingCond = input(prompt,'s'); 
+prompt = ['What day of SRT is this? '];
+FRday  = str2num(input(prompt,'s'));
 
-% load in thresholds
-disp('Getting rat-specific data')
-cd(['X:\01.Experiments\R21\',targetRat,'\thresholds']);
-load('thresholds');
-cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
-load('baselineData');
-cd(['X:\01.Experiments\R21\',targetRat]);
-%load('SRT_testingDays')
-%testingDay = testingConditions(dayTesting);
-
-% interface with cheetah setup
-threshold.coh_duration = 0.5;
-[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
-
-if srate > 2035 || srate < 2000
-    error('Sampling rate is not correct')
-end
+%pause(20);
 
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 25; % minutes
 
 % define a looping time - this is in minutes
 amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
@@ -103,6 +74,7 @@ irArduino.rGoalZone   = 'D7';
 irArduino.lGoalZone   = 'D2';
 irArduino.choicePoint = 'D6';
 
+
 %{
 for i = 1:10000000
     readDigitalPin(a,irArduino.choicePoint)
@@ -110,54 +82,65 @@ end
 %}
 %writeline(s,doorFuns.tRightClose)
 
-%% coherence and real-time LFP extraction parameters
+%% randomly select whether first arm will be left rewarded or right rewarded
+% considered doing probabilistic, but maybe lets determine whether a fully
 
-% define pauseTime as 250ms and windowDuration as 1.25 seconds
-pauseTime      = 0.25;
-windowDuration = 1.25;
+% interface with user
+prompt     = ['Is today day 1 of SRT training? [y/n] '];
+trainingDay = input(prompt,'s');
 
-% Need to approximate idealized window lengths and true window lengths
-% clear stream   
-clearStream(LFP1name,LFP2name);
-pause(windowDuration)
-[succeeded, dataArray, timeStampArray, ~, ~, ...
-numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+if contains(trainingDay,'n')
+    prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
+    datafolder = input(prompt,'s');
+    prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
+    data2load  = input(prompt,'s'); 
+    cd(datafolder);
+    prevTrajData = load(data2load,'traj');
+    prevTraj = prevTrajData.traj;  
 
-% choose numOver - because the code isn't zero lag, there is some timeloss.
-% Account for it
-windowLength  = srate*windowDuration;    
-trueWinLength = length(dataArray);
-timeLoss      = trueWinLength-windowLength;
-windowStep    = (srate*pauseTime)+timeLoss;
-
-% initialize some variables
-dataWin      = [];
-cohAvg_data  = [];
-coh          = [];
-
-% prep for coherence
-window = []; noverlap = []; 
-fpass = [1:.5:20];
-deltaRange = [1 4];
-thetaRange = [6 11];
-
-actualDataDuration = [];
-time2cohAndSend = [];
-
-% define a noise threshold in standard deviations
-noiseThreshold = 4;
-% define how much noise you're willing to accept
-noisePercent = 1; % 5 percent
+    if contains(prevTraj,'R')
+        traj='L';
+    elseif contains(prevTraj,'L')
+        traj='R';
+    end        
+else
+    rng('shuffle');
+    randArm = randsample([1,2],1);
+    if randArm == 1
+        traj='R';
+    elseif randArm == 2
+        traj='L';
+    end
+end
 
 %% delay lenghts
 numTrials  = 200;
 
-%% using the testingDay variable, select between-> within reversal or memory->within reversal
-if contains(prevDay.traj,'R')
-    traj='R';
-elseif contains(prevDay.traj,'L')
-    traj='L';
-end     
+maxDelay = 30;
+minDelay = 5;
+delayDur = minDelay:1:maxDelay; % 5-45 seconds
+rng('shuffle')
+
+delayDuration = [];
+next = 0;
+while next == 0
+
+    if numel(delayDuration) >= numTrials
+        next = 1;
+    else
+        shortDuration  = randsample(minDelay:15,5,'true');
+        longDuration   = randsample(16:maxDelay,5,'true');
+
+        % used for troubleshooting ->
+        %shortDuration  = randsample(1:5,5,'true');
+        %longDuration   = randsample(6:10,5,'true');        
+
+        allDurations   = [shortDuration longDuration];
+        interleaved    = allDurations(randperm(length(allDurations)));
+        delayDuration  = [delayDuration interleaved];
+    end
+    
+end  
 
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
@@ -213,17 +196,15 @@ writeline(s,doorFuns.centralOpen);
 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TrialStart" 700 2');
  
 % make this array ready to track amount of time spent at choice
-time2choice = []; numRev = traj;
+time2choice = []; numRev = traj; endSess = 0;
 for triali = 1:numTrials    
     disp(['Rewarded Trajectory: ',traj])
     trajRewarded{triali} = traj;
 
-    % break out when the rat has performed 12 trials past criterion
-    if isempty(trialMet)==0
-        if (triali-trialMet) > 12
-            break % break out of for loop
-        end      
+    if toc(sStart)/60 > session_length
+        break
     end
+        
 
     % set central door timeout value
     s.Timeout = .05; % 5 minutes before matlab stops looking for an IR break    
@@ -312,7 +293,7 @@ for triali = 1:numTrials
     end 
     
     % identify choice accuracy on last 10 trials
-    if length(trajectory_text) >= 10 && critMet == 0
+    if length(trajectory_text) >= 10
         if contains(traj,'R')
             % temp var
             tempVar = []; propCorrect = [];
@@ -326,12 +307,19 @@ for triali = 1:numTrials
             % find proportion of correct choices
             propCorrect = nanmean(contains(tempVar,'L'));
         end
-
-        % once rats reach 80%, have them execute the rule for 10 additional
-        % trials?
+        
+        % once choice accuracy is reached per 10 trials, switch rewarded
+        % arm - reversalTraj tells the user which trajectory the reversal
+        % occured on
+        
+        % if reversaltraj is trajectory 15, it means that trajectory 15 was
+        % the last rewarded trajectory for say, right sequences. And that
+        % trajectory 16 will only be rewarded for left turns
         if propCorrect >= 0.8
-            critMet  = 1; % tag for criterion met
-            trialMet = triali;
+            endSess = 1;
+        else
+            %reversalTraj(triali) = 0;
+            endSess = 0;
         end
         disp(['Proportion correct: ',num2str(propCorrect)])
     end
@@ -392,114 +380,20 @@ for triali = 1:numTrials
         end
     end
     writeline(s,doorFuns.centralClose);  
-    
-    if contains(testingDay,[{'e'} {'E'}])
-        cohMet = [];
-        next = 0;
-        while next == 0
-            if readDigitalPin(a,irArduino.Delay)==0
-                writeline(s,doorFuns.closeAll)
-                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEntry" 102 2');  
-
-                dStart = tic;
-                for i = 1:1000000000000000000000000000000000 % nearly infinite loop. This is needed for the first loop
-
-                    % this is a fail safe
-                    if cohMet == 1
-                        writeline(s,doorFuns.centralOpen);
-                        break
-                    end
-
-                    if i == 1
-                        clearStream(LFP1name,LFP2name);
-                        pause(windowDuration)
-                        [succeeded, dataArray, timeStampArray, ~, ~, ...
-                        numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                        % 2) store the data
-                        % now add and remove data to move the window
-                        dataWin    = dataArray;
-                    end
-
-                    % 3) pull in 0.25 seconds of data
-                    % pull in data at shorter resolution   
-                    pause(pauseTime)
-                    [succeeded, dataArray, timeStampArray, ~, ~, ...
-                    numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                    % 4) apply it to the initial array, remove what was there
-                    dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-                    dataWin = [dataWin dataArray]; % add data
-
-                    % detrend by removing third degree polynomial
-                    data_det=[];
-                    data_det(1,:) = detrend(dataWin(1,:),3);
-                    data_det(2,:) = detrend(dataWin(2,:),3);
-
-                    % calculate coherence
-                    coh = [];
-                    [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
-
-                    % perform logical indexing of theta and delta ranges to improve
-                    % performance speed
-                    %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-                    cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-                    cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-
-                    % determine if data is noisy
-                    zArtifact = [];
-                    zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-                    zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-                    idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-                    percSat = (length(idxNoise)/length(zArtifact))*100;                
-
-                    % only include if theta coherence is higher than delta. Reject
-                    % if delta is greater than theta or if saturation exceeds
-                    % threshold
-                    if cohDelta > cohTheta || percSat > noisePercent || cohTheta < cohHighThreshold
-                        cohMet = 0;
-                        dataStored{triali}{i} = dataWin;
-                        cohOUT{triali}{i}     = coh;
-                        %rejected = 1;
-                    % accept if theta > delta and if minimal saturation
-                    elseif cohTheta > cohDelta && percSat < noisePercent && cohTheta > cohHighThreshold
-                        cohMet = 1;
-                        writeline(s,doorFuns.centralOpen);
-                        delayDuration(triali) = toc(dStart);
-                        % store data
-                        dataStored{triali}{i}  = dataWin;
-                        cohOUT{triali}{i}      = coh; 
-                        next = 1;
-                        disp(['Coherence of ',num2str(cohTheta),' met that of ', num2str(cohHighThreshold)])
-                        break
-                    end
-
-                end
-            end
-        end   
-    elseif contains(testingDay,[{'C'} {'c'}])
-        next = 0;
-        while next == 0
-            if readDigitalPin(a,irArduino.Delay)==0 
-                writeline(s,doorFuns.closeAll);
-                pause(delayDurationYoked(triali));
-                next = 1;
-            end            
+        
+    next = 0;
+    while next == 0   
+        % track choice entry
+        if readDigitalPin(a,irArduino.Delay)==0 
+            writeline(s,doorFuns.closeAll);
+            pause(delayDuration(triali));
+            next = 1;
         end
-    elseif contains(testingDay,[{'R'} {'r'}])
-        next = 0;
-        while next == 0
-            if readDigitalPin(a,irArduino.Delay)==0 
-                writeline(s,doorFuns.closeAll);
-                pause(delayDuration(triali));
-                next = 1;
-            end            
-        end
-    end
-    
-    if numel(numRev)==3
-        break % break out of for loop
     end      
+        
+    if endSess == 1
+        break
+    end  
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 
@@ -528,24 +422,6 @@ for i = 1:length(looper)
     catch
     end
 end
-idxRev=(find(reversalTraj==1));
-
-figure('color','w'); hold on;
-xVar = 1:length(movingAcc);
-xVar = xVar+9;
-plot(xVar,smoothdata(movingAcc,'gauss',5),'b','LineWidth',2)
-plot(xVar,movingAcc,'k','LineWidth',1)
-ylimits = ylim;
-xlimits = xlim;
-for i = 1:length(idxRev)
-    line([idxRev(i) idxRev(i)],[ylimits(1) ylimits(2)],'Color','r','LineStyle','--')
-end
-xlabel('Trial')
-ylabel('Choice Accuracy')
-title('Spatial Reversal Task')
-yyaxis right;
-plot(xVar,time2ChoiceMov,'Color',[0.9100 0.4100 0.1700],'LineWidth',1)
-ylabel('Time 2 choice')
 
 %% ending noise - a fitting song to end the session
 load handel.mat;
@@ -566,19 +442,7 @@ task_name = input(prompt,'s');
 prompt   = 'Enter notes for the session ';
 info     = input(prompt,'s');
 
-if contains(testingDay,[{'E'} {'e'}])
-    testingInfo = 'experimental';
-else 
-    testingInfo = 'control';
-end
-if contains(testingCond,'BW')
-    addOn = 'BW';
-elseif contains(testingCond,'MW')
-    addOn = 'MW';
-elseif contains(testingCond,'NA')
-    addOn = 'NA';
-end
-save_var = strcat(rat_name,'_',task_name,'_',testingInfo,'_',addOn,'_',c_save);
+save_var = strcat(rat_name,'_',task_name,'_',c_save);
 
 place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
