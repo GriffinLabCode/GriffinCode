@@ -24,6 +24,7 @@ function [gp_cell,freqs] = get_mvgc_freqGranger(data,mvgc_params,modelOrder,inte
 
 
 % -- now lets work towards granger -- %
+data = double(data);
 
 % Estimate VAR model of selected order from data.
 ptic('\n*** tsdata_to_var... ');
