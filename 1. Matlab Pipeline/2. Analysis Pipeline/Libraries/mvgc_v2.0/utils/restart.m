@@ -1,3 +1,0 @@
-clear all;
-restoredefaultpath;
-startup
