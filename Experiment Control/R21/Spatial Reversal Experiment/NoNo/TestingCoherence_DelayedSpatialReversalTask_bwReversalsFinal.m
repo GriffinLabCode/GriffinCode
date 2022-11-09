@@ -25,19 +25,35 @@ confirm  = input(prompt,'s');
 if ~contains(confirm,[{'y'} {'Y'}])
     error('This code does not match the target rat')
 end
-prompt = ['Is today experimental, control, or a reset testing day? enter "E" or "C" or "R" '];
-testingDay = input(prompt,'s');
-prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
-datafolder = input(prompt,'s');
-prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
-data2load  = input(prompt,'s'); 
-cd(datafolder);
-prevTrajData = load(data2load,'traj');
-prevTraj = prevTrajData.traj; 
-clear traj
 
-prompt     = ['If today is memory->within type "MW", if today is between->within type "BW", if reset type "NA" '];
-testingCond = input(prompt,'s'); 
+cd(datafolder);
+% interface with user
+prompt     = ['Is today day 1 of SRT training? [y/n] '];
+trainingDay = input(prompt,'s');
+
+if contains(trainingDay,'n')
+    prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
+    datafolder = input(prompt,'s');
+    prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
+    data2load  = input(prompt,'s'); 
+    cd(datafolder);
+    prevTrajData = load(data2load,'traj');
+    prevTraj = prevTrajData.traj;  
+
+    if contains(prevTraj,'R')
+        traj='L';
+    elseif contains(prevTraj,'L')
+        traj='R';
+    end        
+else
+    rng('shuffle');
+    randArm = randsample([1,2],1);
+    if randArm == 1
+        traj='R';
+    elseif randArm == 2
+        traj='L';
+    end
+end
 
 % load in thresholds
 disp('Getting rat-specific data')
@@ -60,7 +76,7 @@ end
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 25; % minutes
 
 % define a looping time - this is in minutes
 amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
@@ -152,13 +168,6 @@ noisePercent = 1; % 5 percent
 %% delay lenghts
 numTrials  = 200;
 
-%% using the testingDay variable, select between-> within reversal or memory->within reversal
-if contains(prevDay.traj,'R')
-    traj='R';
-elseif contains(prevDay.traj,'L')
-    traj='L';
-end     
-
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
 
@@ -213,16 +222,13 @@ writeline(s,doorFuns.centralOpen);
 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TrialStart" 700 2');
  
 % make this array ready to track amount of time spent at choice
-time2choice = []; numRev = traj;
+time2choice = []; numRev = traj; endSess = 0;
 for triali = 1:numTrials    
     disp(['Rewarded Trajectory: ',traj])
     trajRewarded{triali} = traj;
 
-    % break out when the rat has performed 12 trials past criterion
-    if isempty(trialMet)==0
-        if (triali-trialMet) > 12
-            break % break out of for loop
-        end      
+    if toc(sStart)/60 > session_length
+        break
     end
 
     % set central door timeout value
@@ -312,26 +318,33 @@ for triali = 1:numTrials
     end 
     
     % identify choice accuracy on last 10 trials
-    if length(trajectory_text) >= 10 && critMet == 0
+    if length(trajectory_text) >= 12
         if contains(traj,'R')
             % temp var
             tempVar = []; propCorrect = [];
-            tempVar = trajectory_text(end-9:end);
+            tempVar = trajectory_text(end-11:end);
             % find proportion of correct choices
             propCorrect = nanmean(contains(tempVar,'R'));
         elseif contains(traj,'L')
             % temp var
             tempVar = []; propCorrect = [];
-            tempVar = trajectory_text(end-9:end);
+            tempVar = trajectory_text(end-11:end);
             % find proportion of correct choices
             propCorrect = nanmean(contains(tempVar,'L'));
         end
-
-        % once rats reach 80%, have them execute the rule for 10 additional
-        % trials?
+        
+        % once choice accuracy is reached per 10 trials, switch rewarded
+        % arm - reversalTraj tells the user which trajectory the reversal
+        % occured on
+        
+        % if reversaltraj is trajectory 15, it means that trajectory 15 was
+        % the last rewarded trajectory for say, right sequences. And that
+        % trajectory 16 will only be rewarded for left turns
         if propCorrect >= 0.8
-            critMet  = 1; % tag for criterion met
-            trialMet = triali;
+            endSess = 1;
+        else
+            %reversalTraj(triali) = 0;
+            endSess = 0;
         end
         disp(['Proportion correct: ',num2str(propCorrect)])
     end
@@ -393,113 +406,93 @@ for triali = 1:numTrials
     end
     writeline(s,doorFuns.centralClose);  
     
-    if contains(testingDay,[{'e'} {'E'}])
-        cohMet = [];
-        next = 0;
-        while next == 0
-            if readDigitalPin(a,irArduino.Delay)==0
-                writeline(s,doorFuns.closeAll)
-                [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEntry" 102 2');  
+    cohMet = [];
+    next = 0;
+    while next == 0
+        if readDigitalPin(a,irArduino.Delay)==0
+            writeline(s,doorFuns.closeAll)
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEntry" 102 2');  
 
-                dStart = tic;
-                for i = 1:1000000000000000000000000000000000 % nearly infinite loop. This is needed for the first loop
+            dStart = tic;
+            for i = 1:1000000000000000000000000000000000 % nearly infinite loop. This is needed for the first loop
 
-                    % this is a fail safe
-                    if cohMet == 1
-                        writeline(s,doorFuns.centralOpen);
-                        break
-                    end
+                % this is a fail safe
+                if cohMet == 1
+                    writeline(s,doorFuns.centralOpen);
+                    break
+                end
 
-                    if i == 1
-                        clearStream(LFP1name,LFP2name);
-                        pause(windowDuration)
-                        [succeeded, dataArray, timeStampArray, ~, ~, ...
-                        numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                        % 2) store the data
-                        % now add and remove data to move the window
-                        dataWin    = dataArray;
-                    end
-
-                    % 3) pull in 0.25 seconds of data
-                    % pull in data at shorter resolution   
-                    pause(pauseTime)
+                if i == 1
+                    clearStream(LFP1name,LFP2name);
+                    pause(windowDuration)
                     [succeeded, dataArray, timeStampArray, ~, ~, ...
                     numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-                    % 4) apply it to the initial array, remove what was there
-                    dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-                    dataWin = [dataWin dataArray]; % add data
-
-                    % detrend by removing third degree polynomial
-                    data_det=[];
-                    data_det(1,:) = detrend(dataWin(1,:),3);
-                    data_det(2,:) = detrend(dataWin(2,:),3);
-
-                    % calculate coherence
-                    coh = [];
-                    [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
-
-                    % perform logical indexing of theta and delta ranges to improve
-                    % performance speed
-                    %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-                    cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-                    cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-
-                    % determine if data is noisy
-                    zArtifact = [];
-                    zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-                    zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-                    idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-                    percSat = (length(idxNoise)/length(zArtifact))*100;                
-
-                    % only include if theta coherence is higher than delta. Reject
-                    % if delta is greater than theta or if saturation exceeds
-                    % threshold
-                    if cohDelta > cohTheta || percSat > noisePercent || cohTheta < cohHighThreshold
-                        cohMet = 0;
-                        dataStored{triali}{i} = dataWin;
-                        cohOUT{triali}{i}     = coh;
-                        %rejected = 1;
-                    % accept if theta > delta and if minimal saturation
-                    elseif cohTheta > cohDelta && percSat < noisePercent && cohTheta > cohHighThreshold
-                        cohMet = 1;
-                        writeline(s,doorFuns.centralOpen);
-                        delayDuration(triali) = toc(dStart);
-                        % store data
-                        dataStored{triali}{i}  = dataWin;
-                        cohOUT{triali}{i}      = coh; 
-                        next = 1;
-                        disp(['Coherence of ',num2str(cohTheta),' met that of ', num2str(cohHighThreshold)])
-                        break
-                    end
-
+                    % 2) store the data
+                    % now add and remove data to move the window
+                    dataWin    = dataArray;
                 end
+
+                % 3) pull in 0.25 seconds of data
+                % pull in data at shorter resolution   
+                pause(pauseTime)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 4) apply it to the initial array, remove what was there
+                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+                dataWin = [dataWin dataArray]; % add data
+
+                % detrend by removing third degree polynomial
+                data_det=[];
+                data_det(1,:) = detrend(dataWin(1,:),3);
+                data_det(2,:) = detrend(dataWin(2,:),3);
+
+                % calculate coherence
+                coh = [];
+                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+
+                % perform logical indexing of theta and delta ranges to improve
+                % performance speed
+                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+
+                % determine if data is noisy
+                zArtifact = [];
+                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+                percSat = (length(idxNoise)/length(zArtifact))*100;                
+
+                % only include if theta coherence is higher than delta. Reject
+                % if delta is greater than theta or if saturation exceeds
+                % threshold
+                if cohDelta > cohTheta || percSat > noisePercent || cohTheta < cohHighThreshold
+                    cohMet = 0;
+                    dataStored{triali}{i} = dataWin;
+                    cohOUT{triali}{i}     = coh;
+                    %rejected = 1;
+                % accept if theta > delta and if minimal saturation
+                elseif cohTheta > cohDelta && percSat < noisePercent && cohTheta > cohHighThreshold
+                    cohMet = 1;
+                    writeline(s,doorFuns.centralOpen);
+                    delayDuration(triali) = toc(dStart);
+                    % store data
+                    dataStored{triali}{i}  = dataWin;
+                    cohOUT{triali}{i}      = coh; 
+                    next = 1;
+                    disp(['Coherence of ',num2str(cohTheta),' met that of ', num2str(cohHighThreshold)])
+                    break
+                end
+
             end
-        end   
-    elseif contains(testingDay,[{'C'} {'c'}])
-        next = 0;
-        while next == 0
-            if readDigitalPin(a,irArduino.Delay)==0 
-                writeline(s,doorFuns.closeAll);
-                pause(delayDurationYoked(triali));
-                next = 1;
-            end            
         end
-    elseif contains(testingDay,[{'R'} {'r'}])
-        next = 0;
-        while next == 0
-            if readDigitalPin(a,irArduino.Delay)==0 
-                writeline(s,doorFuns.closeAll);
-                pause(delayDuration(triali));
-                next = 1;
-            end            
-        end
-    end
+    end   
     
-    if numel(numRev)==3
-        break % break out of for loop
-    end      
+    if endSess == 1
+        break
+    end       
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 

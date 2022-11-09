@@ -109,6 +109,7 @@ elseif contains(daySRT,'y')
     end
 end
 %}
+
 rng('shuffle');
 randArm = randsample([1,2],1);
 if randArm == 1
