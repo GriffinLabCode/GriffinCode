@@ -554,7 +554,7 @@ for triali = 1:numTrials
                 % 2) store the data
                 % now add and remove data to move the window
                 dataWin    = dataArray;
-            end                
+            end
         end
 
         % IMPORTANT: Storing this for later
@@ -596,7 +596,6 @@ for triali = 1:numTrials
                 % now add and remove data to move the window
                 dataWin    = dataArray;
             end
-
             try
                 % 3) pull in 0.25 seconds of data
                 % pull in data at shorter resolution   
@@ -676,7 +675,7 @@ for triali = 1:numTrials
                 % 2) store the data
                 % now add and remove data to move the window
                 dataWin    = dataArray;
-            end                
+            end
         end
         
         % IMPORTANT: Storing this for later

@@ -16,7 +16,7 @@ icregmode = 'LWR';  % information criteria regression mode ('OLS', 'LWR' or empt
 regmode   = 'OLS';  % VAR model estimation regression mode ('OLS', 'LWR' or empty for default)
 morder    = 'BIC';  % model order to use ('actual', 'AIC', 'BIC' or supplied numerical value)
 
-acmaxlags = [];% 1324; % maximum autocovariance lags (empty for automatic calculation)
+acmaxlags = []; % maximum autocovariance lags (empty for automatic calculation)
 fs        = 2000;   % sample rate (Hz)
 fres      = [];     % max frequency to calculate to. You should leave this empty for automatic calculation.
 
@@ -45,6 +45,7 @@ title('Model order estimation');
 % -- now lets work towards granger -- %
 
 % Estimate VAR model of selected order from data.
+tStart = tic;
 ptic('\n*** tsdata_to_var... ');
 [A,SIG] = tsdata_to_var(testingData,moBIC,regmode);
 ptoc;
@@ -111,10 +112,12 @@ end
 disp('In gp_cell, COLUMN IS ALWAYS YOUR PREDICTOR, row is always receiving. (col1,row1)=1->1 = NAN. (col1,row2)=1->2. (col2,row1)=2->1');
 
 % frequency resolution
+fres = [];
 if exist(fres) == 0 | isempty(fres) == 1
     fres  = size(f,3) - 1;
 end
 freqs = sfreqs(fres,fs);
+toc(tStart);
 
 figure; plot(freqs,f_3_to_1);
 

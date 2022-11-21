@@ -262,7 +262,7 @@ writeline(s,doorFuns.centralOpen);
 time2choice = []; numRev = traj; detected = [];
 coh = []; dataClean = []; dataDirty = []; % important to initiate these variables
 yokH = []; yokL = []; critMet = 0; trialMet = []; endSess = 0;
-for triali = 2:numTrials    
+for triali = 21:numTrials    
     
     disp(['Rewarded Trajectory: ',traj])
     trajRewarded{triali} = traj;
@@ -773,15 +773,19 @@ remTraj  = str2num(input(prompt,'s'));
 
 % clean up variables
 accuracy2use = accuracy;
-accuracy2use(1)=[]; % remove first trajectory
+accuracy2use(1)=[]; % remove first trajectory bc nothing triggered this trial to start
+
 % to account for traj1 removal, subtract 1 from remTraj
 remTrajFix = remTraj-1;
+
 % correct the trialType variable
 trialType = indicatorOUT;
 trialType(numel(accuracy2use)+1:end)=[];
+
 % correct delay length
 delayLength = delayLenTrial;
 delayLength(numel(accuracy2use)+1:end)=[];
+
 % remove trajectories
 accuracy2use(remTrajFix)=[];
 trialType(remTrajFix)=[];
