@@ -94,7 +94,7 @@ if nargin < 4 || isempty(verb),    verb    = true;  end
 
 [n,m,N] = size(X);
 
-X = demean(X,2); % no constant term, normalise
+%X = demean(X,2); % no constant term, normalise
 
 % store lags
 

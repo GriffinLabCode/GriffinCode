@@ -113,7 +113,7 @@ A   = NaN; % assure a "bad" return value if anything goes wrong (see routine 'is
 SIG = NaN; % assure a "bad" return value if anything goes wrong (see routine 'isbad')
 E   = NaN; % assure a "bad" return value if anything goes wrong (see routine 'isbad')
 
-X = demean(X); % no constant term
+%X = demean(X); % no constant term
 
 if  strcmpi(regmode,'OLS') % OLS (QR decomposition)
 

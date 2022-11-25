@@ -19,7 +19,7 @@ cd(datafolder)
 
 %strCSC = [{'PFC_black'} {'HPC_red'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_red'} {'HPC_blue'} {'HPC_red'}]; % if your csc are strings, do this and comment above
-strCSC = [{'HPC_a'} {'HPC_d'}];
+strCSC = [{'HPC_b'} {'PFC_post'}];
 
 %% Timestamps and events
 

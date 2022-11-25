@@ -4,10 +4,10 @@
 % your session of interest
 %
 % this script was not written by me
-clear; clc
+%clear; clc
 
 % play back
-playBack = 1;
+playBack = 0;
 
 % datafolder directory - stopped on baseline 1 need to do baseline 2 -
 % 9-2-2020 at 2:19

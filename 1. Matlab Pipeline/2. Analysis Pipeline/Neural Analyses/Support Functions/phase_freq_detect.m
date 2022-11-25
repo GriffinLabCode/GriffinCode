@@ -1,4 +1,4 @@
-function [Phase, InstCycleFrequency, PerCycleFreq, signal_filtered] = phase_freq_detect(signal_filtered, signal_ts, lowpass, highpass, srate)
+function [Phase, InstCycleFrequency, PerCycleFreq, signal_filtered] = phase_freq_detect(signal_filtered, lowpass, highpass, srate)
 
 %   This function interpolates phase from peaks, troughs, and zero
 %   crossings of a filtered signal. 

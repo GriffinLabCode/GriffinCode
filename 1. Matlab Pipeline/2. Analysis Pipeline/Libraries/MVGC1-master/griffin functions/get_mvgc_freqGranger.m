@@ -23,7 +23,7 @@ disp('Converting to double...')
 data = double(data);
 
 data = demean(data,'true');
-disp('Data demeaned...')
+disp('Data demeaned to shrink residuals...')
 
 % Estimate VAR model of selected order from data.
 ptic('\n*** tsdata_to_var... ');
