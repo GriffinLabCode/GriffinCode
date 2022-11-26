@@ -16,7 +16,7 @@ function [Phase, InstCycleFrequency, PerCycleFreq, signal_filtered] = phase_freq
 
 % Input:
 %   signal_filtered:    Bandpass filtered signal
-%   signal_ts:          Signal timestamps
+%   signal_ts:          Signal timestamps -- OLD INPUT
 %   lowpass:            Minimum frequency for cycle identification
 %   highpass:           Maximum frequency for cycle identification
 %   srate:              Sampling rate (Hz)
