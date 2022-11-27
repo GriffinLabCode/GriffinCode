@@ -21,7 +21,7 @@
 % written by John Stout
 
 
-function [divisor,n] = find_downsample_rate(current_rate,target_rate)
+function [divisor,srate] = find_downsample_rate(current_rate,target_rate)
 
 % loop across your sampling rate and stop when you've reach the new target
 ds_rates = []; %divisor = [];
@@ -37,4 +37,5 @@ end
 % if divisor could not be established using the exact method above
 if exist('divisor') == 0
     divisor = dsearchn(ds_rates',target_rate);
+    srate = round(ds_rates(divisor));
 end

@@ -18,7 +18,7 @@
 %
 % written by John Stout
 
-function [lfp_ds, times_ds, new_srate] = downSampleLFPdata(lfp_data,lfp_times,srate,target_rate,lowPass,highPass)
+function [lfp_ds, times_ds, srate] = downSampleLFPdata(lfp_data,lfp_times,srate,target_rate,lowPass,highPass)
 
 if isempty(lowPass)
     lowPass = 1;
@@ -33,7 +33,7 @@ if srate ~= target_rate
     disp(['Bandpass filter bw ',num2str(lowPass), ' & ' ,num2str(highPass) , 'Hz'])
     
 	% arbitrary response filter
-    % FIR filter    
+    % FIR filter  
     taps     = 32; % subtract 1 from the actual signal		
     bpFilt = designfilt('bandpassfir','FilterOrder',taps-1, ...
              'CutoffFrequency1',lowPass,'CutoffFrequency2',highPass, ...
@@ -52,16 +52,38 @@ if srate ~= target_rate
 
 	
     % get the downsampling rate divisor
-    [divisor,n] = find_downsample_rate(srate,target_rate);
+    [divisor,srate] = find_downsample_rate(srate,target_rate);
     
+    % downsample
+    lfp_ds = downsample(lfp_data,divisor);
+    times_ds = downsample(lfp_times,divisor);
+    
+    %{
     % loop over data N times. When you trim every other point, then
     % repeatedly do that, the relationship between the starting point and
     % ending point is logirithmic
     lfp_ds = []; times_ds = [];
-    lfp_ds = lfp_data; lfp_ts = lfp_times;
+    lfp_ds = lfp_data; times_ds = lfp_times;
+    
     for i = 1:sqrt(divisor) % sqrt bc log relationship between cutting the data in half at progressively diff time scales and takes divisor times to get from og srate to new srate through linear division
-        lfp_ds = lfp_ds(1:2:end);
+        % forward and backward
+        evenOdd = mod(i,2);
+        if evenOdd == 1 % if odd loops
+            lfp_ds   = lfp_ds(1:2:end);
+            times_ds = times_ds(1:2:end);            
+        elseif evenOdd == 0 % on odd loop i
+            % flip variables 180degrees
+            lfp_ds = flipud(lfp_ds')';
+            times_ds = flipud(times_ds')';
+            % remove 1:2:end (which is really end:-2:1 or something
+            lfp_ds   = lfp_ds(1:2:end);
+            times_ds = times_ds(1:2:end);   
+            % flip back to normal
+            lfp_ds = flipud(lfp_ds')';
+            times_ds = flipud(times_ds')';
+        end
     end
+    %}
     % check it! Get in some data sampled at ~32kh. then extract 120s of
     % data. Run the code below
     %lfp_danumel(lfp_ds)/numel(lfp_ds(1:16:end))
