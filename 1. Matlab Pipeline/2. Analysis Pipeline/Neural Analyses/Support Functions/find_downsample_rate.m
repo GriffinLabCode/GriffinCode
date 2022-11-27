@@ -16,18 +16,21 @@
 %          signalx(1:divisor:end) and it should down-sample your data to
 %          what you wanted
 %
+% n: number of loops to acheive equivalence of srates
+%
 % written by John Stout
 
 
-function [divisor] = find_downsample_rate(current_rate,target_rate)
+function [divisor,n] = find_downsample_rate(current_rate,target_rate)
 
 % loop across your sampling rate and stop when you've reach the new target
-ds_rates = [];
+ds_rates = []; %divisor = [];
 for n = 1:current_rate
     ds_rates(n) = current_rate/n;
     if ds_rates(n) == target_rate
+        %pause;
         divisor = n;
-        continue
+        break
     end
 end
 
