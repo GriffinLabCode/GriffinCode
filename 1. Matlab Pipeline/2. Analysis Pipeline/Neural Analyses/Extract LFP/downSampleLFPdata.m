@@ -18,7 +18,14 @@
 %
 % written by John Stout
 
-function [lfp_ds, times_ds] = downSampleLFPdata(lfp_data,lfp_times,srate,target_rate,lowPass,highPass)
+function [lfp_ds, times_ds, new_srate] = downSampleLFPdata(lfp_data,lfp_times,srate,target_rate,lowPass,highPass)
+
+if isempty(lowPass)
+    lowPass = 1;
+end
+if isempty(highPass)
+    highPass = target_rate/4;
+end
 
 if srate ~= target_rate
     disp('Sampling rate does not match the target rate, therefore data will be down-sampled...')
@@ -49,6 +56,8 @@ if srate ~= target_rate
     lfp_ds = []; times_ds = [];
     lfp_ds   = dataOut(1:divisor:end);
     times_ds = lfp_times(1:divisor:end);
+    new_srate = target_rate;
+    %lfp_ds = round(lfp_ds,100); disp('Rounding signal');
     
 else
     disp('Sampling rate matches the target rate, therefore data was not down-sampled')
