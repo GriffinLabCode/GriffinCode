@@ -120,6 +120,8 @@ cd(['X:\01.Experiments\R21\',targetRat]);
 % interface with cheetah setup
 threshold.coh_duration = 0.5;
 [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
+pause(5);
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
 
 if srate > 2035 || srate < 2000
     error('Sampling rate is not correct')
@@ -229,6 +231,13 @@ connect2netcom(pathName,serverName)
 [succeeded, cheetahObjects, cheetahTypes] = NlxGetDASObjectsAndTypes; % gets cheetah objects and types
 
 %% start recording - make a noise when recording begins
+
+% stream once more to ensure stream doesn't close
+clearStream(LFP1name,LFP2name);
+pause(windowDuration)
+[succeeded, dataArray, timeStampArray, ~, ~, ...
+numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
 [succeeded, reply] = NlxSendCommand('-StartRecording');
 load gong.mat;
 sound(y);
@@ -262,7 +271,7 @@ writeline(s,doorFuns.centralOpen);
 time2choice = []; numRev = traj; detected = [];
 coh = []; dataClean = []; dataDirty = []; % important to initiate these variables
 yokH = []; yokL = []; critMet = 0; trialMet = []; endSess = 0;
-for triali = 21:numTrials    
+for triali = 1:numTrials    
     
     disp(['Rewarded Trajectory: ',traj])
     trajRewarded{triali} = traj;
@@ -473,68 +482,79 @@ for triali = 21:numTrials
                 dataWin    = dataArray;
             end
 
-            % 3) pull in 0.25 seconds of data
-            % pull in data at shorter resolution   
-            pause(pauseTime)
-            [succeeded, dataArray, timeStampArray, ~, ~, ...
-            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+            try
+                % 3) pull in 0.25 seconds of data
+                % pull in data at shorter resolution   
+                pause(pauseTime)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-            % 4) apply it to the initial array, remove what was there
-            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-            dataWin = [dataWin dataArray]; % add data
+                % 4) apply it to the initial array, remove what was there
+                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+                dataWin = [dataWin dataArray]; % add data
 
-            % detrend by removing third degree polynomial
-            data_det=[];
-            data_det(1,:) = detrend(dataWin(1,:),3);
-            data_det(2,:) = detrend(dataWin(2,:),3);
+                % detrend by removing third degree polynomial
+                data_det=[];
+                data_det(1,:) = detrend(dataWin(1,:),3);
+                data_det(2,:) = detrend(dataWin(2,:),3);
 
-            % calculate coherence
-            coh = [];
-            [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+                % calculate coherence
+                coh = [];
+                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
 
-            % perform logical indexing of theta and delta ranges to improve
-            % performance speed
-            %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+                % perform logical indexing of theta and delta ranges to improve
+                % performance speed
+                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
 
-            % determine if data is noisy
-            zArtifact = [];
-            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-            percSat = (length(idxNoise)/length(zArtifact))*100;                
-            
-            % only include if theta coherence is higher than delta. Reject
-            % if delta is greater than theta or if saturation exceeds
-            % threshold
-            if cohDelta > cohTheta || percSat > noisePercent
-                detected{triali}(i)=1;
-                rejected = 1;
-                %disp('Rejected')  
-            % accept if theta > delta and if minimal saturation
-            elseif cohTheta > cohDelta && percSat < noisePercent
-                rejected = 0;
-                detected{triali}(i)=0;
-            end
+                % determine if data is noisy
+                zArtifact = [];
+                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+                percSat = (length(idxNoise)/length(zArtifact))*100;                
 
-            % store data
-            dataZStored{triali}{i} = zArtifact;
-            dataStored{triali}{i}  = dataWin;
-            cohOUT{triali}{i}      = coh;
+                % only include if theta coherence is higher than delta. Reject
+                % if delta is greater than theta or if saturation exceeds
+                % threshold
+                if cohDelta > cohTheta || percSat > noisePercent
+                    detected{triali}(i)=1;
+                    rejected = 1;
+                    %disp('Rejected')  
+                % accept if theta > delta and if minimal saturation
+                elseif cohTheta > cohDelta && percSat < noisePercent
+                    rejected = 0;
+                    detected{triali}(i)=0;
+                end
 
-            % if coherence is higher than your threshold, and the data is
-            % accepted, then let the rat make a choice
-            if cohTheta > cohHighThreshold && rejected == 0
-                met_high = 1;
-                indicatorOUT{triali} = 'highMET';                
-                break 
-            % if you exceed 30s, break out
-            elseif toc(dStart) > maxDelay
-                met_high = 0;
-                indicatorOUT{triali} = 'highFAIL'; 
-                break
-            end  
+                % store data
+                dataZStored{triali}{i} = zArtifact;
+                dataStored{triali}{i}  = dataWin;
+                cohOUT{triali}{i}      = coh;
+
+                % if coherence is higher than your threshold, and the data is
+                % accepted, then let the rat make a choice
+                if cohTheta > cohHighThreshold && rejected == 0
+                    met_high = 1;
+                    indicatorOUT{triali} = 'highMET';                
+                    break 
+                % if you exceed 30s, break out
+                elseif toc(dStart) > maxDelay
+                    met_high = 0;
+                    indicatorOUT{triali} = 'highFAIL'; 
+                    break
+                end 
+            catch
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;
+            end                
         end
 
         % IMPORTANT: Storing this for later
@@ -577,76 +597,86 @@ for triali = 21:numTrials
                 dataWin    = dataArray;
             end
 
-            % 3) pull in 0.25 seconds of data
-            % pull in data at shorter resolution   
-            pause(pauseTime)
-            [succeeded, dataArray, timeStampArray, ~, ~, ...
-            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+            try
+                % 3) pull in 0.25 seconds of data
+                % pull in data at shorter resolution   
+                pause(pauseTime)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-            % 4) apply it to the initial array, remove what was there
-            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-            dataWin = [dataWin dataArray]; % add data
+                % 4) apply it to the initial array, remove what was there
+                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+                dataWin = [dataWin dataArray]; % add data
 
-            % detrend by removing third degree polynomial
-            data_det=[];
-            data_det(1,:) = detrend(dataWin(1,:),3);
-            data_det(2,:) = detrend(dataWin(2,:),3);
+                % detrend by removing third degree polynomial
+                data_det=[];
+                data_det(1,:) = detrend(dataWin(1,:),3);
+                data_det(2,:) = detrend(dataWin(2,:),3);
 
-            % calculate coherence
-            coh = [];
-            [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+                % calculate coherence
+                coh = [];
+                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
 
-            % identify theta > delta or delta > theta
-            % take averages
-            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-            %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-            
-            % perform logical indexing of theta and delta ranges to improve
-            % performance speed
-            %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-            cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-            cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+                % identify theta > delta or delta > theta
+                % take averages
+                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
+                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
 
-            % determine if data is noisy
-            zArtifact = [];
-            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+                % perform logical indexing of theta and delta ranges to improve
+                % performance speed
+                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
+                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
+                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
 
-            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-            percSat = (length(idxNoise)/length(zArtifact))*100;                
-            
-            % only include if theta coherence is higher than delta. Reject
-            % if delta is greater than theta or if saturation exceeds
-            % threshold
-            if cohDelta > cohTheta || percSat > noisePercent
-                detected{triali}(i)=1;
-                rejected = 1;
-                %disp('Rejected')  
-            % accept if theta > delta and if minimal saturation
-            elseif cohTheta > cohDelta && percSat < noisePercent
-                rejected = 0;
-                detected{triali}(i)=0;
-            end            
+                % determine if data is noisy
+                zArtifact = [];
+                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
 
-            % store data
-            dataZStored{triali}{i} = zArtifact;
-            dataStored{triali}{i}  = dataWin;
-            cohOUT{triali}{i}      = coh;
+                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+                percSat = (length(idxNoise)/length(zArtifact))*100;                
 
-            % if coherence is less than your threshold, and the data is
-            % accepted, then let the rat make a choice
-            if cohTheta < cohLowThreshold && rejected == 0
-                %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]); 
-                met_low = 1;
-                indicatorOUT{triali} = 'lowMET';
-                break
-            % if you exceed 30s, break out
-            elseif toc(dStart) > maxDelay
-                met_low = 0;
-                indicatorOUT{triali} = 'lowFAIL';
-                break
-            end
-                
+                % only include if theta coherence is higher than delta. Reject
+                % if delta is greater than theta or if saturation exceeds
+                % threshold
+                if cohDelta > cohTheta || percSat > noisePercent
+                    detected{triali}(i)=1;
+                    rejected = 1;
+                    %disp('Rejected')  
+                % accept if theta > delta and if minimal saturation
+                elseif cohTheta > cohDelta && percSat < noisePercent
+                    rejected = 0;
+                    detected{triali}(i)=0;
+                end            
+
+                % store data
+                dataZStored{triali}{i} = zArtifact;
+                dataStored{triali}{i}  = dataWin;
+                cohOUT{triali}{i}      = coh;
+
+                % if coherence is less than your threshold, and the data is
+                % accepted, then let the rat make a choice
+                if cohTheta < cohLowThreshold && rejected == 0
+                    %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]); 
+                    met_low = 1;
+                    indicatorOUT{triali} = 'lowMET';
+                    break
+                % if you exceed 30s, break out
+                elseif toc(dStart) > maxDelay
+                    met_low = 0;
+                    indicatorOUT{triali} = 'lowFAIL';
+                    break
+                end
+            catch
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;
+            end                
         end
         
         % IMPORTANT: Storing this for later
@@ -842,6 +872,17 @@ cd(place2store);
 save(save_var);
 
 %% clean maze
+disp('Please visualize the data')
+for i = 1:length(dataStored)
+    figure; 
+    subplot 211
+    plot(dataStored{i}{end}(1,:))
+    subplot 212
+    plot(dataStored{i}{end}(2,:))
+    pause
+    close
+    
+end
 
 % close doors
 writeline(s,doorFuns.closeAll);  

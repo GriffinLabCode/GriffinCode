@@ -872,6 +872,17 @@ cd(place2store);
 save(save_var);
 
 %% clean maze
+disp('Please visualize the data')
+for i = 1:length(dataStored)
+    figure; 
+    subplot 211
+    plot(dataStored{i}{end}(1,:))
+    subplot 212
+    plot(dataStored{i}{end}(2,:))
+    pause
+    close
+    
+end
 
 % close doors
 writeline(s,doorFuns.closeAll);  

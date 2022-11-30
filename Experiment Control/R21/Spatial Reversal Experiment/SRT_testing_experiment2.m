@@ -30,82 +30,49 @@ end
 
 prompt = ['Is today testing or a reset day? enter "E" or "R" '];
 testingType = input(prompt,'s');
-prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
-datafolder = input(prompt,'s');
-prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
-data2load  = input(prompt,'s'); 
-cd(datafolder);
-prevTrajData = load(data2load,'traj');
-prevTraj = prevTrajData.traj; 
-clear traj
+% interface with user
+prompt     = ['Is today day 1 of SRT experiment #2 testing? [y/n] '];
+testingDay = input(prompt,'s');
+% 
+prompt     = ['Is today a coherence day or control day? [coh/con] '];
+conditionDay = input(prompt,'s');
 
-% between session reversal
-if contains(prevTraj,'R')
-    traj='L';
-elseif contains(prevTraj,'L')
-    traj='R';
-end   
+% get previous days testing
+if contains(conditionDay,'con')
+    prompt     = ['copy/paste the datafolder of the coh testing session with the MATLAB data saved that you want to copy: '];
+    datafolder = input(prompt,'s');
+    prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
+    data2load  = input(prompt,'s'); 
+    prevTrajData = load(data2load,'traj');
+    prevTraj = prevTrajData.traj; 
+    clear traj
+    % unlike testing, which is a reversal on previous testing, control is a
+    % reversal of previous testing and a match to coh day. In other words,
+    % if day 1 = L coh, day 2 = R coh, day 3 = L yoked. Match the prev traj
+    % from day 1 to current day
+    traj = prevTraj;
+else
+    prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
+    datafolder = input(prompt,'s');
+    prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
+    data2load  = input(prompt,'s'); 
+    cd(datafolder);
+    prevTrajData = load(data2load,'traj');
+    prevTraj = prevTrajData.traj; 
+    clear traj
 
-% randomize MW and BW, then use previous days to offset
-% randomize MW and BW, then use previous days to offset
-numTrials = 12*20;
+    % between session reversal
+    if contains(prevTraj,'R')
+        traj='L';
+    elseif contains(prevTraj,'L')
+        traj='R';
+    end   
+end
+
+% max/min delay
+numTrials = 200;
 maxDelay = 30;
 minDelay = 5;
-rng('shuffle')
-delayLenTrial = [];
-next = 0;
-while next == 0
-
-    if numel(delayLenTrial) >= numTrials
-        next = 1;
-    else
-        shortDuration  = randsample(minDelay:15,6,'true');
-        longDuration   = randsample(16:maxDelay,6,'true');
-
-        % used for troubleshooting ->
-        %shortDuration  = randsample(1:5,5,'true');
-        %longDuration   = randsample(6:10,5,'true');        
-
-        allDurations   = [shortDuration longDuration];
-        interleaved    = allDurations(randperm(length(allDurations)));
-        delayLenTrial = [delayLenTrial interleaved];
-    end
-end   
-
-% interface with user
-prompt     = ['Is today day 1 of SRT training? [y/n] '];
-trainingDay = input(prompt,'s');
-
-% half trials high coh, half control
-indicatorOUT = [];
-for i = 1:12:numTrials
-    delays2pull = delayLenTrial(i:i+11);
-    numExp = length(delays2pull)/3;
-    numCon = length(delays2pull)/3;
-    totalN = numExp+numCon;
-
-    % high and low must happen before yoked
-    next = 0;
-    while next == 0
-        idx = randperm(12,totalN);
-        idx1 = randsample(idx,numExp);
-        idx2 = randsample(idx,numCon);
-        if idx1 < idx2 & numel(unique([idx1,idx2]))==8
-            next = 1;
-        end
-    end
-
-    % first is always high, second low, third, con h, 4 con L
-    indicator = cellstr(repmat('Norm',[12 1]));
-
-    % now replace
-    indicator(idx1) = {'high'};
-    indicator(idx2) = {'contH'};
-
-    % store indicator variable
-    indicatorOUT = [indicatorOUT;indicator];
-
-end     
 
 % load in thresholds
 disp('Getting rat-specific data')
@@ -461,11 +428,7 @@ for triali = 1:numTrials
     end  
     
     % the meat
-    if contains(indicatorOUT{triali},'Norm') || contains(indicatorOUT{triali},'NormHighFail') || contains(indicatorOUT{triali},'NormLowFail')
-        disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-        pause(delayLenTrial(triali));
-
-    elseif contains(indicatorOUT{triali},'high')
+    if contains(conditionDay,'coh')
         dStart = [];
         dStart = tic;        
         pause(3.5);
@@ -569,168 +532,18 @@ for triali = 1:numTrials
             % if coherence was met, replace the delay trial time with the
             % amount of time it took to finish the delay
             delayLenTrial(triali) = cohEnd; 
-            yokH = [yokH cohEnd];
+            %yokH = [yokH cohEnd];
         elseif met_high == 0
             % if coherence wasn't met, replace the next yokeH with a 'Norm'
             % replace the next high with a 'norm'
             delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'contH')==1);
-            indicatorOUT{idxRem(1)}='NormHighFail';
+            %idxRem = find(contains(indicatorOUT,'contH')==1);
+            %indicatorOUT{idxRem(1)}='NormHighFail';
         end
-        
-            %yokH = [yokH NaN];
-        
-    elseif contains(indicatorOUT{triali},'low')
-        dStart = [];
-        dStart = tic;
-        pause(3.5);        
-        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
-            if i == 1
-                clearStream(LFP1name,LFP2name);
-                pause(windowDuration)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 2) store the data
-                % now add and remove data to move the window
-                dataWin    = dataArray;
-            end
-            try
-                % 3) pull in 0.25 seconds of data
-                % pull in data at shorter resolution   
-                pause(pauseTime)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 4) apply it to the initial array, remove what was there
-                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-                dataWin = [dataWin dataArray]; % add data
-
-                % detrend by removing third degree polynomial
-                data_det=[];
-                data_det(1,:) = detrend(dataWin(1,:),3);
-                data_det(2,:) = detrend(dataWin(2,:),3);
-
-                % calculate coherence
-                coh = [];
-                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
-
-                % identify theta > delta or delta > theta
-                % take averages
-                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-
-                % perform logical indexing of theta and delta ranges to improve
-                % performance speed
-                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-
-                % determine if data is noisy
-                zArtifact = [];
-                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-
-                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-                percSat = (length(idxNoise)/length(zArtifact))*100;                
-
-                % only include if theta coherence is higher than delta. Reject
-                % if delta is greater than theta or if saturation exceeds
-                % threshold
-                if cohDelta > cohTheta || percSat > noisePercent
-                    detected{triali}(i)=1;
-                    rejected = 1;
-                    %disp('Rejected')  
-                % accept if theta > delta and if minimal saturation
-                elseif cohTheta > cohDelta && percSat < noisePercent
-                    rejected = 0;
-                    detected{triali}(i)=0;
-                end            
-
-                % store data
-                dataZStored{triali}{i} = zArtifact;
-                dataStored{triali}{i}  = dataWin;
-                cohOUT{triali}{i}      = coh;
-
-                % if coherence is less than your threshold, and the data is
-                % accepted, then let the rat make a choice
-                if cohTheta < cohLowThreshold && rejected == 0
-                    %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]); 
-                    met_low = 1;
-                    indicatorOUT{triali} = 'lowMET';
-                    break
-                % if you exceed 30s, break out
-                elseif toc(dStart) > maxDelay
-                    met_low = 0;
-                    indicatorOUT{triali} = 'lowFAIL';
-                    break
-                end
-            catch
-                clearStream(LFP1name,LFP2name);
-                pause(windowDuration)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 2) store the data
-                % now add and remove data to move the window
-                dataWin    = dataArray;
-            end
-        end
-        
-        % IMPORTANT: Storing this for later
-        cohEnd = toc(dStart);
-        disp(['Coh detect low end at ', num2str(cohEnd)])
-
-        % now replace the delayLenTrial with coherence delay
-        %delayLenTrial(triali) = cohEnd;
-   
-        % now identify yoked high, and replace with control delay
-        if met_low == 1
-            % if coherence was met, replace the delay trial time with the
-            % amount of time it took to finish the delay
-            delayLenTrial(triali) = cohEnd; 
-            yokL = [yokL cohEnd];
-        elseif met_low == 0
-            % if coherence wasn't met, replace the next yokeH with a 'Norm'
-            % replace the next high with a 'norm'
-            delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'contL')==1);
-            indicatorOUT{idxRem(1)}='NormLowFail';
-        end
-        
-    % only yoke up if you have options to pull from, if not then it'll
-    % become a 'norm' trial
-    elseif contains(indicatorOUT{triali},'contL')
-        
-        if isempty(yokL)==0
-            % pause for yoked control
-            disp(['Pausing for low yoked control of ',num2str(yokL(1))])
-            pause(yokL(1));
-            indicatorOUT{triali} = 'yokeL_MET';
-            delayLenTrial(triali) = yokL(1);            
-            % delete so that next time, 1 is the updated delay
-            yokL(1)=[];
-        elseif isempty(yokL)==1
-            disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-            pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokeL_FAIL';
-        end
-        
-    elseif contains(indicatorOUT{triali},'contH')
-        % if you have a yoke to pull from
-        if isempty(yokH)==0
-            disp(['Pausing for high yoked control of ',num2str(yokH(1))])
-            pause(yokH(1));
-            indicatorOUT{triali} = 'yokeH_MET';  
-            delayLenTrial(triali) = yokH(1);
-            yokH(1)=[];
-        % if you don't have a yoke to pull from
-        elseif isempty(yokH)==1
-            disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-            pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokeH_FAIL';          
-        end        
+    elseif contains(conditionDay,'con')
+        disp('Pausing for control delay')
+        pause(delayLenTrial(triali));
     end 
     
 end 
@@ -871,6 +684,17 @@ cd(place2store);
 save(save_var);
 
 %% clean maze
+disp('Please visualize the data')
+for i = 1:length(dataStored)
+    figure; 
+    subplot 211
+    plot(dataStored{i}{end}(1,:))
+    subplot 212
+    plot(dataStored{i}{end}(2,:))
+    pause
+    close
+    
+end
 
 % close doors
 writeline(s,doorFuns.closeAll);  
