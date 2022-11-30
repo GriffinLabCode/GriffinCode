@@ -3,7 +3,7 @@
 %
 % last edit 8/3/20 - JS
 
-% clear workspace and command window
+% clear workspace an d command window
 clear; clc;
 
 % This is the directory where the "Startup" function is located

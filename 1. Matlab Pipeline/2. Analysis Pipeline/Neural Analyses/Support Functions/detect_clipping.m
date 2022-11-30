@@ -18,7 +18,7 @@
 %
 % written by John Stout
 
-function [clip_saturation] = detect_clipping(data)
+function [clip_saturation, clip_idx] = detect_clipping(data)
     
     % define output variable
     data_new = data;

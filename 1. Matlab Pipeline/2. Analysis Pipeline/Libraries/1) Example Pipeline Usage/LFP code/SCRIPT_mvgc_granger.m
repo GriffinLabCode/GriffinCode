@@ -13,14 +13,15 @@ nobs      = size(testingData,2); % number of observations per trial
 % (Cohen 2014)
 momax     = 100;    % number of orders to test for
 icregmode = 'LWR';  % information criteria regression mode ('OLS', 'LWR' or empty for default)
-regmode   = 'OLS';  % VAR model estimation regression mode ('OLS', 'LWR' or empty for default)
+regmode   = 'LWR';  % VAR model estimation regression mode ('OLS', 'LWR' or empty for default)
 morder    = 'BIC';  % model order to use ('actual', 'AIC', 'BIC' or supplied numerical value)
 
-acmaxlags = []; % maximum autocovariance lags (empty for automatic calculation)
+acmaxlags = 1000;   % 1324; % maximum autocovariance lags (empty for automatic calculation)
 fs        = 2000;   % sample rate (Hz)
-fres      = [];     % max frequency to calculate to. You should leave this empty for automatic calculation.
+fres      = [];    % Resolution
 
-%% working with a 2D array
+%% working with a 2D array - statespace
+
 %testingDemean = demean(testingData);
 
 % convert data into double
@@ -31,7 +32,7 @@ testingData = double(testingData);
 % trial of interest. However, you'll notice that the model fits the data
 % better with smaller model orders compared to when we used a lot of
 % observations.
-
+%{
 % AIC reflects information lost by the model. Lower values indicate less
 % information lost. BIC is like AIC, but generally preferred in our field.
 ptic('\n*** tsdata_to_infocrit\n');
@@ -41,11 +42,11 @@ ptoc('*** tsdata_to_infocrit took ');
 figure('color','w'); clf;
 plot_tsdata([AIC BIC]',{'AIC','BIC'},1/fs);
 title('Model order estimation');
-
+%}
 % -- now lets work towards granger -- %
 
 % Estimate VAR model of selected order from data.
-tStart = tic;
+tstart=tic;
 ptic('\n*** tsdata_to_var... ');
 [A,SIG] = tsdata_to_var(testingData,moBIC,regmode);
 ptoc;
@@ -61,38 +62,31 @@ ptic('*** var_to_autocov... ');
 [G,info] = var_to_autocov(A,SIG,acmaxlags);
 ptoc;
 
-% The above routine does a LOT of error checking and issues useful diagnostics.
-% If there are problems with your data (e.g. non-stationarity, colinearity,
-% etc.) there's a good chance it'll show up at this point - and the diagnostics
-% may supply useful information as to what went wrong. It is thus essential to
-% report and check for errors here.
-acerr = var_info(info,true); % report results (and bail out on error)
-disp('consider skipping if acerr == 1');
+info = var_info(A,SIG);
+assert(~info.error,'VAR error(s) found - bailing out');
 
-% -- now lets work towards granger -- %
-disp('we dont need to worry about time domain granger, but here it is for completion')
+% Granger causality calculation: frequency domain  (<mvgc_schema.html#3 |A14|>)
 
-% Calculate time-domain pairwise-conditional causalities - this just requires
-% the autocovariance sequence.
-ptic('*** autocov_to_pwcgc... ');
-F = autocov_to_pwcgc(G);
-ptoc;
-
-% Check for failed GC calculation
-assert(~isbad(F,false),'GC calculation failed');
-
-% -- frequency domain -- %
-disp('Freq domain is more relevant to our work');
-% Calculate spectral pairwise-conditional causalities at given frequency
-% resolution - again, this only requires the autocovariance sequence.
-disp('Be warned, gewekes estimation is extremely time consuming...')
-ptic('\n*** autocov_to_spwcgc... ');
-f = autocov_to_spwcgc(G,fres);
+% If not specified, we set the frequency resolution to something sensible. Warn if
+% resolution is very large, as this may lead to excessively long computation times,
+% and/or out-of-memory issues.
+if isempty(fres)
+    fres = 2^nextpow2(info.acdec); % based on autocorrelation decay; alternatively, you could try fres = 2^nextpow2(nobs);
+	fprintf('\nfrequency resolution auto-calculated as %d (increments ~ %.2gHz)\n',fres,fs/2/fres);
+end
+if fres > 20000 % adjust to taste
+	fprintf(2,'\nWARNING: large frequency resolution = %d - may cause computation time/memory usage problems\nAre you sure you wish to continue [y/n]? ',fres);
+	istr = input(' ','s'); if isempty(istr) || ~strcmpi(istr,'y'); fprintf(2,'Aborting...\n'); return; end
+end
+ptic('\n*** var_to_spwcgc... ');
+f = var_to_spwcgc(A,SIG,fres);
+assert(~isbad(f,false),'spectral GC calculation failed - bailing out');
 ptoc;
 
 % Check for failed spectral GC calculation
 assert(~isbad(f,false),'spectral GC calculation failed');
 
+%{
 fprintf('\nchecking that frequency-domain GC integrates to time-domain GC... \n');
 Fint = smvgc_to_mvgc(f); % integrate spectral MVGCs
 mad = maxabs(F-Fint);
@@ -102,6 +96,7 @@ if mad < madthreshold
 else
     fprintf(2,'WARNING: high maximum absolute difference = %e.2 (> %.2e)\n',mad,madthreshold);
 end
+%}
 
 % get data out in an automated way
 for rowi = 1:size(f,1)
@@ -112,14 +107,14 @@ end
 disp('In gp_cell, COLUMN IS ALWAYS YOUR PREDICTOR, row is always receiving. (col1,row1)=1->1 = NAN. (col1,row2)=1->2. (col2,row1)=2->1');
 
 % frequency resolution
-fres = [];
+fres=[];
 if exist(fres) == 0 | isempty(fres) == 1
     fres  = size(f,3) - 1;
 end
 freqs = sfreqs(fres,fs);
-toc(tStart);
+toc(tstart)
 
-figure; plot(freqs,f_3_to_1);
+%figure; plot(freqs,f_3_to_1);
 
 % Plot spectral causal graph and compare against your extracted data
 figure(); clf;
@@ -128,7 +123,6 @@ plot_spw(f,fs);
 figure; plot(freqs,gp_cell{1,3});
 % row 3 column 1 = effect of signal 1 on signal 3
 figure; plot(freqs,gp_cell{3,1});
-
 
 %% 3D array
 % you can do the same work with a 3D array, however, with 3Dimensions, the
