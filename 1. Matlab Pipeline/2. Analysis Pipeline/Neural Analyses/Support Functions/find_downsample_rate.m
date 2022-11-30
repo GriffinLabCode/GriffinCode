@@ -15,8 +15,8 @@
 %          variable is signalx, you can do the following:
 %          signalx(1:divisor:end) and it should down-sample your data to
 %          what you wanted
+% srate: new sampling rate
 %
-% n: number of loops to acheive equivalence of srates
 %
 % written by John Stout
 
@@ -27,15 +27,8 @@ function [divisor,srate] = find_downsample_rate(current_rate,target_rate)
 ds_rates = []; %divisor = [];
 for n = 1:current_rate
     ds_rates(n) = current_rate/n;
-    if ds_rates(n) == target_rate
-        %pause;
-        divisor = n;
-        break
-    end
 end
 
-% if divisor could not be established using the exact method above
-if exist('divisor') == 0
-    divisor = dsearchn(ds_rates',target_rate);
-    srate = round(ds_rates(divisor));
-end
+% get divisor and new sampling rate
+divisor = dsearchn(ds_rates',target_rate);
+srate = round(ds_rates(divisor));
