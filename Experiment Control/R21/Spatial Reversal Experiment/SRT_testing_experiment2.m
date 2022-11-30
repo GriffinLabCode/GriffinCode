@@ -30,12 +30,17 @@ end
 
 prompt = ['Is today testing or a reset day? enter "E" or "R" '];
 testingType = input(prompt,'s');
+
 % interface with user
 prompt     = ['Is today day 1 of SRT experiment #2 testing? [y/n] '];
 testingDay = input(prompt,'s');
-% 
 prompt     = ['Is today a coherence day or control day? [coh/con] '];
 conditionDay = input(prompt,'s');
+
+% max/min delay
+numTrials = 200;
+maxDelay = 30;
+minDelay = 5;
 
 % get previous days testing
 if contains(conditionDay,'con')
@@ -43,7 +48,7 @@ if contains(conditionDay,'con')
     datafolder = input(prompt,'s');
     prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
     data2load  = input(prompt,'s'); 
-    prevTrajData = load(data2load,'traj');
+    prevTrajData = load(data2load,'traj','delayLenTrial');
     prevTraj = prevTrajData.traj; 
     clear traj
     % unlike testing, which is a reversal on previous testing, control is a
@@ -51,6 +56,29 @@ if contains(conditionDay,'con')
     % if day 1 = L coh, day 2 = R coh, day 3 = L yoked. Match the prev traj
     % from day 1 to current day
     traj = prevTraj;
+    delayLenTrial = prevTraj.delayLenTrial;
+    % add delays
+    delayDuration = [];
+    next = 0;
+    while next == 0
+
+        if numel(delayDuration) >= numTrials
+            next = 1;
+        else
+            shortDuration  = randsample(minDelay:15,5,'true');
+            longDuration   = randsample(16:maxDelay,5,'true');
+
+            % used for troubleshooting ->
+            %shortDuration  = randsample(1:5,5,'true');
+            %longDuration   = randsample(6:10,5,'true');        
+
+            allDurations   = [shortDuration longDuration];
+            interleaved    = allDurations(randperm(length(allDurations)));
+            delayDuration  = [delayDuration interleaved];
+        end
+
+    end      
+    delayLenTrial = horzcat(delayLenTrial,delayDuration);
 else
     prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
     datafolder = input(prompt,'s');
@@ -69,10 +97,6 @@ else
     end   
 end
 
-% max/min delay
-numTrials = 200;
-maxDelay = 30;
-minDelay = 5;
 
 % load in thresholds
 disp('Getting rat-specific data')
