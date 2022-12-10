@@ -18,12 +18,12 @@
 % 
 % --- OUTPUTS --- %
 % coh: Coherence outputs per frequency
-% dataDet1: data used in moving window format
-% dataDet2: detrended data in moving window format
+% t: windowed time for coherence estimations
+% f: frequency (same as input really)
 %
 % written by John Stout
     
-function [C] = mscohere_movingWin_updated(data1,data2,movingwin,srate)
+function [C,t,f] = mscohere_movingWin_updated(data1,data2,movingwin,srate,f)
 clear starter ender coh
 
 % reorient data
@@ -31,7 +31,7 @@ data1 = change_row_to_column(data1);
 data2 = change_row_to_column(data2);
 
 % preparatory steps
-f = [1:.5:20];
+%f = [1:.5:20];
 Fs = srate;
 Nwin=round(Fs*movingwin(1)); % number of samples in window
 Nstep=round(movingwin(2)*Fs); % number of samples to step through

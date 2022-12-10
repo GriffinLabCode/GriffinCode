@@ -1,0 +1,90 @@
+%% Coherence in moving window
+% this code computes coherence over a moving window. This code uses
+% mscohere, and detrends the data by removing 3rd degree polynomials using
+% the moving window as the segment to detrend over. 
+%
+% this code also accounts for artifacts in the data, removing them
+%
+% -- INPUTS -- %
+% data: matrix of LFP data (signal on rows, samples on columns)
+% cohInd: you must specify which two signals to compare. For example:
+%               indicator = [1 2] means to compare signals 1 and 2 (find
+%               high and low coh epochs from signals 1 and 2). The output
+%               will be coh events for all of your data
+% signalInd: You must specify which signals are LFP and which signals are
+%               binary spike data
+% srate: sampling rate (e.g. 2000)
+% thresholds: [h L] where h = high coh value and L = low coh value
+% 
+% --- OUTPUTS --- %
+% coh: Coherence outputs per frequency
+% t: windowed time for coherence estimations
+% fTheta: frequency (same as input really) of theta
+% ts: timestamps of high coh and low coh events
+%
+% written by John Stout
+    
+function [C,t,f] = getHighAndLowCohData(data,cohInd,signalInd,thresholds,srate)
+warning('This function only works if your data variable has samples (voltages) on rows, and observations on columns')
+
+% preparatory steps
+movingwin = [1.25 0.25];
+f = [6:.5:11];
+Fs = srate;
+Nwin=round(Fs*movingwin(1)); % number of samples in window
+Nstep=round(movingwin(2)*Fs); % number of samples to step through
+[N,Ch]=check_consistency(data1,data2);
+winstart=1:Nstep:N-Nwin+1;
+nw=length(winstart);
+
+C = [];
+for n=1:nw
+    
+    % get data
+    indx    = winstart(n):winstart(n)+Nwin-1;
+    datawin = data(indx,:);
+    
+    % detrend signals indicated
+    datawin(:,signalInd) = detrend(datawin(:,signalInd),3);
+    
+    % compute avg theta coherence
+    c = mean(mscohere(datawin(:,cohInd(1)),datawin(:,cohInd(2)),[],[],f,srate));  
+    
+    % identify whether c belongs to high, low, or na
+    if c > thresholds(1) % this should be high
+        datahigh{n} = datawin';
+    elseif c < threshold(2)
+        datalow{n} = datawin';
+    else
+        dataex{n} = datawin';
+    end
+
+    % store coherence
+    C(n,:)=c;
+end
+
+% clean up data
+datahigh = emptyCellErase(datahigh);
+datalow  = emptyCellErase(datalow);
+dataex   = emptyCellErase(dataex);
+
+% reorient coherence matrix
+C = C';
+
+% generate time
+winmid=winstart+round(Nwin/2);
+t=winmid/Fs;
+
+if contains(plotfig,[{'y'} {'Y'})
+    figure('color','w')
+    stem(t,C,'k');
+    ylabel('Theta coherence (6-11Hz)')
+    xlabel('Time (sec)')
+    axis tight;
+    ylim([0 1]);
+    xlimits = xlim;
+    ylimits = ylim;
+    line([xlimits(1) xlimits(2)],[thresholds(1) thresholds(1)],'color','b','LineStyle','--')
+    line([xlimits(1) xlimits(2)],[thresholds(2) thresholds(2)],'color','r','LineStyle','--')
+    title('Epoched coherence. Lines denote high/low coh threshold')
+end
