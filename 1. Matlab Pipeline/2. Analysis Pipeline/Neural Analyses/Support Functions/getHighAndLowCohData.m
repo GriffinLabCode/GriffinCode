@@ -1,10 +1,7 @@
 %% Coherence in moving window
-% this code computes coherence over a moving window. This code uses
-% mscohere, and detrends the data by removing 3rd degree polynomials using
-% the moving window as the segment to detrend over. 
-%
-% this code also accounts for artifacts in the data, removing them
-%
+% this code computes theta coherence over moving windows similar to the BMI
+% does in real time.
+
 % -- INPUTS -- %
 % data: matrix of LFP data (signal on rows, samples on columns)
 % cohInd: you must specify which two signals to compare. For example:
@@ -25,8 +22,8 @@
 %
 % written by John Stout
     
-function [datahigh,datalow,dataex,C,t] = getHighAndLowCohData(data,cohInd,signalInd,CohThresholds,srate,plotfig)
-warning('This function only works if your data variable has samples (voltages) on rows, and observations on columns')
+function [datahigh,datalow,dataex,C,t] = getHighAndLowCohData(data,cohInd,signalInd,cohThresholds,srate,plotfig)
+disp('If you notice signal artifacts in your data, consider ztransforming and removing high coh epochs if extreme voltages are observed or if delta coh > theta coh')
 
 % preparatory steps
 movingwin = [1.25 0.25];
@@ -34,11 +31,18 @@ f = [6:.5:11];
 Fs = srate;
 Nwin=round(Fs*movingwin(1)); % number of samples in window
 Nstep=round(movingwin(2)*Fs); % number of samples to step through
-[N,Ch]=check_consistency(data1,data2);
+%[N,Ch]=check_consistency(data1,data2);
+[row,col] = size(data);
+if row < col
+    data = data';
+    disp('Signal detected on columns. Inverted so signal is on rows')
+end
+[N,~] = size(data);
 winstart=1:Nstep:N-Nwin+1;
 nw=length(winstart);
 
-C = [];
+disp(['LFP channels defined in "signalInd" will be detrended'])
+C = []; datahigh = cell([1 nw]); datalow = cell([1 nw]); dataex = cell([1 nw]);
 for n=1:nw
     
     % get data
@@ -53,9 +57,9 @@ for n=1:nw
     %cdelta = mean(mscohere(datawin(:,cohInd(1)),datawin(:,cohInd(2)),[],[],[1:.5:4],srate));
     
     % identify whether c belongs to high, low, or na
-    if ctheta > CohThresholds(1) % this should be high
+    if ctheta > cohThresholds(1) % this should be high
         datahigh{n} = datawin';
-    elseif ctheta < threshold(2)
+    elseif ctheta < cohThresholds(2)
         datalow{n} = datawin';
     else
         dataex{n} = datawin';
@@ -82,7 +86,7 @@ if contains(plotfig,[{'y'} {'Y'}])
     ylim([0 1]);
     xlimits = xlim;
     ylimits = ylim;
-    line([xlimits(1) xlimits(2)],[CohThresholds(1) CohThresholds(1)],'color','b','LineStyle','--')
-    line([xlimits(1) xlimits(2)],[CohThresholds(2) CohThresholds(2)],'color','r','LineStyle','--')
+    line([xlimits(1) xlimits(2)],[cohThresholds(1) cohThresholds(1)],'color','b','LineStyle','--')
+    line([xlimits(1) xlimits(2)],[cohThresholds(2) cohThresholds(2)],'color','r','LineStyle','--')
     title('Epoched coherence. Lines denote high/low coh threshold')
 end
