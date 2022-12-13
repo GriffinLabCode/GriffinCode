@@ -116,9 +116,10 @@ else
     try
         evEdges  = [TimeStamps(evStarts);TimeStamps(evEnds)]';
         correctedEdges = 0;
-        warning('Problem with contantenating event strings - likely multiple stop/starts')
-        warning('***it is recommended that you enter your own event_boundaries***')
+        %disp('Multiple stop/starts detected, ')
+        %warning('***it is recommended that you enter your own event_boundaries***')
     catch
+        warning('Starting/stopping recordings dont align, treating starts as stops')
         % sometimes in old data, there could be multiple starting recordings but not a clear stopping recording
         if numel(evStarts) ~= numel(evEnds)
             % if there is no true end (eg a "stopping recording")
