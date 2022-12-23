@@ -12,6 +12,8 @@
 %               binary spike data
 % srate: sampling rate (e.g. 2000)
 % thresholds: [h L] where h = high coh value and L = low coh value
+% plotFig: 'y' to plot figure
+% deltaThresh: 'y' if you want to require that theta > delta
 % 
 % --- OUTPUTS --- %
 % datahigh: cell array containing signal data during high coherence events
@@ -22,9 +24,16 @@
 %
 % written by John Stout
     
-function [datahigh,datalow,dataex,C,t] = getHighAndLowCohData(data,cohInd,signalInd,cohThresholds,srate,plotfig)
+function [datahigh,datalow,dataex,C,t] = getHighAndLowCohData(data,cohInd,signalInd,cohThresholds,srate,plotfig,deltaThresh)
 disp('If you notice signal artifacts in your data, consider ztransforming and removing high coh epochs if extreme voltages are observed or if delta coh > theta coh')
 
+if exist('deltaThresh')==0
+    deltaThresh = 'n';
+end
+if exist('plotFig')==0
+    plotFig = 'n';
+end
+    
 % preparatory steps
 movingwin = [1.25 0.25];
 f = [6:.5:11];
@@ -57,14 +66,24 @@ for n=1:nw
     %cdelta = mean(mscohere(datawin(:,cohInd(1)),datawin(:,cohInd(2)),[],[],[1:.5:4],srate));
     
     % identify whether c belongs to high, low, or na
-    if ctheta > cohThresholds(1) % this should be high
-        datahigh{n} = datawin';
-    elseif ctheta < cohThresholds(2)
-        datalow{n} = datawin';
+    if contains(deltaThresh,'y')
+        cdelta = mean(mscohere(datawin(:,cohInd(1)),datawin(:,cohInd(2)),[],[],[1:.5:4],srate));
+        if ctheta > cohThresholds(1) && ctheta > cdelta % this should be high
+            datahigh{n} = datawin';
+        elseif ctheta < cohThresholds(2) && ctheta > cdelta
+            datalow{n} = datawin';
+        else
+            dataex{n} = datawin';
+        end        
     else
-        dataex{n} = datawin';
+        if ctheta > cohThresholds(1) % this should be high
+            datahigh{n} = datawin';
+        elseif ctheta < cohThresholds(2)
+            datalow{n} = datawin';
+        else
+            dataex{n} = datawin';
+        end
     end
-
     % store coherence
     C(n,:)=ctheta;
     %Cd(n,:)=cdelta;

@@ -56,7 +56,7 @@ assert(~info.error,'VAR error(s) found - bailing out');
 % and/or out-of-memory issues.
 if isempty(mvgc_params.fres)
     fres = 2^nextpow2(info.acdec); % based on autocorrelation decay; alternatively, you could try fres = 2^nextpow2(nobs);
-	fprintf('\nfrequency resolution auto-calculated as %d (increments ~ %.2gHz)\n',fres,fs/2/fres);
+	fprintf('\nfrequency resolution auto-calculated as %d (increments ~ %.2gHz)\n',fres,mvgc_params.fs/2/fres);
 end
 if mvgc_params.fres > 20000 % adjust to taste
 	fprintf(2,'\nWARNING: large frequency resolution = %d - may cause computation time/memory usage problems\nAre you sure you wish to continue [y/n]? ',fres);
