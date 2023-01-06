@@ -46,17 +46,18 @@ minDelay = 5;
 if contains(conditionDay,'con')
     prompt     = ['copy/paste the datafolder of the coh testing session with the MATLAB data saved that you want to copy: '];
     datafolder = input(prompt,'s');
+    cd(datafolder);
     prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
     data2load  = input(prompt,'s'); 
     prevTrajData = load(data2load,'traj','delayLenTrial');
-    prevTraj = prevTrajData.traj; 
-    clear traj
+    traj = prevTrajData.traj; 
+    
     % unlike testing, which is a reversal on previous testing, control is a
     % reversal of previous testing and a match to coh day. In other words,
     % if day 1 = L coh, day 2 = R coh, day 3 = L yoked. Match the prev traj
     % from day 1 to current day
-    traj = prevTraj;
-    delayLenTrial = prevTraj.delayLenTrial;
+   
+    delayLenTrial = prevTrajData.delayLenTrial;
     % add delays
     delayDuration = [];
     next = 0;
@@ -625,7 +626,7 @@ else
 end
 
 save_var = strcat(rat_name,'_',task_name,'_',testingInfo,'_',c_save);
-
+save(save_var);
 % what trials to exclude
 clear prompt
 prompt   = 'Enter number of trajectories that you recorded: ';

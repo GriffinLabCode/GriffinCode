@@ -1,0 +1,22 @@
+Instructions for use:
+
+DAILY SEQUENCE:
+a) Run Startup
+
+b) Run Startup_ExperimentControl
+
+EXPERIMENT SEQUENCE:
+1) ONLY DO ONCE: After you randomize and determine which rat will receive wood-left/mesh-right or wood-right/mesh-left,
+you run SCRIPT_generateCDinfo
+
+2) Train rats on forced runs with maze inserts using FR_training
+
+3) Generate baseline using baselineDetect_CD
+
+4) Train rats on CD to 70% for two consecutive days using CD_training data will be saved in CD Habituation
+
+5) run defineThetaFrequency_CD
+
+6) Generate thresholds using defineThetaThresholds_CDoffline
+
+7) Test using CD_testing

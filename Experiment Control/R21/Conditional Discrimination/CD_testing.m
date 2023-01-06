@@ -1,12 +1,5 @@
-%% prep 1 - clear history, workspace, get working directory
-% _____________________________________________________
+%% Step 4
 
-% --- MAKE SURE YOU RUN STARTUP_EXPERIMENTCONTROL --- %
-
-%______________________________________________________
-
-
-% for ref. look at testingCoh_delayedSpatial..._withinSess
 %% 
 % sometimes if the session is not exceeding the time limit of 30 minutes,
 % then the code will continue performing trials, but not save the data.
@@ -22,150 +15,36 @@ addpath(codeDir)
 %% confirm this is the correct code
 prompt = ['What is your rats name? '];
 targetRat = input(prompt,'s');
+
 prompt   = ['Confirm that your rat is ' targetRat,' [y/Y OR n/N] '];
 confirm  = input(prompt,'s');
+
 if ~contains(confirm,[{'y'} {'Y'}])
     error('This code does not match the target rat')
 end
 
-prompt = ['Is today testing or a reset day? enter "E" or "R" '];
-testingType = input(prompt,'s');
-prompt     = ['copy/paste the datafolder of the previous days testing session with the MATLAB data saved: '];
-datafolder = input(prompt,'s');
-prompt     = ['copy/paste the title of the previous days MATLAB data saved out: '];
-data2load  = input(prompt,'s'); 
-cd(datafolder);
-prevTrajData = load(data2load,'traj');
-prevTraj = prevTrajData.traj; 
-clear traj
+prompt = ['What day of CD TESTING is this? '];
+CDday  = str2num(input(prompt,'s'));
 
-% between session reversal
-if contains(prevTraj,'R')
-    traj='L';
-elseif contains(prevTraj,'L')
-    traj='R';
-end   
-
-% randomize MW and BW, then use previous days to offset
-% randomize MW and BW, then use previous days to offset
-numTrials = 12*20;
-maxDelay = 30;
-minDelay = 5;
-rng('shuffle')
-delayLenTrial = [];
-next = 0;
-while next == 0
-
-    if numel(delayLenTrial) >= numTrials
-        next = 1;
-    else
-        shortDuration  = randsample(minDelay:15,6,'true');
-        longDuration   = randsample(16:maxDelay,6,'true');
-
-        % used for troubleshooting ->
-        %shortDuration  = randsample(1:5,5,'true');
-        %longDuration   = randsample(6:10,5,'true');        
-
-        allDurations   = [shortDuration longDuration];
-        interleaved    = allDurations(randperm(length(allDurations)));
-        delayLenTrial = [delayLenTrial interleaved];
-    end
-end   
-
-% interface with user
-prompt     = ['Is today day 1 of SRT training? [y/n] '];
-trainingDay = input(prompt,'s');
-
-% half trials high coh, half control
-indicatorOUT = [];
-for i = 1:12:numTrials
-    delays2pull = delayLenTrial(i:i+11);
-    numExp = length(delays2pull)/3;
-    numCon = length(delays2pull)/3;
-    totalN = numExp+numCon;
-
-    % high and low must happen before yoked
-    next = 0;
-    while next == 0
-        idx = randperm(12,totalN);
-        idx1 = randsample(idx,numExp);
-        idx2 = randsample(idx,numCon);
-        if idx1 < idx2 & numel(unique([idx1,idx2]))==8
-            next = 1;
-        end
-    end
-
-    % first is always high, second low, third, con h, 4 con L
-    indicator = cellstr(repmat('Norm',[12 1]));
-
-    % now replace
-    indicator(idx1) = {'high'};
-    indicator(idx2) = {'contH'};
-
-    % store indicator variable
-    indicatorOUT = [indicatorOUT;indicator];
-
-end     
+disp(['Getting LFP names for ' targetRat])
+cd(['X:\01.Experiments\R21\',targetRat,'\CD\baseline']);
+load('baselineData')
 
 % load in thresholds
-disp('Getting rat-specific data')
-cd(['X:\01.Experiments\R21\',targetRat,'\thresholds']);
-load('thresholds');
-cd(['X:\01.Experiments\R21\',targetRat,'\baseline']);
-load('baselineData');
-cd(['X:\01.Experiments\R21\',targetRat]);
-%load('SRT_testingDays')
-%testingDay = testingConditions(dayTesting);
+disp('Getting threshold data')
+cd(['X:\01.Experiments\R21\',targetRat,'\CD\thresholds']);
+load('thresholdData');
 
 % interface with cheetah setup
 threshold.coh_duration = 0.5;
-[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
+[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);   
+% do this twice to ensure reliable streaming
 pause(5);
 [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
 
 if srate > 2035 || srate < 2000
     error('Sampling rate is not correct')
 end
-
-%% auto maze prep.
-
-% -- automaze set up -- %
-
-% check port
-if exist("s") == 0
-    % connect to the serial port making an object
-    s = serialport("COM6",19200);
-end
-
-% load in door functions
-doorFuns = DoorActions;
-
-% test reward wells
-rewFuns = RewardActions;
-
-% get IR information
-irBreakNames = irBreakLabels;
-
-% for arduino
-if exist("a") == 0
-    % connect arduino
-    a = arduino('COM5','Uno','Libraries','Adafruit\MotorShieldV2');
-end
-
-% digital ports for reverse maze
-irArduino.Delay       = 'D8';
-irArduino.rGoalArm    = 'D10';
-irArduino.lGoalArm    = 'D12';
-irArduino.rGoalZone   = 'D7';
-irArduino.lGoalZone   = 'D2';
-irArduino.choicePoint = 'D6';
-
-%{
-for i = 1:10000000
-    readDigitalPin(a,irArduino.choicePoint)
-end
-%}
-%writeline(s,doorFuns.tRightClose)
 
 %% coherence and real-time LFP extraction parameters
 
@@ -206,32 +85,203 @@ noiseThreshold = 4;
 % define how much noise you're willing to accept
 noisePercent = 1; % 5 percent
 
+%% prep 2 - define parameters for the session
+
+% how long should the session be?
+session_length = 30; % minutes
+
+% pellet count and machine timeout
+pellet_count = 1;
+timeout_len  = 60*15;
+
+% define a looping time - this is in minutes
+amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for initial pause of 10sec .25; % minutes - note that this isn't perfect, but its a few seconds behind dependending on the length you set. The lag time changes incrementally because there is a 10-20ms processing time that adds up
+
+%% experiment design prep.
+
+% define number of trials
+numTrials = 100; %24;
+%umTrials = 24;
+
+%% randomize delay durations
+maxDelay = 20;
+minDelay = 5;
+delayDur = minDelay:1:maxDelay; % 5-45 seconds
+rng('shuffle')
+
+delayLenTrial = [];
+next = 0;
+while next == 0
+
+    if numel(delayLenTrial) >= 100
+        next = 1;
+    else
+        shortDuration  = randsample(minDelay:maxDelay/2,5,'true');
+        longDuration   = randsample((maxDelay/2)+1:maxDelay,5,'true');
+        
+        % used for troubleshooting ->
+        %shortDuration  = randsample(1:5,5,'true');
+        %longDuration   = randsample(6:10,5,'true');        
+
+        allDurations   = [shortDuration longDuration];
+        interleaved    = allDurations(randperm(length(allDurations)));
+        delayLenTrial = [delayLenTrial interleaved];
+    end
+end
+
+%% auto maze prep.
+
+% -- automaze set up -- %
+
+% check port
+if exist("s") == 0
+    % connect to the serial port making an object
+    s = serialport("COM6",19200);
+end
+
+% load in door functions
+doorFuns = DoorActions;
+
+% test reward wells
+rewFuns = RewardActions;
+
+% get IR information
+irBreakNames = irBreakLabels;
+
+% for arduino
+if exist("a") == 0
+    % connect arduino
+    a = arduino('COM5','Uno','Libraries','Adafruit\MotorShieldV2');
+end
+
+% digital ports for reverse maze
+irArduino.Delay       = 'D8';
+irArduino.rGoalArm    = 'D10';
+irArduino.lGoalArm    = 'D12';
+irArduino.rGoalZone   = 'D7';
+irArduino.lGoalZone   = 'D2';
+irArduino.choicePoint = 'D6';
+
+% define LEDs for left/right/wood/mesh combinations
+ledArduino.left  = 'D3';
+ledArduino.right = 'D13';
+ledArduino.wood  = 'D11';
+ledArduino.mesh  = 'D5';
+ON = 1; OFF = 0;
+
+%writeline(s,doorFuns.closeAll);
+%{
+for i = 1:10000000
+    readDigitalPin(a,irArduino.Delay)
+end
+%}
+
 %% clean the stored data just in case IR beams were broken
 s.Timeout = 1; % 1 second timeout
+next = 0; % set while loop variable
+while next == 0
+   irTemp = read(s,4,"uint8"); % look for stored data
+   if isempty(irTemp) == 1     % if there are no stored ir beam breaks
+       next = 1;               % break out of the while loop
+       disp('IR record empty - ignore the warning')
+   else
+       disp('IR record not empty')
+       disp(irTemp)
+   end
+end
 
-% close all maze doors - this gives problems with solenoid box
-pause(0.25)
-writeline(s,[doorFuns.centralClose doorFuns.sbLeftClose ...
-    doorFuns.sbRightClose doorFuns.tLeftClose doorFuns.tRightClose]);
+%% trial set up - make sure that there are no more than 3 of each trial type
+disp('Generating trial distribution')
+left  = repmat('L',[numTrials/2 1]);
+right = repmat('R',[numTrials/2 1]);
+both  = [left; right];
+both_shuffled = both;
+for i = 1:1000
+    % notice how it rewrites the both_shuffled variable
+    both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
+end
+trajectory = cellstr(both_shuffled);
 
-pause(0.25)
-writeline(s,[doorFuns.gzLeftClose doorFuns.gzRightClose])
+disp('Ensuring that there are no more than 3 of each trial type')
+next = 0;
+while next == 0
+    for i = 1:length(trajectory)-3
+        if trajectory{i}==trajectory{i+1} && trajectory{i}==trajectory{i+2} && trajectory{i}==trajectory{i+3} && trajectory{i}==trajectory{i+3}
+            % try a new shuffle
+            both_shuffled = randsample(trajectory,numTrials,false);
+            trajectory = cellstr(both_shuffled);           
+            break
+        end
+        if i == length(trajectory)-3
+            next = 1;
+        end
+    end
+end
+   
+% add 1 to trajectory - the rat won't run on this trial
+trajectory{end+1} = 'E';
 
-%% interface with cheetah
-% downloaded location of github code - automate for github
-github_download_directory = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21';
-addpath(github_download_directory);
+%% delay duration
+maxDelay = 20; % changed bc it takes time to flip the inserts
+minDelay = 5; % 
+delayDur = minDelay:1:maxDelay; % 5-45 seconds
+rng('shuffle')
 
-% connect to netcom - automate this for github
-pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
-serverName = '192.168.3.100';
-connect2netcom(pathName,serverName)
+delayLenTrial = [];
+next = 0;
+while next == 0
+    if numel(delayLenTrial) >= numTrials
+        next = 1;
+    else
+        shortDuration  = randsample(minDelay:maxDelay/2,5,'true');
+        longDuration   = randsample((maxDelay/2)+1:maxDelay,5,'true');
+        allDurations   = [shortDuration longDuration];
+        interleaved    = allDurations(randperm(length(allDurations)));
+        delayLenTrial = [delayLenTrial interleaved];
+    end
+end
+% the actual distribution of delays will be numtrial-1 because the first
+% trial starts, then delays follow. On CD, there are 41 choices, but 40
+% delays. On DA, there are 40 choices that could result in an error as the
+% first trial is always rewarded
+%delayLenTrial = delayLenTrial(1:numTrials-1);
 
-% open a stream to interface with Nlx objects - this is required
-[succeeded, cheetahObjects, cheetahTypes] = NlxGetDASObjectsAndTypes; % gets cheetah objects and types
+% designate what 20% looks like
+indicatorOUT = [];
+for i = 1:10:100
+    delays2pull = delayLenTrial(i:i+9);
+    numExp = length(delays2pull)*.20;
+    numCon = length(delays2pull)*.20;
+    totalN = numExp+numCon;
+    
+    % randomly select which delay will be high and low
+    %N1=1; N2=10;   % range desired
+    %p=randperm(N1:N2);
+        
+    % high and low must happen before yoked
+    next = 0;
+    while next == 0
+        idx = randperm(10,totalN);
+        if idx(1) < idx(3) && idx(1) < idx(4) && idx(2) < idx(3) && idx(2) < idx(4)
+            next = 1;
+        end
+    end
+    
+    % first is always high, second low, third, con h, 4 con L
+    indicator = cellstr(repmat('Norm',[10 1]));
+    
+    % now replace
+    indicator{idx(1)} = 'high';
+    indicator{idx(2)} = 'low';
+    indicator{idx(3)} = 'contH';
+    indicator{idx(4)} = 'contL';
+    
+    % store indicator variable
+    indicatorOUT = [indicatorOUT;indicator];
+end  
+
 
 %% start recording - make a noise when recording begins
-
 % stream once more to ensure stream doesn't close
 clearStream(LFP1name,LFP2name);
 pause(windowDuration)
@@ -247,14 +297,14 @@ pause(5)
 open_t  = [doorFuns.tLeftOpen doorFuns.tRightOpen];
 close_t = [doorFuns.tLeftClose doorFuns.tRightClose];
 maze_prep = [doorFuns.sbLeftOpen doorFuns.sbRightOpen ...
-    doorFuns.tRightClose doorFuns.tLeftClose doorFuns.centralOpen ...
+    doorFuns.tRightClose doorFuns.tLeftClose doorFuns.centralClose ...
     doorFuns.gzLeftClose doorFuns.gzRightClose];
+writeline(s,maze_prep)
 
 % mark session start
 sStart = [];
 sStart = tic;
 sessEnd = 0;
-session_length = 25; % minutes
 
 c = clock;
 session_start = str2num(strcat(num2str(c(4)),num2str(c(5))));
@@ -267,39 +317,83 @@ writeline(s,doorFuns.centralOpen);
 % neuralynx timestamp command
 [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "TrialStart" 700 2');
  
-% make this array ready to track amount of time spent at choice
-time2choice = []; numRev = traj; detected = [];
-coh = []; dataClean = []; dataDirty = []; % important to initiate these variables
-yokH = []; yokL = []; critMet = 0; trialMet = []; endSess = 0;
-for triali = 1:numTrials    
-    
-    disp(['Rewarded Trajectory: ',traj])
-    trajRewarded{triali} = traj;
+% tell the experimenter which trial is start
+if condID == 0
+    if trajectory{1} == 'L'
+        writeDigitalPin(a,ledArduino.left,ON);
+        writeDigitalPin(a,ledArduino.wood,ON);
+    elseif trajectory{1} == 'R'
+        writeDigitalPin(a,ledArduino.right,ON);
+        writeDigitalPin(a,ledArduino.mesh,ON);
+    end
+elseif condID == 1
+    if trajectory{1} == 'L'
+        writeDigitalPin(a,ledArduino.left,ON);
+        writeDigitalPin(a,ledArduino.mesh,ON);
+    elseif trajectory{1} == 'R'
+        writeDigitalPin(a,ledArduino.right,ON);
+        writeDigitalPin(a,ledArduino.wood,ON);
+    end
+end
 
-    % break out when the rat has performed 10 trials past criterion
+% run while loop to make sure inserts were flipped - two while loops for
+% two floor inserts
+next = 0;
+while next == 0
+    if readDigitalPin(a,irArduino.rGoalArm)==0 || readDigitalPin(a,irArduino.lGoalArm)==0
+        pause(1);
+        next = 1;
+    end
+end
+next = 0;
+while next == 0
+    if readDigitalPin(a,irArduino.choicePoint)==0 
+        pause(5);
+        next = 1;
+    end
+end
+% turn everything off
+writeDigitalPin(a,ledArduino.left,OFF);
+writeDigitalPin(a,ledArduino.mesh,OFF);
+writeDigitalPin(a,ledArduino.right,OFF);
+writeDigitalPin(a,ledArduino.wood,OFF);
+
+% open central stem door to start session
+%writeline(s,doorFuns.centralOpen);
+
+% make this array ready to track amount of time spent at choice
+time2choice = []; detected = [];
+coh = []; dataClean = []; dataDirty = []; % important to initiate these variables
+yokH = []; yokL = [];
+for triali = 1:numTrials
+
+    % start out with this as a way to make sure you don't exceed 30
+    % minutes of the session
     if toc(sStart)/60 > session_length
-        break
+        %writeline(s,doorFuns.closeAll)
+        %sessEnd = 1;            
+        break % break out of for loop
+    else        
+        % set central door timeout value
+        s.Timeout = .05; % 5 minutes before matlab stops looking for an IR break    
+
+        % first trial - set up the maze doors appropriately
+        writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);
     end
 
-    % set central door timeout value
-    s.Timeout = .05; % 5 minutes before matlab stops looking for an IR break    
-
-    % first trial - set up the maze doors appropriately
-    writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);
+    % neuralynx timestamp command
+    if triali > 1
+        [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayExit" 102 2'); 
+    end
     
     % set irTemp to empty matrix
     irTemp = []; 
-
-    % t-beam
-    
-    %disp('Tracking choice-time')
-    disp('Choice-entry')
-    tEntry = [];
-    tEntry = tic;
     
     next = 0;
     while next == 0
         if readDigitalPin(a,irArduino.choicePoint) == 0   % if central beam is broken
+            tEntry = [];
+            tEntry = tic;            
             % neuralynx timestamp command
             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPentry" 202 2');
             next = 1; % break out of the loop
@@ -310,7 +404,6 @@ for triali = 1:numTrials
     next = 0;
     while next == 0
         if readDigitalPin(a,irArduino.rGoalArm)==0
-            disp(['Chosen Trajectory: L'])
 
             % neuralynx timestamp command
             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPexit" 202 2');
@@ -319,27 +412,29 @@ for triali = 1:numTrials
             
             % track the trajectory_text
             time2choice(triali) = toc(tEntry); % amount of time it took to make a decision
-            trajectory_text{triali} = 'L';
-            trajectory(triali)      = 0;            
+            trajectory_taken{triali} = 'L';
+            trajectory(triali)       = 0;            
             
             %pause(1);
             % Reward zone and eating
             % send to netcom 
-            if contains(traj,'L')
-                writeline(s,rewFuns.right)
+            if triali > 1
+                if trajectory_taken{triali} == 'L' && trajectory_taken{triali} == trajectory{triali}
+                    % only reward on an alternation
+                    writeline(s,rewFuns.right)                   
+                end
+            elseif triali == 1
+                if trajectory_taken{triali} == 'L' && trajectory_taken{triali} == trajectory{triali}
+                    % only reward on an alternation
+                    writeline(s,rewFuns.right)                   
+                end                    
             end
-            
             pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
-            %pause(5)
-            %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
-
-            % break while loop
+            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.tLeftClose doorFuns.tRightOpen doorFuns.centralClose]);
             next = 1;
 
         elseif readDigitalPin(a,irArduino.lGoalArm)==0
-             disp(['Chosen Trajectory: R'])
-
+            
             % neuralynx timestamp command
             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CPexit" 202 2');
             % neuralynx timestamp command
@@ -350,54 +445,25 @@ for triali = 1:numTrials
             trajectory_text{triali} = 'R';
             trajectory(triali)      = 1;            
             
-            %pause(1);
             % Reward zone and eating
             % send to netcom 
-            if contains(traj,'R')
-                writeline(s,rewFuns.left)
-            end             
+            if triali > 1
+                if trajectory_taken{triali} == 'R' && trajectory_taken{triali} == trajectory{triali}
+                    % only reward on an alternation
+                    writeline(s,rewFuns.left)                   
+                end
+            elseif triali == 1
+                if trajectory_taken{triali} == 'R' && trajectory_taken{triali} == trajectory{triali}
+                    % only reward on an alternation
+                    writeline(s,rewFuns.left)                   
+                end                    
+            end                    
 
             pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
-           % pause(5)
-            %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
-
-            % break out of while loop
+            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.tRightClose doorFuns.tLeftOpen doorFuns.centralClose]);
             next = 1;
         end
-    end 
-    
-    % identify choice accuracy on last 10 trials
-    if length(trajectory_text) >= 12
-        if contains(traj,'R')
-            % temp var
-            tempVar = []; propCorrect = [];
-            tempVar = trajectory_text(end-11:end);
-            % find proportion of correct choices
-            propCorrect = nanmean(contains(tempVar,'R'));
-        elseif contains(traj,'L')
-            % temp var
-            tempVar = []; propCorrect = [];
-            tempVar = trajectory_text(end-11:end);
-            % find proportion of correct choices
-            propCorrect = nanmean(contains(tempVar,'L'));
-        end
-        
-        % once choice accuracy is reached per 10 trials, switch rewarded
-        % arm - reversalTraj tells the user which trajectory the reversal
-        % occured on
-        
-        % if reversaltraj is trajectory 15, it means that trajectory 15 was
-        % the last rewarded trajectory for say, right sequences. And that
-        % trajectory 16 will only be rewarded for left turns
-        if propCorrect >= 0.8
-            endSess = 1;
-        else
-            %reversalTraj(triali) = 0;
-            endSess = 0;
-        end
-        disp(['Proportion correct: ',num2str(propCorrect)])
-    end
+    end     
 
     % return arm
     next = 0;
@@ -407,19 +473,11 @@ for triali = 1:numTrials
             
             % neuralynx timestamp command
             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "ReturnRight" 422 2');
-            
-            % close both for audio symmetry and do opposite doors first
-            % with a slightly longer delay so the rats can have a fraction
-            % of time longer to enter
             %pause(0.5)
             pause(0.5)
             writeline(s,[doorFuns.gzRightClose])
             pause(0.25)
             writeline(s,[doorFuns.gzLeftClose])
-            pause(0.25)
-            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
-            pause(0.25)
-            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]); 
             
             next = 1;
             
@@ -432,17 +490,12 @@ for triali = 1:numTrials
             pause(0.5)
             writeline(s,[doorFuns.gzLeftClose])
             pause(0.25)
-            writeline(s,[doorFuns.gzRightClose])
-            pause(0.25)
-            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);
-            pause(0.25)
-            writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightOpen]);            
+            writeline(s,[doorFuns.gzRightClose])          
 
             next = 1;
         end
     end
-    writeline(s,doorFuns.centralClose);  
-   
+
     next = 0;
     while next == 0   
         % track choice entry
@@ -451,16 +504,19 @@ for triali = 1:numTrials
             % neuralynx timestamp command
             [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEntry" 102 2');  
             writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
+            %tEntry = [];
+            %tEntry = tic;
             next = 1;
+
         end
     end
-   
-    % break out when the rat has performed 10 trials past criterion
-    if endSess == 1
-        break
-    end  
-    
-    % the meat
+
+    % break out of the session if youre out of time
+    if triali == numTrials || toc(sStart)/60 > session_length
+        break % break out of for loop
+    end       
+
+    % open these for storing
     if contains(indicatorOUT{triali},'Norm') || contains(indicatorOUT{triali},'NormHighFail') || contains(indicatorOUT{triali},'NormLowFail')
         disp(['Normal delay of ',num2str(delayLenTrial(triali))])
         pause(delayLenTrial(triali));
@@ -556,7 +612,10 @@ for triali = 1:numTrials
                 dataWin    = dataArray;
             end                
         end
-
+        
+        %yokH_store = yokH;
+        %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
+        
         % IMPORTANT: Storing this for later
         cohEnd = toc(dStart);
         disp(['Coh detect high end at ', num2str(cohEnd)])
@@ -596,7 +655,6 @@ for triali = 1:numTrials
                 % now add and remove data to move the window
                 dataWin    = dataArray;
             end
-
             try
                 % 3) pull in 0.25 seconds of data
                 % pull in data at shorter resolution   
@@ -732,8 +790,8 @@ for triali = 1:numTrials
             pause(delayLenTrial(triali));
             indicatorOUT{triali} = 'yokeH_FAIL';          
         end        
-    end 
-    
+    end    
+       
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 
@@ -746,22 +804,143 @@ session_time = session_time_update-session_start;
 endTime = toc(sStart)/60;
 
 %% compute accuracy array and create some figures
-for i = 1:length(trajRewarded)
-    if trajRewarded{i} == trajectory_text{i}
-        accuracy(i) = 0;
+accuracy = [];
+accuracy_text = cell(1, length(trajectory_text)-1);
+for triali = 1:length(trajectory_text)-1
+    if trajectory_text{triali} ~= trajectory_text{triali+1}
+        accuracy(triali) = 0; % correct trial
+        accuracy_text{triali} = 'correct';
+    elseif trajectory_text{triali} == trajectory_text{triali+1}
+        accuracy(triali) = 1; % incorrect trial
+        accuracy_text{triali} = 'incorrect';
+    end
+end
+percentAccurate = ((numel(find(accuracy==0)))/(numel(accuracy)))*100;
+
+% perseveration index
+for i = 2:length(trajectory_text)-1
+    % if the previous trajectory equals the future trajectory and the
+    % previous trajectory is the current trajectory and the current trajectory is the future trajectory
+    if (trajectory(i-1) == trajectory(i+1))  && (trajectory(i-1) == trajectory(i)) && (trajectory(i) == trajectory(i+1))
+        persev(i-1) = 1;
     else
-        accuracy(i) = 1;
+        persev(i-1) = 0;
     end
 end
-movingAcc=[]; time2ChoiceMov=[];
-looper = 1:length(trajRewarded);
-for i = 1:length(looper)
+
+% perseveration index - because of indexing (consideration of 3 consecutive
+% turns = perseveration), we have to do numTrials-2
+percentPerseveration = (sum(persev)/(numTrials-2))*100;
+
+% turn bias
+rTurn = numel(find(contains(trajectory_text,'R')==1));
+lTurn = numel(find(contains(trajectory_text,'L')==1));
+percentBias = ((abs(rTurn-lTurn))/(rTurn+lTurn))*100;
+disp(['Rat performed at ', num2str(percentAccurate), '%', ' perseverated ', num2str(percentPerseveration), '%', ' with a turn bias of ',num2str(percentBias),'%'])
+
+% moving window method for time2choice
+winLength = 8; % trials
+winStep   = 1;
+avg_t = []; sem_t = [];
+for i = 1:winStep:length(time2choice)
+    if i == 1      
+        % define a starter variable that will be saved for each loop and
+        % modified each time
+        starter(i) = 1;
+        ender(i)   = winLength;
+
+        % get data        
+        avg_t = [avg_t nanmean(time2choice(starter(i):ender(i)))];
+        sem_t = [sem_t stderr(time2choice(starter(i):ender(i)),1)];
+        
+		% -- enter your code here and save per each loop -- %
+        
+    else
+        starter(i) = starter(i-1)+(winStep);
+        ender(i)   = starter(i-1)+(winLength);
+
+        % in the case where you've run out of data, break out of the loop
+        if ender(i) > length(time2choice)
+            starter(i) = [];
+            ender(i)   = [];
+            break
+        end
+        
+        % get data        
+        avg_t = [avg_t nanmean(time2choice(starter(i):ender(i)))];
+        sem_t = [sem_t stderr(time2choice(starter(i):ender(i)),1)];        
+           
+		% -- enter your code here and save per each loop -- %
+        
+    end
+
+end
+
+% moving window method for choice accuracy
+avg_c = []; sem_c = [];
+for i = 1:winStep:length(accuracy)
     try
-        movingAcc(i) = 1-nanmean(accuracy(looper(i):looper(i)+3));
-        time2ChoiceMov(i) = nanmean(time2choice(looper(i):looper(i)+3));
-    catch
+        if i == 1      
+            % define a starter variable that will be saved for each loop and
+            % modified each time
+            starter(i) = 1;
+            ender(i)   = winLength;
+
+            % get data        
+            choiceAcc_temp = ((numel(find(accuracy(starter(i):ender(i))==0)))/winLength)*100;
+            avg_c = [avg_c choiceAcc_temp];
+
+            % -- enter your code here and save per each loop -- %
+
+        else
+            starter(i) = starter(i-1)+(winStep);
+            ender(i)   = starter(i-1)+(winLength);
+
+            % in the case where you've run out of data, break out of the loop
+            if ender(i) > length(time2choice)
+                starter(i) = [];
+                ender(i)   = [];
+                break
+            end
+
+            % get data        
+            choiceAcc_temp = ((numel(find(accuracy(starter(i):ender(i))==0)))/winLength)*100;
+            avg_c = [avg_c choiceAcc_temp];
+
+            % -- enter your code here and save per each loop -- %
+
+        end
     end
 end
+
+figure('color','w')
+subplot(3,3,1)
+    bar(percentAccurate,'FaceColor',[.6 0 1])
+    box off;
+    ylim([0 100]); ylabel('Choice Accuracy')
+subplot(3,3,2)
+    bar(percentPerseveration,'FaceColor','r')
+    box off;
+    ylabel('% Perseveration')
+subplot(3,3,3)
+    bar(percentBias,'FaceColor',[1 0 .5])
+    box off;
+    ylabel('% Turn Bias')
+subplot(3,1,2)
+    plot(1:length(avg_c),avg_c,'Color',[.6 0 1],'LineWidth',2)
+    ylabel('Choice Accuracy')
+    xlabel(['Trial Moving Window (' num2str(winLength) ' trials in increments of ' num2str(winStep) ' trial'])
+    box off;       
+subplot(3,1,3)
+    shadedErrorBar(1:length(avg_t),avg_t,sem_t,'k',1)
+    ylabel('Time Spent at CP (sec)')
+    xlabel(['Trial Moving Window (' num2str(winLength) ' trials in increments of ' num2str(winStep) ' trial'])
+    box off;
+
+figure('Color','w');
+scatter(1:length(time2choice),time2choice)
+lsline
+[r,p] = corrcoef(1:length(time2choice),time2choice);
 
 %% ending noise - a fitting song to end the session
 load handel.mat;
@@ -782,94 +961,65 @@ task_name = input(prompt,'s');
 prompt   = 'Enter notes for the session ';
 info     = input(prompt,'s');
 
-if contains(testingType,[{'E'} {'e'}])
-    testingInfo = 'experimental';
-else 
-    testingInfo = 'control';
+prompt = 'Did the EIB come off the rats head during any delay trials? ';
+eibOFF  = input(prompt,'s');
+if contains(eibOFF,[{'y'} {'Y'}])
+    eibSave = 'EIBfellOFF_trialsRemoved';
+else
+    eibSave = 'allTrialsGood';
 end
 
-save_var = strcat(rat_name,'_',task_name,'_',testingInfo,'_',c_save);
+prompt = 'Did the EIB come off at any OTHER point during the session? ';
+eibOFF_session = input(prompt,'s');
+
+%% VISUALIZE
+clear plot
+if contains(eibOFF,[{'y'} {'Y'}])
+    for i = 1:length(dataStored)
+        disp('If there are any flat lined data, the EIB came off')
+        dataPlot = horzcat(dataStored{i}{:});
+        figure('color','w');
+        subplot 211;
+        plot(dataPlot(1,:));
+        subplot 212;
+        plot(dataPlot(2,:));
+        prompt   = 'Keep? ';
+        keepTrial = input(prompt,'s'); 
+        if contains(keepTrial,[{'n'} {'N'}])
+            trial2rem(i)=1;
+        else
+            trial2rem(i)=0;
+        end
+        
+        close;
+    end
+
+    % save og data just to have it
+    dataOG.dataZStored = dataZStored;
+    dataOG.dataStored  = dataStored;
+    dataOG.coh         = coh;
+    dataOG.delayLenTrial = delayLenTrial;
+    
+    % remove trials where eib came off
+    dataZStored(logical(trial2rem))=[];
+    dataStored(logical(trial2rem))=[];
+    coh(logical(trial2rem))=[];
+
+end
+
+save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save);
+
+place2store = ['X:\01.Experiments\R21\',targetRat];
+cd(place2store);
+save(save_var);
 
 % what trials to exclude
 clear prompt
-prompt   = 'Enter number of trajectories that you recorded: ';
-expTotalTraj = str2num(input(prompt,'s'));
-if expTotalTraj ~= numel(accuracy)
-    error('You have entered the wrong number of trials')
-end
-clear prompt
-prompt   = 'Enter trajectories to exclude. For example: 1 4 5 20 45: ';
+prompt   = 'Enter trajectories to exclude ';
 remTraj  = str2num(input(prompt,'s'));
 
-% clean up variables
-accuracy2use = accuracy;
-accuracy2use(1)=[]; % remove first trajectory bc nothing triggered this trial to start
-
-% to account for traj1 removal, subtract 1 from remTraj
-remTrajFix = remTraj-1;
-
-% correct the trialType variable
-trialType = indicatorOUT;
-trialType(numel(accuracy2use)+1:end)=[];
-
-% correct delay length
-delayLength = delayLenTrial;
-delayLength(numel(accuracy2use)+1:end)=[];
-
-% remove trajectories
-accuracy2use(remTrajFix)=[];
-trialType(remTrajFix)=[];
-delayLength(remTrajFix)=[];
-
-% split data
-idxHmet = find(contains(trialType,'highMET'));
-idxYmet = find(contains(trialType,'yokeH_MET'));
-
-% get accuracy
-accuracyHigh     = accuracy2use(idxHmet);
-accuracyYokeHigh = accuracy2use(idxYmet);
-% get trial type and delay length
-ttHigh     = trialType(idxHmet);
-ttYokeHigh = trialType(idxYmet);
-dlHigh     = delayLength(idxHmet);
-dlYokeHigh = delayLength(idxYmet);
-% identify mismatches in delay duration
-remData = [];
-for i = 1:length(dlYokeHigh)
-    idxFind = [];
-    idxFind = find(dlHigh == dlYokeHigh(i));
-    if isempty(idxFind)
-        remData(i)=1;
-    else 
-        remData(i)=0;
-    end
-end
-dlYokeHigh(logical(remData))=[];
-accuracyYokeHigh(logical(remData))=[];
-ttYokeHigh(logical(remData))=[];
-idxYmet(logical(remData))=[];
-remData1 = remData;
-
-remData = [];
-for i = 1:length(dlHigh)
-    idxFind = [];
-    idxFind = find(dlYokeHigh == dlHigh(i));
-    if isempty(idxFind)
-        remData(i)=1;
-    else 
-        remData(i)=0;
-    end
-end
-dlHigh(logical(remData))=[];
-accuracyHigh(logical(remData))=[];
-ttHigh(logical(remData))=[];
-idxHmet(logical(remData))=[];
-remData2 = remData;
-remAll = horzcat(remData1, remData2);
-
-place2store = ['X:\01.Experiments\R21\',targetRat,'\SRT\Testing'];
-cd(place2store);
-save(save_var);
+disp('Saving excluded trajectories')
+save('removeTrajectories','remTraj');
 
 %% clean maze
 disp('Please visualize the data')
@@ -900,6 +1050,19 @@ while next == 0
         disp('Clean the maze!!!')
     end
 end
+
+
+% look at data
+dataMat1 = horzcat(dataStored{:});
+dataMat2 = horzcat(dataMat1{:});
+
+figure('color','w');
+subplot 211
+plot(dataMat2(1,:),'k','LineWidth',0.5)
+title('LFP1 - expect signal spikes, but not complete contamination')
+subplot 212
+plot(dataMat2(2,:),'b','LineWidth',0.5)
+title('LFP2 - expect signal spikes, but not complete contamination')
 
 
 
