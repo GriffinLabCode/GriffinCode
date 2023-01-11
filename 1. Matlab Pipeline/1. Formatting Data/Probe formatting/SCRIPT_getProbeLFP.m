@@ -1,57 +1,69 @@
-%% SCRIPT avg csc
-%  the buzsaki 64chL probe has 8 shanks, each with 2 arrays along the edge
-%  of the probe. This code gets those arrays into variables for processing
+%% SCRIPT_getProbeLFP
+%
+% this script is meant as a preprocessing step to remove any signals that
+% look bad
+disp('This code is meant to format your probe signals and should only be used if each shank has equal number of electrodes...')
+warning('If your shank does NOT have equal number of electrodes per shank, do not use this code!!!')
+clear; close all;
 
-disp('This code uses buzsaki64L probes and calculates LFP averages over arrays')
-clear;
-numCSC = [1:4:64]; % 64ch - 16 tts
-for i = 1:length(numCSC)
-    try
-        csc1 = ['CSC',num2str(numCSC(i))];
-        csc2 = ['CSC',num2str(numCSC(i)+1)];
-        csc3 = ['CSC',num2str(numCSC(i)+2)];
-        csc4 = ['CSC',num2str(numCSC(i)+3)];
-        lfp = [];
-        try [lfp{1}] = getLFPdata(pwd,csc1,'Events'); catch; lfp1 = []; end
-        try [lfp{2}] = getLFPdata(pwd,csc2,'Events'); catch; lfp2 = []; end
-        try [lfp{3}] = getLFPdata(pwd,csc3,'Events'); catch; lfp3 = []; end
-        try [lfp{4},times,srate(i)] = getLFPdata(pwd,csc4,'Events'); catch; lfp4 = []; end
-        % now visually inspect and discard any arrays that are bad
-        figure('color','w')
-        for lfpi = 1:length(lfp) 
-            subplot(length(lfp),1,lfpi)
-            plot(lfp{lfpi})
-            title(['signal',num2str(lfpi)])
-            axis tight;
+% interface with user - want to know how many electrode surfaces are on
+% each shank
+prompt = 'How many electrodes on on each shank? ';
+elecPerShank = num2str(input(prompt,'s'));
+
+% get signal
+numCSC = 1:8:64; % Each shank has 8 recordings surfaces
+for shanki = 1:length(numCSC)
+    % define shank
+    cscNames = numCSC(shanki):numCSC(shanki)+7;
+    % loop over the electrodes on each shank to load them into matlab
+    for ei = 1:length(cscNames)
+        cscName = ['CSC',num2str(cscNames(ei))];
+        try
+            [lfp{shanki,ei},times,srate(shanki,ei)] = getLFPdata(pwd,cscName,'Events');
+        catch
+            disp(['Missing ',cscName])
+            lfp{shanki,ei} = NaN;
         end
-        prompt = ['Denote if any signals should be eliminated (IGNORE EMPTY ARRAYS) '];
-        lfpErase = [];
-        lfpErase = str2num(input(prompt,'s'));
-        lfp(lfpErase)=[];
-        % remove wires with no signal
-        lfp = emptyCellErase(lfp);
-        % concatenate to avg over probe shanks
-        lfpArray{i} = vertcat(lfp{:});
-        disp(['Finished creating LFP variable on array ',num2str(i)])
-        %save(['shankLFP',num2str(i)]);
-    catch
-        disp(['Could not handle shank',num2str(i)])
+    end
+    disp(['Loaded and converted signals from shank #',num2str(shanki)])
+end
+
+% the output "lfp" has shanks on rows, and electrodes on columns
+numShanks     = size(lfp,1);
+numElectrodes = size(lfp,2);
+figure('color','w')
+looper = 0;
+for shanki = 1:numShanks
+    for ei = 1:numElectrodes
+        looper = looper+1;        
+        subplot(numShanks,numElectrodes,looper)
+        plot(lfp{shanki,ei})
+        title(['Shank',num2str(shanki),' electrode',num2str(ei)])
+        axis tight;
+        ylim([-6000 6000])
+        % keep track of the number of loops
     end
 end
 
-% take common average
-comAvg = mean(vertcat(lfpArray{:}),1);
+% enter which signals to remove (row/col)
+data2rem = [];
+for i = 1:numShanks
+    % request the user to remove signals on each shank
+    prompt=(['Which electrodes on shank',num2str(i), ' should be removed? ']);
+    data2rem{i} = str2num(input(prompt,'s'));
+end
 
-% subtract
-for arrayi = 1:length(lfpArray)
-    for ei = 1:size(lfpArray{arrayi},1)
-        lfpArrayReRef{arrayi}(ei,:) = lfpArray{arrayi}(ei,:)-comAvg;
+% remove arrays by erasing them
+for shanki = 1:numShanks
+    for i = 1:length(data2rem{shanki})
+        lfp{shanki,data2rem{shanki}(i)} = [];
     end
 end
-        
-info.lfpArrayReRef = 'Rereferenced by subtracting common average';
-info.lfpArray = 'Data organized by electrode array on the sides of probes.';
-info.processing = 'Electrodes excluded if artifacts are present or if voltage was extremely low';
-save('probeLFP','lfpArray','lfpArrayReRef','srate','info');
+
+info.variable = 'lfp is a cell array with rows being shank and columns being electrode';
+info.processing = 'Signals were visualized and excluded if artifacts were observed or 1) if the wires were missing or 2) if the signals were references (based on low voltage signals';
+save('probeLFP','lfp','info','srate');
+%savefig('probeLFP.fig')
 
 
