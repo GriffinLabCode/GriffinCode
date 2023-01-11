@@ -32,15 +32,20 @@ if ~contains(confirm,[{'y'} {'Y'}])
     error('This code does not match the target rat')
 end
 
+% load in condition information
+disp('Loading CD information')
+cd(['X:\01.Experiments\R21\',targetRat,'\CD\conditionID']);
+load('CDinfo')
+
+% enter which day of training
 prompt = ['What day of FR training is this? '];
 FRday  = str2num(input(prompt,'s'));
-
 pause(2);
 
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 20; % minutes
 
 % pellet count and machine timeout
 pellet_count = 1;
@@ -52,7 +57,7 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 %% experiment design prep.
 
 % define number of trials
-numTrials  = 12;
+numTrials  = 20;
 
 %% auto maze prep.
 
@@ -87,10 +92,16 @@ irArduino.rGoalZone = 'D7';
 irArduino.lGoalZone = 'D2';
 irArduino.choicePoint = 'D6';
 
+% define LEDs for left/right/wood/mesh combinations
+ledArduino.left  = 'D3';
+ledArduino.right = 'D13';
+ledArduino.wood  = 'D11';
+ledArduino.mesh  = 'D5';
+ON = 1; OFF = 0;
 
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.choicePoint)
+    readDigitalPin(a,irArduino.lGoalArm)
 end
 
 ledArduino.left = 'D3';
@@ -122,15 +133,8 @@ while next == 0
    end
 end
 
-% close all maze doors - this gives problems with solenoid box
-pause(0.25)
-writeline(s,[doorFuns.centralClose doorFuns.sbLeftClose ...
-    doorFuns.sbRightClose doorFuns.tLeftClose doorFuns.tRightClose]);
-
-pause(0.25)
-writeline(s,[doorFuns.gzLeftClose doorFuns.gzRightClose])
-
-%% trial set up
+%% trial set up - make sure that there are no more than 3 of each trial type
+disp('Generating trial distribution')
 left  = repmat('L',[numTrials/2 1]);
 right = repmat('R',[numTrials/2 1]);
 both  = [left; right];
@@ -141,11 +145,52 @@ for i = 1:1000
 end
 trajectory = cellstr(both_shuffled);
 
+disp('Ensuring that there are no more than 3 of each trial type')
+next = 0;
+while next == 0
+    for i = 1:length(trajectory)-3
+        if trajectory{i}==trajectory{i+1} && trajectory{i}==trajectory{i+2} && trajectory{i}==trajectory{i+3} && trajectory{i}==trajectory{i+3}
+            % try a new shuffle
+            both_shuffled = randsample(trajectory,numTrials,false);
+            trajectory = cellstr(both_shuffled);           
+            break
+        end
+        if i == length(trajectory)-3
+            next = 1;
+        end
+    end
+end
+   
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
 
 % update the numTrials variable
 numTrials = length(trajectory);
+
+%% delay duration
+maxDelay = 20; % changed bc it takes time to flip the inserts
+minDelay = 5; % 
+delayDur = minDelay:1:maxDelay; % 5-45 seconds
+rng('shuffle')
+
+delayLenTrial = [];
+next = 0;
+while next == 0
+    if numel(delayLenTrial) >= numTrials
+        next = 1;
+    else
+        shortDuration  = randsample(minDelay:maxDelay/2,5,'true');
+        longDuration   = randsample((maxDelay/2)+1:maxDelay,5,'true');
+        allDurations   = [shortDuration longDuration];
+        interleaved    = allDurations(randperm(length(allDurations)));
+        delayLenTrial = [delayLenTrial interleaved];
+    end
+end
+% the actual distribution of delays will be numtrial-1 because the first
+% trial starts, then delays follow. On CD, there are 41 choices, but 40
+% delays. On DA, there are 40 choices that could result in an error as the
+% first trial is always rewarded
+delayLenTrial = delayLenTrial(1:numTrials-1);
 
 %% start recording - make a noise when recording begins
 load gong.mat;
@@ -156,37 +201,82 @@ pause(5)
 open_t  = [doorFuns.tLeftOpen doorFuns.tRightOpen];
 close_t = [doorFuns.tLeftClose doorFuns.tRightClose];
 maze_prep = [doorFuns.sbLeftOpen doorFuns.sbRightOpen ...
-    doorFuns.tRightClose doorFuns.tLeftClose doorFuns.centralOpen ...
+    doorFuns.tRightClose doorFuns.tLeftClose doorFuns.centralClose ...
     doorFuns.gzLeftClose doorFuns.gzRightClose];
+writeline(s,maze_prep)
 
 % mark session start
 sStart = [];
 sStart = tic;
 sessEnd = 0;
-
 c = clock;
 session_start = str2num(strcat(num2str(c(4)),num2str(c(5))));
 session_time  = session_start-session_start; % quick definitio of this so it starts the while loop
+
+% tell the experimenter which trial is start
+if condID == 0
+    if trajectory{1} == 'L'
+        writeDigitalPin(a,ledArduino.left,ON);
+        writeDigitalPin(a,ledArduino.wood,ON);
+    elseif trajectory{1} == 'R'
+        writeDigitalPin(a,ledArduino.right,ON);
+        writeDigitalPin(a,ledArduino.mesh,ON);
+    end
+elseif condID == 1
+    if trajectory{1} == 'L'
+        writeDigitalPin(a,ledArduino.left,ON);
+        writeDigitalPin(a,ledArduino.mesh,ON);
+    elseif trajectory{1} == 'R'
+        writeDigitalPin(a,ledArduino.right,ON);
+        writeDigitalPin(a,ledArduino.wood,ON);
+    end
+end
+
+% run while loop to make sure inserts were flipped - two while loops for
+% two floor inserts
+next = 0;
+while next == 0
+    if readDigitalPin(a,irArduino.rGoalArm)==0 || readDigitalPin(a,irArduino.lGoalArm)==0
+        pause(1);
+        next = 1;
+    end
+end
+next = 0;
+while next == 0
+    if readDigitalPin(a,irArduino.choicePoint)==0 
+        pause(5);
+        next = 1;
+    end
+end
+% turn everything off
+writeDigitalPin(a,ledArduino.left,OFF);
+writeDigitalPin(a,ledArduino.mesh,OFF);
+writeDigitalPin(a,ledArduino.right,OFF);
+writeDigitalPin(a,ledArduino.wood,OFF);
+
+% open central stem door to start session
 writeline(s,doorFuns.centralOpen);
 
 for triali = 1:numTrials
-
+    
     % start out with this as a way to make sure you don't exceed 30
     % minutes of the session
     if triali == numTrials || toc(sStart)/60 > session_length
-        writeline(s,doorFuns.closeAll)
+        writeline(s,[doorFuns.centralClose doorFuns.tLeftClose doorFuns.tRightClose])
         %sessEnd = 1;            
         break % break out of for loop
-    end        
+    end      
+    
+    
 
     % set central door timeout value
     s.Timeout = .2;%timeout_len; % 5 minutes before matlab stops looking for an IR break    
 
     % first trial - set up the maze doors appropriately
     if trajectory{triali} == 'R'
-        writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftClose doorFuns.centralOpen]);
-    elseif trajectory{triali} == 'L'
         writeline(s,[doorFuns.sbLeftOpen doorFuns.sbRightClose doorFuns.centralOpen]);
+    elseif trajectory{triali} == 'L'
+        writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftClose doorFuns.centralOpen]);
     end   
     %pause(0.5);     
 
@@ -208,7 +298,8 @@ for triali = 1:numTrials
             end    
 
             pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
+            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
+
             %pause(5)
             %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tLeftClose doorFuns.tRightOpen]);
 
@@ -226,7 +317,9 @@ for triali = 1:numTrials
             end                       
 
             pause(5)
-            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
+            %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.tRightClose doorFuns.tLeftOpen]);
+            writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.tRightClose doorFuns.tLeftOpen]);
+            
             %pause(5)
             %writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.sbRightClose doorFuns.sbLeftClose doorFuns.tRightClose doorFuns.tLeftOpen]);
 
@@ -278,12 +371,62 @@ for triali = 1:numTrials
     next = 0;
     while next == 0
         if readDigitalPin(a,irArduino.Delay)==0
-            writeline(s,doorFuns.closeAll)
+            % prep the maze
+            writeline(s,maze_prep)
+                
+            % prep the maze for the next trial
+            if condID == 0
+                if trajectory{triali+1} == 'L'
+                    writeDigitalPin(a,ledArduino.left,ON);
+                    writeDigitalPin(a,ledArduino.wood,ON);
+                elseif trajectory{triali+1} == 'R'
+                    writeDigitalPin(a,ledArduino.right,ON);
+                    writeDigitalPin(a,ledArduino.mesh,ON);
+                elseif trajectory{triali+1} == 'E'
+                    break
+                end
+            elseif condID == 1
+                if trajectory{triali+1} == 'L'
+                    writeDigitalPin(a,ledArduino.left,ON);
+                    writeDigitalPin(a,ledArduino.mesh,ON);
+                elseif trajectory{triali+1} == 'R'
+                    writeDigitalPin(a,ledArduino.right,ON);
+                    writeDigitalPin(a,ledArduino.wood,ON);
+                elseif trajectory{triali+1} == 'E'
+                    break
+                end
+            end
+
+            if trajectory{triali+1} == 'E'
+                break
+            end
             
+            % run while loop to make sure inserts were flipped - two while loops for
+            % two floor inserts
+            next1 = 0;
+            while next1 == 0
+                if readDigitalPin(a,irArduino.rGoalArm)==0 || readDigitalPin(a,irArduino.lGoalArm)==0
+                    next1 = 1;
+                end
+            end
+            next2 = 0;
+            while next2 == 0
+                if readDigitalPin(a,irArduino.choicePoint)==0 
+                    next2 = 1;
+                end
+            end
+
+            % turn everything off
+            writeDigitalPin(a,ledArduino.left,OFF);
+            writeDigitalPin(a,ledArduino.mesh,OFF);
+            writeDigitalPin(a,ledArduino.right,OFF);
+            writeDigitalPin(a,ledArduino.wood,OFF);  
+    
             if triali == numTrials-1 || toc(sStart)/60 > session_length || trajectory{triali+1} == 'E'
                 next = 1;
-            else            
-                pause(10);
+            else  
+                disp(['Pausing for ',num2str((delayLenTrial(triali))),' seconds'] )
+                pause(delayLenTrial(triali));
                 next = 1;
             end
         end
@@ -322,9 +465,17 @@ notes    = input(prompt,'s');
 
 save_var = strcat(rat_name,'_',task_name,'_',c_save);
 
-place2store = ['X:\01.Experiments\R21\Experimental Cohort\Training Data'];
-cd(place2store);
-save(save_var);
+try
+    place2store = (['X:\01.Experiments\R21\',targetRat,'\CD\ForcedRuns']);
+    cd(place2store);
+    save(save_var);
+catch
+    mkdir(['X:\01.Experiments\R21\',targetRat,'\CD\ForcedRuns']);
+    place2store = (['X:\01.Experiments\R21\',targetRat,'\CD\ForcedRuns']);
+    cd(place2store);
+    save(save_var);
+end
+
 
 %% clean maze
 

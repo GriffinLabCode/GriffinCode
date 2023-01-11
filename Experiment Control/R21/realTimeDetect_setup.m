@@ -17,7 +17,9 @@ github_download_directory = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB C
 addpath(github_download_directory);
 
 % connect to netcom - automate this for github
-pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
+%pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
+rootDir = getCurrentPath;
+pathName = horzcat(rootDir,'\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files');
 serverName = '192.168.3.100';
 connect2netcom(pathName,serverName)
 
