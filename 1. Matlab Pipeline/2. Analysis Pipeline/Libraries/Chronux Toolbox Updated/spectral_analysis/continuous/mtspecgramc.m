@@ -1,4 +1,4 @@
-function [S,t,f,Serr]=mtspecgramc(data,movingwin,params)
+function [S,t,f,Serr,dataout,idxout]=mtspecgramc(data,movingwin,params)
 % Multi-taper time-frequency spectrum - continuous process
 %
 % Usage:
@@ -52,6 +52,8 @@ function [S,t,f,Serr]=mtspecgramc(data,movingwin,params)
 %       t       (times)
 %       f       (frequencies)
 %       Serr    (error bars) only for err(1)>=1
+%       dataout  cell array containing data used for mtspectrumc
+%       indxout  cell array containing index of data used for mtspectrumc
 
 if nargin < 2; error('Need data and window parameters'); end;
 if nargin < 3; params=[]; end;
@@ -78,15 +80,17 @@ nw=length(winstart);
 
 if trialave
     S = zeros(nw,Nf);
-    if nargout==4; Serr=zeros(2,nw,Nf); end;
+    if nargout>=4; Serr=zeros(2,nw,Nf); end;
 else
     S = zeros(nw,Nf,Ch);
-    if nargout==4; Serr=zeros(2,nw,Nf,Ch); end;
+    if nargout>=4; Serr=zeros(2,nw,Nf,Ch); end;
 end
 
 for n=1:nw;
    indx=winstart(n):winstart(n)+Nwin-1;
    datawin=data(indx,:);
+   dataout{n} = datawin;
+   idxout{n} = indx;
    if nargout==4
      [s,f,serr]=mtspectrumc(datawin,params);
      Serr(1,n,:,:)=squeeze(serr(1,:,:));
@@ -97,6 +101,6 @@ for n=1:nw;
    S(n,:,:)=s;
 end;
 S=squeeze(S); 
-if nargout==4;Serr=squeeze(Serr);end;
+if nargout>=4;Serr=squeeze(Serr);end;
 winmid=winstart+round(Nwin/2);
 t=winmid/Fs;

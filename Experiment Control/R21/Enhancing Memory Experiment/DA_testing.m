@@ -780,6 +780,7 @@ session_time = session_time_update-session_start;
 endTime = toc(sStart)/60;
 
 %% compute accuracy array and create some figures
+disp('On DA, there are N trajectories, N-1 choices and N-1 delays. Each delay matches a choice.');
 accuracy = [];
 accuracy_text = cell(1, length(trajectory_text)-1);
 for triali = 1:length(trajectory_text)-1
