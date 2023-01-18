@@ -4,7 +4,7 @@
 % sometimes if the session is not exceeding the time limit of 30 minutes,
 % then the code will continue performing trials, but not save the data.
 % Cheetah w%%
-
+rng('shuffle');
 % clear/clc
 clear; clc
 
@@ -173,7 +173,7 @@ ON = 1; OFF = 0;
 %writeline(s,doorFuns.closeAll);
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.rGoalArm)
+    readDigitalPin(a,irArduino.lGoalArm)
 end
 %}
 
@@ -741,14 +741,22 @@ info     = input(prompt,'s');
 
 prompt = 'Did the EIB come off the rats head during any delay trials? ';
 eibOFF  = input(prompt,'s');
-if contains(eibOFF,[{'y'} {'Y'}])
-    eibSave = 'EIBfellOFF_trialsRemoved';
-else
-    eibSave = 'allTrialsGood';
-end
-
 prompt = 'Did the EIB come off at any OTHER point during the session? ';
 eibOFF_session = input(prompt,'s');
+
+if contains(eibOFF,[{'y'} {'Y'}])
+    eibSave = 'EIBoffDelay_delaysRemoved';
+elseif contains(eibOFF_session,[{'y'} {'Y'}])
+    eibSave = 'EIBoffOnMaze_noDelaysRemoved';
+else
+    eibSave ='';
+end
+
+if percentAccurate > 70
+    accPrompt = 'Above70Percent';
+else
+    accPrompt = 'Below70Percent';
+end
 
 %% VISUALIZE
 clear plot
@@ -772,13 +780,13 @@ if contains(eibOFF,[{'y'} {'Y'}])
     dataOG.delayLenTrial = delayLenTrial;
     
     % remove trials where eib came off
-    dataZStored(logical(trial2rem))=[];
-    dataStored(logical(trial2rem))=[];
-    coh(logical(trial2rem))=[];
+    dataZStored(logical(remTrial))=[];
+    dataStored(logical(remTrial))=[];
+    coh(logical(remTrial))=[];
 
 end
 
-save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save);
+save_var = strcat(rat_name,'_',task_name,'_',accPrompt,'_',eibSave,'_',c_save);
 
 place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);

@@ -23,21 +23,18 @@ if ~contains(confirm,[{'y'} {'Y'}])
     error('This code does not match the target rat')
 end
 
-prompt = ['What day of CD TESTING is this? '];
+prompt = ['What day of CD TRAINING is this? '];
 CDday  = str2num(input(prompt,'s'));
+
+
+% load in condition information
+disp('Loading CD information')
+cd(['X:\01.Experiments\R21\',targetRat,'\CD\conditionID']);
+load('CDinfo')
 
 disp(['Getting LFP names for ' targetRat])
 cd(['X:\01.Experiments\R21\',targetRat,'\CD\baseline']);
 load('baselineData')
-
-% load in thresholds
-disp('Getting threshold data')
-cd(['X:\01.Experiments\R21\',targetRat,'\CD\thresholds']);
-load('thresholds');
-
-disp('Loading CD information')
-cd(['X:\01.Experiments\R21\',targetRat,'\CD\conditionID']);
-load('CDinfo')
 
 % interface with cheetah setup
 threshold.coh_duration = 0.5;
@@ -176,7 +173,7 @@ ON = 1; OFF = 0;
 %writeline(s,doorFuns.closeAll);
 %{
 for i = 1:10000000
-    readDigitalPin(a,irArduino.Delay)
+    readDigitalPin(a,irArduino.lGoalArm)
 end
 %}
 
@@ -622,286 +619,85 @@ for triali = 1:numTrials
     end 
     
     % begin delay pause and real-time coherence detection
-    %delayLength = delayLenTrial(triali);
+    delayLength = delayLenTrial(triali);
 
     % neuralynx timestamp command
     [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CohDetectStart" 102 2');  
     
-    % open these for storing
-    if contains(indicatorOUT{triali},'Norm') || contains(indicatorOUT{triali},'NormHighFail') || contains(indicatorOUT{triali},'NormLowFail')
-        disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-        pause(delayLenTrial(triali));
+    dStart = [];
+    dStart = tic;
+    for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
+        disp('Getting coherence');
+        if i == 1
+            clearStream(LFP1name,LFP2name);
+            pause(windowDuration)
+            [succeeded, dataArray, timeStampArray, ~, ~, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-    elseif contains(indicatorOUT{triali},'high')
-        dStart = [];
-        dStart = tic;        
-        pause(3.5);
-        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
+            % 2) store the data
+            % now add and remove data to move the window
+            dataWin    = dataArray;
+        end
 
-            if i == 1
-                clearStream(LFP1name,LFP2name);
-                pause(windowDuration)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+        try
+            % 3) pull in 0.25 seconds of data
+            % pull in data at shorter resolution   
+            pause(pauseTime)
+            [succeeded, dataArray, timeStampArray, ~, ~, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-                % 2) store the data
-                % now add and remove data to move the window
-                dataWin    = dataArray;
+            % 4) apply it to the initial array, remove what was there
+            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+            dataWin = [dataWin dataArray]; % add data
+
+            % detrend by removing third degree polynomial
+            data_det=[];
+            data_det(1,:) = detrend(dataWin(1,:),3);
+            data_det(2,:) = detrend(dataWin(2,:),3);
+
+            % determine if data is noisy
+            zArtifact = [];
+            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
+
+            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+            percSat = (length(idxNoise)/length(zArtifact))*100;
+            if percSat > noisePercent
+                detected{triali}(i)=1;
+                disp('Artifact Detected - coherence not calculated')     
+            else
+                detected{triali}(i)=0;
             end
 
-            try
-                % 3) pull in 0.25 seconds of data
-                % pull in data at shorter resolution   
-                pause(pauseTime)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+            % calculate coherence
+            [coh{triali}{i},f] = mscohere(data_det(1,:),data_det(2,:),[],[],fpass,srate);
+           % cohAvg = nanmean(coh);
 
-                % 4) apply it to the initial array, remove what was there
-                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-                dataWin = [dataWin dataArray]; % add data
+            % store data
+            dataZStored{triali}{i} = zArtifact;
+            dataStored{triali}{i}  = dataWin;
 
-                % detrend by removing third degree polynomial
-                data_det=[];
-                data_det(1,:) = detrend(dataWin(1,:),3);
-                data_det(2,:) = detrend(dataWin(2,:),3);
+            % store coherence data
+            %cohAvg_data = [cohAvg_data cohAvg];
 
-                % calculate coherence
-                coh = [];
-                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
+            % calculate the amount of data actually pulled in
+            %actualDataDuration(i) = length(dataWin)/srate;
 
-                % perform logical indexing of theta and delta ranges to improve
-                % performance speed
-                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-
-                % determine if data is noisy
-                zArtifact = [];
-                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-                percSat = (length(idxNoise)/length(zArtifact))*100;                
-
-                % only include if theta coherence is higher than delta. Reject
-                % if delta is greater than theta or if saturation exceeds
-                % threshold
-                if cohDelta > cohTheta || percSat > noisePercent
-                    detected{triali}(i)=1;
-                    rejected = 1;
-                    %disp('Rejected')  
-                % accept if theta > delta and if minimal saturation
-                elseif cohTheta > cohDelta && percSat < noisePercent
-                    rejected = 0;
-                    detected{triali}(i)=0;
-                end
-
-                % store data
-                dataZStored{triali}{i} = zArtifact;
-                dataStored{triali}{i}  = dataWin;
-                cohOUT{triali}{i}      = coh;
-
-                % if coherence is higher than your threshold, and the data is
-                % accepted, then let the rat make a choice
-                if cohTheta > cohHighThreshold && rejected == 0
-                    met_high = 1;
-                    indicatorOUT{triali} = 'highMET';                
-                    break 
-                % if you exceed 30s, break out
-                elseif toc(dStart) > maxDelay
-                    met_high = 0;
-                    indicatorOUT{triali} = 'highFAIL'; 
-                    break
-                end 
-            catch
-                clearStream(LFP1name,LFP2name);
-                pause(windowDuration)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 2) store the data
-                % now add and remove data to move the window
-                dataWin    = dataArray;
-            end                
-        end
-        
-        %yokH_store = yokH;
-        %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]);                
-        
-        % IMPORTANT: Storing this for later
-        cohEnd = toc(dStart);
-        %disp(['Coh detect high end at ', num2str(cohEnd)])
-
-        % now replace the delayLenTrial with coherence delay
-        %delayLenTrial(triali) = cohEnd;
-   
-        % now identify yoked high, and replace with control delay        
-        if met_high == 1
-            % if coherence was met, replace the delay trial time with the
-            % amount of time it took to finish the delay
-            delayLenTrial(triali) = cohEnd; 
-            yokH = [yokH cohEnd];
-        elseif met_high == 0
-            % if coherence wasn't met, replace the next yokeH with a 'Norm'
-            % replace the next high with a 'norm'
-            delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'contH')==1);
-            indicatorOUT{idxRem(1)}='NormHighFail';
-        end
-        
-            %yokH = [yokH NaN];
-        
-    elseif contains(indicatorOUT{triali},'low')
-        dStart = [];
-        dStart = tic;
-        pause(3.5);        
-        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
-
-            if i == 1
-                clearStream(LFP1name,LFP2name);
-                pause(windowDuration)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 2) store the data
-                % now add and remove data to move the window
-                dataWin    = dataArray;
+            if toc(dStart) > delayLength
+                break
             end
-            try
-                % 3) pull in 0.25 seconds of data
-                % pull in data at shorter resolution   
-                pause(pauseTime)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+        catch
+            disp('Caught potential failure')
+            clearStream(LFP1name,LFP2name);
+            pause(windowDuration)
+            [succeeded, dataArray, timeStampArray, ~, ~, ...
+            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-                % 4) apply it to the initial array, remove what was there
-                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-                dataWin = [dataWin dataArray]; % add data
-
-                % detrend by removing third degree polynomial
-                data_det=[];
-                data_det(1,:) = detrend(dataWin(1,:),3);
-                data_det(2,:) = detrend(dataWin(2,:),3);
-
-                % calculate coherence
-                coh = [];
-                [coh,f] = mscohere(data_det(1,:),data_det(2,:),window,noverlap,fpass,srate);
-
-                % identify theta > delta or delta > theta
-                % take averages
-                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-                %thetaIdx = find(f > thetaRange(1) & f < thetaRange(2));
-
-                % perform logical indexing of theta and delta ranges to improve
-                % performance speed
-                %cohAvg   = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-                cohDelta = nanmean(coh(f > deltaRange(1) & f < deltaRange(2)));
-                cohTheta = nanmean(coh(f > thetaRange(1) & f < thetaRange(2)));
-
-                % determine if data is noisy
-                zArtifact = [];
-                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-
-                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-                percSat = (length(idxNoise)/length(zArtifact))*100;                
-
-                % only include if theta coherence is higher than delta. Reject
-                % if delta is greater than theta or if saturation exceeds
-                % threshold
-                if cohDelta > cohTheta || percSat > noisePercent
-                    detected{triali}(i)=1;
-                    rejected = 1;
-                    %disp('Rejected')  
-                % accept if theta > delta and if minimal saturation
-                elseif cohTheta > cohDelta && percSat < noisePercent
-                    rejected = 0;
-                    detected{triali}(i)=0;
-                end            
-
-                % store data
-                dataZStored{triali}{i} = zArtifact;
-                dataStored{triali}{i}  = dataWin;
-                cohOUT{triali}{i}      = coh;
-
-                % if coherence is less than your threshold, and the data is
-                % accepted, then let the rat make a choice
-                if cohTheta < cohLowThreshold && rejected == 0
-                    %writeline(s,[doorFuns.sbRightOpen doorFuns.sbLeftOpen doorFuns.centralOpen]); 
-                    met_low = 1;
-                    indicatorOUT{triali} = 'lowMET';
-                    break
-                % if you exceed 30s, break out
-                elseif toc(dStart) > maxDelay
-                    met_low = 0;
-                    indicatorOUT{triali} = 'lowFAIL';
-                    break
-                end
-            catch
-                clearStream(LFP1name,LFP2name);
-                pause(windowDuration)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-                % 2) store the data
-                % now add and remove data to move the window
-                dataWin    = dataArray;
-            end                
+            % 2) store the data
+            % now add and remove data to move the window
+            dataWin    = dataArray;            
         end
-        
-        % IMPORTANT: Storing this for later
-        cohEnd = toc(dStart);
-        %disp(['Coh detect low end at ', num2str(cohEnd)])
-
-        % now replace the delayLenTrial with coherence delay
-        %delayLenTrial(triali) = cohEnd;
-   
-        % now identify yoked high, and replace with control delay
-        if met_low == 1
-            % if coherence was met, replace the delay trial time with the
-            % amount of time it took to finish the delay
-            delayLenTrial(triali) = cohEnd; 
-            yokL = [yokL cohEnd];
-        elseif met_low == 0
-            % if coherence wasn't met, replace the next yokeH with a 'Norm'
-            % replace the next high with a 'norm'
-            delayLenTrial(triali) = cohEnd; 
-            idxRem = find(contains(indicatorOUT,'contL')==1);
-            indicatorOUT{idxRem(1)}='NormLowFail';
-        end
-        
-    % only yoke up if you have options to pull from, if not then it'll
-    % become a 'norm' trial
-    elseif contains(indicatorOUT{triali},'contL')
-        
-        if isempty(yokL)==0
-            % pause for yoked control
-            %disp(['Pausing for low yoked control of ',num2str(yokL(1))])
-            pause(yokL(1));
-            indicatorOUT{triali} = 'yokeL_MET';
-            delayLenTrial(triali) = yokL(1);            
-            % delete so that next time, 1 is the updated delay
-            yokL(1)=[];
-        elseif isempty(yokL)==1
-            %disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-            pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokeL_FAIL';
-        end
-        
-    elseif contains(indicatorOUT{triali},'contH')
-        % if you have a yoke to pull from
-        if isempty(yokH)==0
-            %disp(['Pausing for high yoked control of ',num2str(yokH(1))])
-            pause(yokH(1));
-            indicatorOUT{triali} = 'yokeH_MET';  
-            delayLenTrial(triali) = yokH(1);
-            yokH(1)=[];
-        % if you don't have a yoke to pull from
-        elseif isempty(yokH)==1
-            %disp(['Normal delay of ',num2str(delayLenTrial(triali))])
-            pause(delayLenTrial(triali));
-            indicatorOUT{triali} = 'yokeH_FAIL';          
-        end        
-    end   
+    end    
        
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
@@ -954,6 +750,8 @@ end
 prompt = 'Did the EIB come off at any OTHER point during the session? ';
 eibOFF_session = input(prompt,'s');
 
+if percentAccurate > 70
+    
 %% VISUALIZE
 clear plot
 if contains(eibOFF,[{'y'} {'Y'}])
@@ -976,13 +774,11 @@ if contains(eibOFF,[{'y'} {'Y'}])
     dataOG.delayLenTrial = delayLenTrial;
     
     % remove trials where eib came off
-    dataZStored(logical(trial2rem))=[];
-    dataStored(logical(trial2rem))=[];
-    coh(logical(trial2rem))=[];
+    dataZStored(logical(remTrial))=[];
+    dataStored(logical(remTrial))=[];
+    coh(logical(remTrial))=[];
 
 end
-
-
 
 save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save);
 
@@ -996,257 +792,6 @@ prompt   = 'Enter trajectories to exclude ';
 remTraj  = str2num(input(prompt,'s'));
 
 disp('Saving excluded trajectories')
-save('removeTrajectories','remTraj','save_var');
+save('removeTrajectories','remTraj');
 
 disp('Remember! There are N trajectories, but N-1 delays. Therefore, remove trial #1 when lining up BMI data');
-
-%% provide modified variables to user
-remChoices = remTraj;
-
-numTrials = length(accuracy);
-indicatorOUT(numTrials+1:end)=[];
-delayLenTrial(numTrials+1:end)=[];
-
-% indicatorOUT temp
-tempInd = [];
-tempInd = indicatorOUT;
-
-% delay times 
-delayTimes = [];
-delayTimes = delayLenTrial;
-
-% trial accuracies
-accuracyNew  = []; 
-accuracyNew  = accuracyNew;        
-
-% remove
-tempInd(remChoices)={'NaN'};
-delayTimes(remChoices)=NaN;
-accuracy(remChoices) =NaN;
-
-% get indices
-idxHigh = []; idxLow = []; idxYokedHigh = []; idxYokedLow = [];
-idxHigh = find(contains(tempInd,'highMET')==1);
-idxLow = find(contains(tempInd,'lowMET')==1);
-idxYokedHigh = find(contains(tempInd,'yokeH_MET')==1);
-idxYokedLow = find(contains(tempInd,'yokeL_MET')==1);
-%idxNorm = find(contains(tempInd,[{'Norm'}, {'NormHighFail'} {'NormLowFail'}]));
-idxNorm = find(contains(tempInd,[{'Norm'}]));
-
-% find times and make sure everytihng lines up
-delayHighTimes = []; delayHighYTimes = [];
-delayHighTimes = delayTimes(idxHigh);
-delayHighYTimes = delayTimes(idxYokedHigh);
-
-delayLowTimes = []; delayLowYTimes = [];
-delayLowTimes = delayTimes(idxLow);
-delayLowYTimes = delayTimes(idxYokedLow);
-delayNorm = delayTimes(idxNorm);    
-
-% plot data to visualize
-figure('color','w')
-for i = 1:length(idxHigh)
-    subplot(4,4,i)
-    lfphighTemp = [];
-    lfphighTemp = dataStored{idxHigh(i)};
-    lfphighTemp = lfphighTemp{end};
-    plot(lfphighTemp(1,:),'b')
-    title(['Trial ',num2str(idxHigh(i))])
-    ylabel('HPC')
-    axis tight;
-end
-figure('color','w')
-for i = 1:length(idxHigh)
-    subplot(4,4,i)
-    lfphighTemp = [];
-    lfphighTemp = dataStored{idxHigh(i)};
-    lfphighTemp = lfphighTemp{end};    
-    plot(lfphighTemp(2,:),'r')
-    axis tight;
-    title(['Trial ',num2str(idxHigh(i))])
-    ylabel('PFC')
-end
-idxHighRem2 = str2num(input('Which trials to remove? ','s'));
-idxHigh(idxHighRem2) = [];
-
-% plot data to visualize
-figure('color','w')
-for i = 1:length(idxLow)
-    subplot(4,4,i)
-    lfpLowTemp = [];
-    lfpLowTemp = dataStored{idxLow(i)};
-    lfpLowTemp = lfpLowTemp{end};
-    plot(lfpLowTemp(1,:),'b')
-    title(['Trial ',num2str(idxLow(i))])
-    ylabel('HPC')
-    axis tight;
-end
-figure('color','w')
-for i = 1:length(idxLow)
-    subplot(4,4,i)
-    lfpLowTemp = [];
-    lfpLowTemp = dataStored{idxLow(i)};
-    lfpLowTemp = lfpLowTemp{end};    
-    plot(lfpLowTemp(2,:),'r')
-    axis tight;
-    title(['Trial ',num2str(idxLow(i))])
-    ylabel('PFC')
-end
-idxLowRem2 = str2num(input('Which trials to remove? ','s'));
-idxLow(idxLowRem2) = [];
-
-% do the same 
-% remove any delay times that don't have an equally matched partner
-% we're checking for equal delay High Times using the yoked
-% condition because there can only be a yoked trial if there is a
-% high trial
-% however, it is possible that some trials could get removed. So we
-% need to account for those too.
-idxRemHigh = [];
-for j = 1:length(delayHighYTimes)
-    findYinHigh = find(delayHighTimes == delayHighYTimes(j));
-    if isempty(findYinHigh)==1
-        idxRemHigh(j) = 1;
-    else
-        idxRemHigh(j) = 0;
-    end
-end       
-idxRemLow = [];
-for j = 1:length(delayLowYTimes)
-    findYinLow = find(delayLowTimes == delayLowYTimes(j));
-    if isempty(findYinLow)==1
-        idxRemLow(j) = 1;
-    else
-        idxRemLow(j) = 0;
-    end
-end   
-
-% idxRemLow: if yoked time isn't found in experimental, remove the
-% yoked time
-% removal of the top two are mostly to check my work
-delayLowYTimes(logical(idxRemLow))=[];
-delayHighYTimes(logical(idxRemHigh))=[];
-% remove from the index used above to get times
-idxYokedHigh(logical(idxRemHigh))=[];
-idxYokedLow(logical(idxRemLow))=[];
-
-%----------------------------------------%
-
-% do everything above, except switch variables
-idxRemHigh = [];
-for j = 1:length(delayHighTimes)
-    findHighInY = find(delayHighYTimes == delayHighTimes(j));
-    if isempty(findHighInY)==1
-        idxRemHigh(j) = 1;
-    else
-        idxRemHigh(j) = 0;
-    end
-end       
-idxRemLow = [];
-for j = 1:length(delayLowTimes)
-    findLowInY = find(delayLowYTimes == delayLowTimes(j));
-    if isempty(findLowInY)==1
-        idxRemLow(j) = 1;
-    else
-        idxRemLow(j) = 0;
-    end
-end   
-
-% idxRemLow: if yoked time isn't found in experimental, remove the
-% yoked time
-delayLowTimes(logical(idxRemLow))=[];
-delayHighTimes(logical(idxRemHigh))=[];
-% remove from the index used above to get times
-idxHigh(logical(idxRemHigh))=[];
-idxLow(logical(idxRemLow))=[]; 
-
-%----%
-highTime  = delayHighTimes;
-lowTime   = delayLowTimes;
-lowYTime  = delayLowYTimes;
-highYTime = delayHighYTimes;        
-NormTime  = delayNorm;
-
-% get choice accuracies
-acc_high  = accuracy(idxHigh);
-acc_low   = accuracy(idxLow);
-acc_yHigh = accuracy(idxYokedHigh);
-acc_yLow  = accuracy(idxYokedLow);   
-acc_Norm  = accuracy(idxNorm);
-
-% get alternation index
-for i = 1:length(idxHigh)
-    try
-        altTrajHigh(i,:) = trajectory_taken(idxHigh(i)-1:idxHigh(i));
-    catch
-        altTrajHigh(i,:)=[{NaN'} {NaN}];
-    end
-    try
-        altTrajHighY(i,:) = trajectory_taken(idxYokedHigh(i)-1:idxYokedHigh(i));
-    catch
-        altTrajHighY(i,:)=[{NaN} {NaN}];
-    end
-end
-for i = 1:length(idxLow)
-    try
-        altTrajLow(i,:) = trajectory_taken(idxLow(i)-1:idxLow(i));
-    catch
-        altTrajLow(i,:)=[{NaN} {NaN}];
-    end
-    try
-        altTrajLowY(i,:) = trajectory_taken(idxYokedLow(i)-1:idxYokedLow(i));
-    catch
-        altTrajLowY(i,:)=[{NaN} {NaN}];
-    end
-end
-altTrajLow   = nan2empty(altTrajLow);
-altTrajLowY  = nan2empty(altTrajLowY);
-altTrajHigh  = nan2empty(altTrajHigh);
-altTrajHighY = nan2empty(altTrajHighY);
-[~,idxEmpty] = emptyCellErase(altTrajLow(:,1));
-altTrajLow (idxEmpty,:)=[];
-altTrajLowY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajLowY(:,1));
-% now do the same for high
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajHigh(:,1));
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajHighY(:,1));
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
-
-% alternation index
-for i = 1:size(altTrajHigh,1)
-    if altTrajHigh{i,1} == altTrajHigh{i,2}
-        altIdxHigh(i,:) = 0;
-    elseif altTrajHigh{i,1} ~= altTrajHigh{i,2}
-        altIdxHigh(i,:) = 1; % 1 = alternation
-    end
-    
-    if altTrajHighY{i,1} == altTrajHighY{i,2}
-        altIdxHighY(i,:) = 0;
-    elseif altTrajHighY{i,1} ~= altTrajHighY{i,2}
-        altIdxHighY(i,:) = 1; % 1 = alternation
-    end    
-end
-
-for i = 1:size(altTrajLow,1)
-    if altTrajLow{i,1} == altTrajLow{i,2}
-        altIdxLow(i,:) = 0;
-    elseif altTrajLow{i,1} ~= altTrajLow{i,2}
-        altIdxLow(i,:) = 1; % 1 = alternation
-    end
-    
-    if altTrajLowY{i,1} == altTrajLowY{i,2}
-        altIdxLowY(i,:) = 0;
-    elseif altTrajLowY{i,1} ~= altTrajLowY{i,2}
-        altIdxLowY(i,:) = 1; % 1 = alternation
-    end    
-end
-
-place2store = ['X:\01.Experiments\R21\',targetRat];
-cd(place2store);
-save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save,'_CLEANED');
-save(save_var);

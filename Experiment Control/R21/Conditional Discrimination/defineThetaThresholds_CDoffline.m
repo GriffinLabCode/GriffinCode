@@ -39,7 +39,7 @@
 % coherence estimate by a fraction of a decimal. 
 
 %% define parameters
-ratName = '21-33';
+ratName = '21-39';
 
 cd(['X:\01.Experiments\R21\',targetRat,'\CD\baseline']);
 load('baselineData')

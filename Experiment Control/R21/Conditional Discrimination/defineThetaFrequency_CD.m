@@ -27,7 +27,7 @@ ratName = targetRat;
 %Datafolders = 'X:\01.Experiments\R21';
   
 % get datafolders (session names) into a cell array
-Datafolders = ['X:\01.Experiments\R21\',ratName,'\CD\Sessions\CD Habituation\'];
+Datafolders = ['X:\01.Experiments\R21\',ratName,'\CD\Training\'];
 cd(Datafolders);
 dir_content = [];
 dir_content = dir(Datafolders);
@@ -102,7 +102,9 @@ for sessi = 1:length(dir_content)
     %_____________________________________%
 
     dataSB = horzcat(dataIN.dataStored{:});
-    %detectedSB = horzcat(dataIN.detected{:});       
+    
+    % remove empty arrays
+    dataSB = emptyCellErase(dataSB);
 
     % compute coherence, then separate clean and dirty
     cohSB = []; window = []; noverlap = []; fpass = [1:.5:20]; srate = 2000;
@@ -261,7 +263,7 @@ end
 f = fSB;
 mkdir(['X:\01.Experiments\R21\' ratName,'\CD\ThetaFreqDist'])
 
-prompt = 'Are you ready to save? (y/n) - DO NOT SAVE OVER OLD DATA!';
+prompt = 'Are you ready to save? (y/n) - DO NOT SAVE OVER OLD DATA! ';
 answer = input(prompt,'s');
 if contains(answer,[{'y'} {'Y'}])==1
     cd(['X:\01.Experiments\R21\' ratName,'\CD\ThetaFreqDist'])

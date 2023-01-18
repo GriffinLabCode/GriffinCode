@@ -1204,21 +1204,11 @@ altTrajLowY  = nan2empty(altTrajLowY);
 altTrajHigh  = nan2empty(altTrajHigh);
 altTrajHighY = nan2empty(altTrajHighY);
 [~,idxEmpty] = emptyCellErase(altTrajLow(:,1));
-altTrajLow (idxEmpty,:)=[];
-altTrajLowY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajLowY(:,1));
-% now do the same for high
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajHigh(:,1));
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajHighY(:,1));
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
+altTrajLow(idxEmpty)=[];
+altTrajLowY(idxEmpty)=[];
 
 % alternation index
-for i = 1:size(altTrajHigh,1)
+for i = 1:length(idxHigh)
     if altTrajHigh{i,1} == altTrajHigh{i,2}
         altIdxHigh(i,:) = 0;
     elseif altTrajHigh{i,1} ~= altTrajHigh{i,2}
@@ -1232,7 +1222,7 @@ for i = 1:size(altTrajHigh,1)
     end    
 end
 
-for i = 1:size(altTrajLow,1)
+for i = 1:length(idxLow)
     if altTrajLow{i,1} == altTrajLow{i,2}
         altIdxLow(i,:) = 0;
     elseif altTrajLow{i,1} ~= altTrajLow{i,2}
