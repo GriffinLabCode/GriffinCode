@@ -1041,5 +1041,215 @@ subplot 212
 plot(dataMat2(2,:),'b','LineWidth',0.5)
 title('LFP2 - expect signal spikes, but not complete contamination')
 
+%% ADDED AFTER EXPERIMENTS TO IMPROVE REPRODUCTION
+
+% now line this up with delayLenTrial and IndicatorOUT
+numDelays = length(accuracy);
+indicatorOUT(numDelays+1:end)=[];
+delayLenTrial(numDelays+1:end)=[];
+indicatorFIX = vertcat({'NaN'},indicatorOUT);
+accuracyFIX  = vertcat({'NaN'}, accuracy_text');
+delayFIX     = num2cell(vertcat(NaN,delayLenTrial'));
+
+% make a variable so we can align all data
+dataFormatted = [];
+dataFormatted = horzcat(trajectory_text',accuracyFIX,indicatorFIX,delayFIX);
+
+% this index is complicated. Relative to dataFormatted, it reflects trials,
+% and therefore when relating to delay-dependent variables, must be N-1
+idxHigh = []; idxLow = [];
+idxHigh = find(contains(dataFormatted(:,3),'highMET'));
+idxLow  = find(contains(dataFormatted(:,3),'lowMET'));
+
+% now fill in the variable, but bc dataFormatted is N+1 greater than
+% datastored, account for that 
+% you can always know if this is correct bc non BMI trials have no data
+dataFormatted(:,5) = cell([size(dataFormatted,1) 1]);
+dataFormatted(idxHigh,5) = dataStored(idxHigh-1);
+dataFormatted(idxLow,5)  = dataStored(idxLow-1);
+
+% add coherence data
+dataFormatted(:,6) = cell([size(dataFormatted,1) 1]);
+dataFormatted(idxHigh,6) = cohOUT(idxHigh-1);
+dataFormatted(idxLow,6)  = cohOUT(idxLow-1);
+
+% now use the remChoices to remove data
+remChoices = remTraj; % this data is entered at the trial-resolution. For CD each trial is a choice
+dataFormatted2 = dataFormatted;
+dataFormatted2(remChoices,:)=[];
+
+% get indices
+% IMPORTANT - at this point, the idxHigh and others do not match perfectly
+% to the original trial sequence because remChoices removed select trials
+idxHigh = []; idxLow = []; idxYokedHigh = []; idxYokedLow = [];
+idxHigh = find(contains(dataFormatted2(:,3),'highMET')==1);
+idxLow = find(contains(dataFormatted2(:,3),'lowMET')==1);
+idxYokedHigh = find(contains(dataFormatted2(:,3),'yokeH_MET')==1);
+idxYokedLow = find(contains(dataFormatted2(:,3),'yokeL_MET')==1);
+%idxNorm = find(contains(tempInd,[{'Norm'}, {'NormHighFail'} {'NormLowFail'}]));
+idxNorm = find(contains(dataFormatted2(:,3),[{'Norm'}]));
+
+% plot data to visualize
+figure('color','w')
+for i = 1:length(idxHigh)
+    subplot(4,4,i)
+    lfphighTemp = [];
+    lfphighTemp = dataFormatted2{idxHigh(i),6};
+    lfphighTemp = lfphighTemp{end};
+    plot(lfphighTemp(1,:),'b')
+    title(['Index ',num2str(idxHigh(i))])
+    ylabel('HPC')
+    axis tight;
+end
+figure('color','w')
+for i = 1:length(idxHigh)
+    subplot(4,4,i)
+    lfphighTemp = [];
+    lfphighTemp = dataFormatted2{idxHigh(i),6};
+    lfphighTemp = lfphighTemp{end};
+    plot(lfphighTemp(2,:),'r')
+    title(['Index ',num2str(idxHigh(i))])
+    ylabel('PFC')
+    axis tight;
+end
+idxHighRem2 = str2num(input('Which trials to remove? ','s'));
+%dataFormatted2(idxHighRem2,:) = [];
+
+% plot data to visualize
+figure('color','w')
+for i = 1:length(idxLow)
+    subplot(4,4,i)
+    lfpLowTemp = [];
+    lfpLowTemp = dataFormatted2{idxLow(i),6};
+    lfpLowTemp = lfpLowTemp{end};
+    plot(lfpLowTemp(1,:),'b')
+    title(['Index ',num2str(idxLow(i))])
+    ylabel('HPC')
+    axis tight;
+end
+figure('color','w')
+for i = 1:length(idxLow)
+    subplot(4,4,i)
+    lfpLowTemp = [];
+    lfpLowTemp = dataFormatted2{idxLow(i),6};
+    lfpLowTemp = lfpLowTemp{end};
+    plot(lfpLowTemp(2,:),'r')
+    title(['Index ',num2str(idxLow(i))])
+    ylabel('PFC')
+    axis tight;
+end
+idxLowRem2 = str2num(input('Which trials to remove? ','s'));
+%dataFormatted2(idxLowRem2,:) = [];
+idxRem2 = []; idxRem2 = horzcat(idxHighRem2,idxLowRem2);
+dataFormatted2(idxRem2,:) = [];
+            
+% re-get indices
+idxHigh = []; idxLow = []; idxYokedHigh = []; idxYokedLow = [];
+idxHigh = find(contains(dataFormatted2(:,3),'highMET')==1);
+idxLow = find(contains(dataFormatted2(:,3),'lowMET')==1);
+idxYokedHigh = find(contains(dataFormatted2(:,3),'yokeH_MET')==1);
+idxYokedLow = find(contains(dataFormatted2(:,3),'yokeL_MET')==1);
+%idxNorm = find(contains(tempInd,[{'Norm'}, {'NormHighFail'} {'NormLowFail'}]));
+idxNorm = find(contains(dataFormatted2(:,3),[{'Norm'}]));
+
+% find times and make sure everytihng lines up
+delayHighTimes = []; delayHighYTimes = [];
+delayHighTimes  = cell2mat(dataFormatted2(idxHigh,4));
+delayHighYTimes = cell2mat(dataFormatted2(idxYokedHigh,4));
+delayLowTimes = []; delayLowYTimes = [];
+delayLowTimes  = cell2mat(dataFormatted2(idxLow,4));
+delayLowYTimes = cell2mat(dataFormatted2(idxYokedLow,4));
+delayNorm = cell2mat(dataFormatted2(idxNorm,4));    
+
+% do the same 
+% remove any delay times that don't have an equally matched partner
+% we're checking for equal delay High Times using the yoked
+% condition because there can only be a yoked trial if there is a
+% high trial
+% however, it is possible that some trials could get removed. So we
+% need to account for those too.
+idxRemHigh = [];
+for j = 1:length(delayHighYTimes)
+    findYinHigh = find(delayHighTimes == delayHighYTimes(j));
+    if isempty(findYinHigh)==1
+        idxRemHigh(j) = 1;
+    else
+        idxRemHigh(j) = 0;
+    end
+end       
+idxRemLow = [];
+for j = 1:length(delayLowYTimes)
+    findYinLow = find(delayLowTimes == delayLowYTimes(j));
+    if isempty(findYinLow)==1
+        idxRemLow(j) = 1;
+    else
+        idxRemLow(j) = 0;
+    end
+end   
+
+% idxRemLow: if yoked time isn't found in experimental, remove the
+% yoked time
+% removal of the top two are mostly to check my work
+delayLowYTimes(logical(idxRemLow))=[];
+delayHighYTimes(logical(idxRemHigh))=[];
+% remove from the index used above to get times
+idxYokedHigh(logical(idxRemHigh))=[];
+idxYokedLow(logical(idxRemLow))=[];
+
+%----------------------------------------%
+
+% do everything above, except switch variables
+idxRemHigh = [];
+for j = 1:length(delayHighTimes)
+    findHighInY = find(delayHighYTimes == delayHighTimes(j));
+    if isempty(findHighInY)==1
+        idxRemHigh(j) = 1;
+    else
+        idxRemHigh(j) = 0;
+    end
+end       
+idxRemLow = [];
+for j = 1:length(delayLowTimes)
+    findLowInY = find(delayLowYTimes == delayLowTimes(j));
+    if isempty(findLowInY)==1
+        idxRemLow(j) = 1;
+    else
+        idxRemLow(j) = 0;
+    end
+end   
+
+% idxRemLow: if yoked time isn't found in experimental, remove the
+% yoked time
+delayLowTimes(logical(idxRemLow))=[];
+delayHighTimes(logical(idxRemHigh))=[];
+% remove from the index used above to get times
+idxHigh(logical(idxRemHigh))=[];
+idxLow(logical(idxRemLow))=[]; 
+
+%----%
+highTime  = delayHighTimes;
+lowTime   = delayLowTimes;
+lowYTime  = delayLowYTimes;
+highYTime = delayHighYTimes;        
+NormTime  = delayNorm;
+
+% get choice accuracies
+acc_high_text  = dataFormatted2(idxHigh,2);
+acc_low_text   = dataFormatted2(idxLow,2);
+acc_yHigh_text = dataFormatted2(idxYokedHigh,2);
+acc_yLow_text  = dataFormatted2(idxYokedLow,2); 
+acc_Norm_text  = dataFormatted2(idxNorm,2);
+
+% convert to boolean. 0 = correct, 1 = incorrect
+acc_high  = double(contains(acc_high_text,'incorrect'));
+acc_yHigh = double(contains(acc_yHigh_text,'incorrect'));
+acc_low   = double(contains(acc_low_text,'incorrect'));
+acc_yLow  = double(contains(acc_yLow_text,'incorrect'));
+acc_Norm  = double(contains(acc_Norm_text,'incorrect'));
+
+place2store = ['X:\01.Experiments\R21\',targetRat];
+cd(place2store);
+save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save,'_filtered');
+save(save_var,'dataFormatted2','acc_high','acc_low','acc_yHigh','acc_yLow','acc_Norm','acc_high_text','acc_low_text','acc_yHigh_text','acc_yLow_text','acc_Norm_text','altIdxHigh','altIdxHighY','altIdxLow','altIdxLowY');
 
 

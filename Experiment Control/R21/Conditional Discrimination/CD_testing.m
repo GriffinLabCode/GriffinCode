@@ -909,10 +909,7 @@ end
 % if this happens, it means that the session ended during the delay or
 % directly after it
 disp('Unlike DA, on CD, there are N trajectories, N correct choices, but N-1 delays');
-if length(dataStored)==length(accuracy)
-    dataStored(end)=[];
-    dataZStored(end)=[];
-end
+
 % get amount of time past since session start
 c = clock;
 session_time_update = str2num(strcat(num2str(c(4)),num2str(c(5))));
@@ -982,10 +979,7 @@ if contains(eibOFF,[{'y'} {'Y'}])
 
 end
 
-
-
 save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save);
-
 place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
 save(save_var);
@@ -1001,99 +995,129 @@ save('removeTrajectories','remTraj','save_var');
 disp('Remember! There are N trajectories, but N-1 delays. Therefore, remove trial #1 when lining up BMI data');
 
 %% provide modified variables to user
-remChoices = remTraj;
 
-numTrials = length(accuracy);
-indicatorOUT(numTrials+1:end)=[];
-delayLenTrial(numTrials+1:end)=[];
+% for CD, removing the first accuracy trial lines up accuracy with
+% IndicatorOUT and delayLenTrial bc there are N trajectories, N choices,
+% but N-1 delays
+disp('Removing first choice from accuracy variable')
+accuracy(1)=[]; % not really needed. But removed anyway
 
-% indicatorOUT temp
-tempInd = [];
-tempInd = indicatorOUT;
+% now line this up with delayLenTrial and IndicatorOUT
+numDelays = length(accuracy);
+indicatorOUT(numDelays+1:end)=[];
+delayLenTrial(numDelays+1:end)=[];
+trajectoryNew = trajectory;
+trajectoryNew(numDelays+2:end)=[];
+indicatorFIX = vertcat({'NaN'},indicatorOUT);
+delayFIX = num2cell(vertcat(NaN,delayLenTrial'));
 
-% delay times 
-delayTimes = [];
-delayTimes = delayLenTrial;
+% make a variable so we can align all data
+dataFormatted = [];
+dataFormatted = horzcat(trajectoryNew,trajectory_taken',accuracy_text',indicatorFIX,delayFIX);
 
-% trial accuracies
-accuracyNew  = []; 
-accuracyNew  = accuracyNew;        
+% this index is complicated. Relative to dataFormatted, it reflects trials,
+% and therefore when relating to delay-dependent variables, must be N-1
+idxHigh = []; idxLow = [];
+idxHigh = find(contains(dataFormatted(:,4),'highMET'));
+idxLow  = find(contains(dataFormatted(:,4),'lowMET'));
 
-% remove
-tempInd(remChoices)={'NaN'};
-delayTimes(remChoices)=NaN;
-accuracy(remChoices) =NaN;
+% now fill in the variable, but bc dataFormatted is N+1 greater than
+% datastored, account for that 
+% you can always know if this is correct bc non BMI trials have no data
+dataFormatted(:,6) = cell([size(dataFormatted,1) 1]);
+dataFormatted(idxHigh,6) = dataStored(idxHigh-1);
+dataFormatted(idxLow,6)  = dataStored(idxLow-1);
+
+% add coherence data
+dataFormatted(:,7) = cell([size(dataFormatted,1) 1]);
+dataFormatted(idxHigh,7) = cohOUT(idxHigh-1);
+dataFormatted(idxLow,7)  = cohOUT(idxLow-1);
+
+% now use the remChoices to remove data
+remChoices = remTraj; % this data is entered at the trial-resolution. For CD each trial is a choice
+dataFormatted2 = dataFormatted;
+dataFormatted2(remChoices,:)=[];
 
 % get indices
+% IMPORTANT - at this point, the idxHigh and others do not match perfectly
+% to the original trial sequence because remChoices removed select trials
 idxHigh = []; idxLow = []; idxYokedHigh = []; idxYokedLow = [];
-idxHigh = find(contains(tempInd,'highMET')==1);
-idxLow = find(contains(tempInd,'lowMET')==1);
-idxYokedHigh = find(contains(tempInd,'yokeH_MET')==1);
-idxYokedLow = find(contains(tempInd,'yokeL_MET')==1);
+idxHigh = find(contains(dataFormatted2(:,4),'highMET')==1);
+idxLow = find(contains(dataFormatted2(:,4),'lowMET')==1);
+idxYokedHigh = find(contains(dataFormatted2(:,4),'yokeH_MET')==1);
+idxYokedLow = find(contains(dataFormatted2(:,4),'yokeL_MET')==1);
 %idxNorm = find(contains(tempInd,[{'Norm'}, {'NormHighFail'} {'NormLowFail'}]));
-idxNorm = find(contains(tempInd,[{'Norm'}]));
+idxNorm = find(contains(dataFormatted2(:,4),[{'Norm'}]));
+
+% plot data to visualize
+figure('color','w')
+for i = 1:length(idxHigh)
+    subplot(4,4,i)
+    lfphighTemp = [];
+    lfphighTemp = dataFormatted2{idxHigh(i),6};
+    lfphighTemp = lfphighTemp{end};
+    plot(lfphighTemp(1,:),'b')
+    title(['Index ',num2str(idxHigh(i))])
+    ylabel('HPC')
+    axis tight;
+end
+figure('color','w')
+for i = 1:length(idxHigh)
+    subplot(4,4,i)
+    lfphighTemp = [];
+    lfphighTemp = dataFormatted2{idxHigh(i),6};
+    lfphighTemp = lfphighTemp{end};
+    plot(lfphighTemp(2,:),'r')
+    title(['Index ',num2str(idxHigh(i))])
+    ylabel('PFC')
+    axis tight;
+end
+idxHighRem2 = str2num(input('Which trials to remove? ','s'));
+%dataFormatted2(idxHighRem2,:) = [];
+
+% plot data to visualize
+figure('color','w')
+for i = 1:length(idxLow)
+    subplot(4,4,i)
+    lfpLowTemp = [];
+    lfpLowTemp = dataFormatted2{idxLow(i),6};
+    lfpLowTemp = lfpLowTemp{end};
+    plot(lfpLowTemp(1,:),'b')
+    title(['Index ',num2str(idxLow(i))])
+    ylabel('HPC')
+    axis tight;
+end
+figure('color','w')
+for i = 1:length(idxLow)
+    subplot(4,4,i)
+    lfpLowTemp = [];
+    lfpLowTemp = dataFormatted2{idxLow(i),6};
+    lfpLowTemp = lfpLowTemp{end};
+    plot(lfpLowTemp(2,:),'r')
+    title(['Index ',num2str(idxLow(i))])
+    ylabel('PFC')
+    axis tight;
+end
+idxLowRem2 = str2num(input('Which trials to remove? ','s'));
+idxRem2 = []; idxRem2 = horzcat(idxHighRem2,idxLowRem2);
+dataFormatted2(idxRem2,:) = [];
+
+% re-get indices
+idxHigh = []; idxLow = []; idxYokedHigh = []; idxYokedLow = [];
+idxHigh = find(contains(dataFormatted2(:,4),'highMET')==1);
+idxLow = find(contains(dataFormatted2(:,4),'lowMET')==1);
+idxYokedHigh = find(contains(dataFormatted2(:,4),'yokeH_MET')==1);
+idxYokedLow = find(contains(dataFormatted2(:,4),'yokeL_MET')==1);
+idxNorm = find(contains(dataFormatted2(:,4),[{'Norm'}]));
 
 % find times and make sure everytihng lines up
 delayHighTimes = []; delayHighYTimes = [];
-delayHighTimes = delayTimes(idxHigh);
-delayHighYTimes = delayTimes(idxYokedHigh);
-
+delayHighTimes  = cell2mat(dataFormatted2(idxHigh,5));
+delayHighYTimes = cell2mat(dataFormatted2(idxYokedHigh,5));
 delayLowTimes = []; delayLowYTimes = [];
-delayLowTimes = delayTimes(idxLow);
-delayLowYTimes = delayTimes(idxYokedLow);
-delayNorm = delayTimes(idxNorm);    
-
-% plot data to visualize
-figure('color','w')
-for i = 1:length(idxHigh)
-    subplot(4,4,i)
-    lfphighTemp = [];
-    lfphighTemp = dataStored{idxHigh(i)};
-    lfphighTemp = lfphighTemp{end};
-    plot(lfphighTemp(1,:),'b')
-    title(['Trial ',num2str(idxHigh(i))])
-    ylabel('HPC')
-    axis tight;
-end
-figure('color','w')
-for i = 1:length(idxHigh)
-    subplot(4,4,i)
-    lfphighTemp = [];
-    lfphighTemp = dataStored{idxHigh(i)};
-    lfphighTemp = lfphighTemp{end};    
-    plot(lfphighTemp(2,:),'r')
-    axis tight;
-    title(['Trial ',num2str(idxHigh(i))])
-    ylabel('PFC')
-end
-idxHighRem2 = str2num(input('Which trials to remove? ','s'));
-idxHigh(idxHighRem2) = [];
-
-% plot data to visualize
-figure('color','w')
-for i = 1:length(idxLow)
-    subplot(4,4,i)
-    lfpLowTemp = [];
-    lfpLowTemp = dataStored{idxLow(i)};
-    lfpLowTemp = lfpLowTemp{end};
-    plot(lfpLowTemp(1,:),'b')
-    title(['Trial ',num2str(idxLow(i))])
-    ylabel('HPC')
-    axis tight;
-end
-figure('color','w')
-for i = 1:length(idxLow)
-    subplot(4,4,i)
-    lfpLowTemp = [];
-    lfpLowTemp = dataStored{idxLow(i)};
-    lfpLowTemp = lfpLowTemp{end};    
-    plot(lfpLowTemp(2,:),'r')
-    axis tight;
-    title(['Trial ',num2str(idxLow(i))])
-    ylabel('PFC')
-end
-idxLowRem2 = str2num(input('Which trials to remove? ','s'));
-idxLow(idxLowRem2) = [];
+delayLowTimes  = cell2mat(dataFormatted2(idxLow,5));
+delayLowYTimes = cell2mat(dataFormatted2(idxYokedLow,5));
+delayNorm = cell2mat(dataFormatted2(idxNorm,5));    
 
 % do the same 
 % remove any delay times that don't have an equally matched partner
@@ -1168,54 +1192,28 @@ highYTime = delayHighYTimes;
 NormTime  = delayNorm;
 
 % get choice accuracies
-acc_high  = accuracy(idxHigh);
-acc_low   = accuracy(idxLow);
-acc_yHigh = accuracy(idxYokedHigh);
-acc_yLow  = accuracy(idxYokedLow);   
-acc_Norm  = accuracy(idxNorm);
+acc_high_text  = dataFormatted2(idxHigh,3);
+acc_low_text   = dataFormatted2(idxLow,3);
+acc_yHigh_text = dataFormatted2(idxYokedHigh,3);
+acc_yLow_text  = dataFormatted2(idxYokedLow,3); 
+acc_Norm_text  = dataFormatted2(idxNorm,3);
+
+% convert to boolean. 0 = correct, 1 = incorrect
+acc_high  = double(contains(acc_high_text,'incorrect'));
+acc_yHigh = double(contains(acc_yHigh_text,'incorrect'));
+acc_low   = double(contains(acc_low_text,'incorrect'));
+acc_yLow  = double(contains(acc_yLow_text,'incorrect'));
+acc_Norm  = double(contains(acc_Norm_text,'incorrect'));
 
 % get alternation index
 for i = 1:length(idxHigh)
-    try
-        altTrajHigh(i,:) = trajectory_taken(idxHigh(i)-1:idxHigh(i));
-    catch
-        altTrajHigh(i,:)=[{NaN'} {NaN}];
-    end
-    try
-        altTrajHighY(i,:) = trajectory_taken(idxYokedHigh(i)-1:idxYokedHigh(i));
-    catch
-        altTrajHighY(i,:)=[{NaN} {NaN}];
-    end
+        altTrajHigh(i,:)  = dataFormatted2(idxHigh(i)-1:idxHigh(i),2);
+        altTrajHighY(i,:) = dataFormatted2(idxYokedHigh(i)-1:idxYokedHigh(i),2);
 end
 for i = 1:length(idxLow)
-    try
-        altTrajLow(i,:) = trajectory_taken(idxLow(i)-1:idxLow(i));
-    catch
-        altTrajLow(i,:)=[{NaN} {NaN}];
-    end
-    try
-        altTrajLowY(i,:) = trajectory_taken(idxYokedLow(i)-1:idxYokedLow(i));
-    catch
-        altTrajLowY(i,:)=[{NaN} {NaN}];
-    end
+        altTrajLow(i,:)  = dataFormatted2(idxLow(i)-1:idxLow(i),2);
+        altTrajLowY(i,:) = dataFormatted2(idxYokedLow(i)-1:idxYokedLow(i),2);
 end
-altTrajLow   = nan2empty(altTrajLow);
-altTrajLowY  = nan2empty(altTrajLowY);
-altTrajHigh  = nan2empty(altTrajHigh);
-altTrajHighY = nan2empty(altTrajHighY);
-[~,idxEmpty] = emptyCellErase(altTrajLow(:,1));
-altTrajLow (idxEmpty,:)=[];
-altTrajLowY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajLowY(:,1));
-% now do the same for high
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajHigh(:,1));
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
-[~,idxEmpty] = emptyCellErase(altTrajHighY(:,1));
-altTrajHigh (idxEmpty,:)=[];
-altTrajHighY(idxEmpty,:)=[];
 
 % alternation index
 for i = 1:size(altTrajHigh,1)
@@ -1224,7 +1222,6 @@ for i = 1:size(altTrajHigh,1)
     elseif altTrajHigh{i,1} ~= altTrajHigh{i,2}
         altIdxHigh(i,:) = 1; % 1 = alternation
     end
-    
     if altTrajHighY{i,1} == altTrajHighY{i,2}
         altIdxHighY(i,:) = 0;
     elseif altTrajHighY{i,1} ~= altTrajHighY{i,2}
@@ -1238,7 +1235,6 @@ for i = 1:size(altTrajLow,1)
     elseif altTrajLow{i,1} ~= altTrajLow{i,2}
         altIdxLow(i,:) = 1; % 1 = alternation
     end
-    
     if altTrajLowY{i,1} == altTrajLowY{i,2}
         altIdxLowY(i,:) = 0;
     elseif altTrajLowY{i,1} ~= altTrajLowY{i,2}
@@ -1250,3 +1246,9 @@ place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
 save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save,'_CLEANED');
 save(save_var);
+
+place2store = ['X:\01.Experiments\R21\',targetRat];
+cd(place2store);
+save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save,'_filtered');
+save(save_var,'dataFormatted2','acc_high','acc_low','acc_yHigh','acc_yLow','acc_Norm','acc_high_text','acc_low_text','acc_yHigh_text','acc_yLow_text','acc_Norm_text','altIdxHigh','altIdxHighY','altIdxLow','altIdxLowY');
+
