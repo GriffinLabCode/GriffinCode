@@ -13,6 +13,12 @@ codeDir = getCurrentPath();
 addpath(codeDir)
 
 %% confirm this is the correct code
+prompt = ['CHANGE FONT SIZE TO 36? Home>Preferences>Fonts'];
+fontOut = input(prompt,'s');
+if contains(fontOut,[{'n'} {'N'}])
+    error('Please change font size to 36 so you can see the instructions for CD task Home>Preferences>Fonts')
+end
+
 prompt = ['What is your rats name? '];
 targetRat = input(prompt,'s');
 
@@ -324,19 +330,23 @@ session_time  = session_start-session_start; % quick definitio of this so it sta
 % tell the experimenter which trial is start
 if condID == 0
     if trajectory{1} == 'L'
-        writeDigitalPin(a,ledArduino.left,ON);
-        writeDigitalPin(a,ledArduino.wood,ON);
+        disp('LEFT WOOD')
+        %writeDigitalPin(a,ledArduino.left,ON);
+        %writeDigitalPin(a,ledArduino.wood,ON);
     elseif trajectory{1} == 'R'
-        writeDigitalPin(a,ledArduino.right,ON);
-        writeDigitalPin(a,ledArduino.mesh,ON);
+        disp('RIGHT MESH')
+        %writeDigitalPin(a,ledArduino.right,ON);
+        %writeDigitalPin(a,ledArduino.mesh,ON);
     end
 elseif condID == 1
     if trajectory{1} == 'L'
-        writeDigitalPin(a,ledArduino.left,ON);
-        writeDigitalPin(a,ledArduino.mesh,ON);
+        disp('LEFT MESH')
+        %writeDigitalPin(a,ledArduino.left,ON);
+        %writeDigitalPin(a,ledArduino.mesh,ON);
     elseif trajectory{1} == 'R'
-        writeDigitalPin(a,ledArduino.right,ON);
-        writeDigitalPin(a,ledArduino.wood,ON);
+        disp('RIGHT WOOD')
+        %writeDigitalPin(a,ledArduino.right,ON);
+        %writeDigitalPin(a,ledArduino.wood,ON);
     end
 end
 
@@ -358,10 +368,10 @@ while next == 0
     end
 end
 % turn everything off
-writeDigitalPin(a,ledArduino.left,OFF);
-writeDigitalPin(a,ledArduino.mesh,OFF);
-writeDigitalPin(a,ledArduino.right,OFF);
-writeDigitalPin(a,ledArduino.wood,OFF);
+%writeDigitalPin(a,ledArduino.left,OFF);
+%writeDigitalPin(a,ledArduino.mesh,OFF);
+%writeDigitalPin(a,ledArduino.right,OFF);
+%writeDigitalPin(a,ledArduino.wood,OFF);
 
 % open central stem door to start session
 writeline(s,doorFuns.centralOpen);
@@ -551,12 +561,7 @@ for triali = 1:numTrials
     % break out of the session if youre out of time
     if triali == numTrials || toc(sStart)/60 > session_length
         break % break out of for loop
-    end       
-
-    disp(['Time left on task = ',num2str(round(session_length-toc(sStart)/60)),'min'])
-    if toc(sStart)/60 > session_length
-        break % break out of for loop
-    end         
+    end             
     
     next = 0;
     while next == 0
@@ -567,21 +572,25 @@ for triali = 1:numTrials
             % prep the maze for the next trial
             if condID == 0
                 if trajectory{triali+1} == 'L'
-                    writeDigitalPin(a,ledArduino.left,ON);
-                    writeDigitalPin(a,ledArduino.wood,ON);
+                    disp('LEFT WOOD')
+                    %writeDigitalPin(a,ledArduino.left,ON);
+                    %writeDigitalPin(a,ledArduino.wood,ON);
                 elseif trajectory{triali+1} == 'R'
-                    writeDigitalPin(a,ledArduino.right,ON);
-                    writeDigitalPin(a,ledArduino.mesh,ON);
+                    disp('RIGHT MESH')
+                    %writeDigitalPin(a,ledArduino.right,ON);
+                    %writeDigitalPin(a,ledArduino.mesh,ON);
                 elseif trajectory{triali+1} == 'E'
                     break
                 end
             elseif condID == 1
                 if trajectory{triali+1} == 'L'
-                    writeDigitalPin(a,ledArduino.left,ON);
-                    writeDigitalPin(a,ledArduino.mesh,ON);
+                    disp('LEFT MESH')
+                    %writeDigitalPin(a,ledArduino.left,ON);
+                    %writeDigitalPin(a,ledArduino.mesh,ON);
                 elseif trajectory{triali+1} == 'R'
-                    writeDigitalPin(a,ledArduino.right,ON);
-                    writeDigitalPin(a,ledArduino.wood,ON);
+                    disp('RIGHT WOOD')
+                    %writeDigitalPin(a,ledArduino.right,ON);
+                    %writeDigitalPin(a,ledArduino.wood,ON);
                 elseif trajectory{triali+1} == 'E'
                     break
                 end
@@ -607,10 +616,10 @@ for triali = 1:numTrials
             end
 
             % turn everything off
-            writeDigitalPin(a,ledArduino.left,OFF);
-            writeDigitalPin(a,ledArduino.mesh,OFF);
-            writeDigitalPin(a,ledArduino.right,OFF);
-            writeDigitalPin(a,ledArduino.wood,OFF);  
+            %writeDigitalPin(a,ledArduino.left,OFF);
+            %writeDigitalPin(a,ledArduino.mesh,OFF);
+            %writeDigitalPin(a,ledArduino.right,OFF);
+            %writeDigitalPin(a,ledArduino.wood,OFF);  
             
             next = 1;
         end
@@ -629,7 +638,7 @@ for triali = 1:numTrials
     
     % open these for storing
     if contains(indicatorOUT{triali},'Norm') || contains(indicatorOUT{triali},'NormHighFail') || contains(indicatorOUT{triali},'NormLowFail')
-        disp(['Normal delay of ',num2str(delayLenTrial(triali))])
+        %disp(['Normal delay of ',num2str(delayLenTrial(triali))])
         pause(delayLenTrial(triali));
 
     elseif contains(indicatorOUT{triali},'high')
