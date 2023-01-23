@@ -9,10 +9,10 @@ clear; close all;
 % interface with user - want to know how many electrode surfaces are on
 % each shank
 prompt = 'How many electrodes on on each shank? ';
-elecPerShank = num2str(input(prompt,'s'));
+elecPerShank = str2num(input(prompt,'s'));
 
 % get signal
-numCSC = 1:8:64; % Each shank has 8 recordings surfaces
+numCSC = 1:elecPerShank:64; % Each shank has 8 recordings surfaces
 for shanki = 1:length(numCSC)
     % define shank
     cscNames = numCSC(shanki):numCSC(shanki)+7;
@@ -41,7 +41,7 @@ for shanki = 1:numShanks
         plot(lfp{shanki,ei})
         title(['Shank',num2str(shanki),' electrode',num2str(ei)])
         axis tight;
-        ylim([-6000 6000])
+        ylim([-7000 7000])
         % keep track of the number of loops
     end
 end
@@ -61,9 +61,36 @@ for shanki = 1:numShanks
     end
 end
 
-info.variable = 'lfp is a cell array with rows being shank and columns being electrode';
-info.processing = 'Signals were visualized and excluded if artifacts were observed or 1) if the wires were missing or 2) if the signals were references (based on low voltage signals';
-save('probeLFP','lfp','info','srate');
-%savefig('probeLFP.fig')
+% load events
+load('Events')
+ratName = input('Enter rat name (no delimeters) ','s');
+session = strsplit(pwd,'\');
+session = session{end};
+session = strsplit(session,'_');
+sessName = horzcat(session{:});
+sessName = join(strsplit(sessName,'-'),'');
+sessName = ['session',sessName{1}];
+
+% create structure
+sessionInfo = input('Describe what the rat did on this session ','s');
+lfpRef = input('Where was the reference? ','s');
+
+data.(['rat',ratName]).(sessName).('metadata').session.date = session{1};
+data.(['rat',ratName]).(sessName).('metadata').session.time = session{2};
+data.(['rat',ratName]).(sessName).('metadata').session.description = sessionInfo;
+data.(['rat',ratName]).(sessName).('metadata').LFP.organization = 'lfp is a cell array with rows being shank and columns being electrode';
+data.(['rat',ratName]).(sessName).('metadata').LFP.processing = 'Signals were visualized and excluded if artifacts were observed or 1) if the wires were missing or 2) if the signals were references (based on low voltage signals';
+data.(['rat',ratName]).(sessName).('metadata').LFP.reference = lfpRef;
+
+% save events
+data.(['rat',ratName]).(sessName).('events').strings = EventStrings;
+data.(['rat',ratName]).(sessName).('events').times   = TimeStamps;
+
+% get 
+data.(['rat',ratName]).(sessName).LFP.lfp   = lfp;
+data.(['rat',ratName]).(sessName).LFP.times = times;
+data.(['rat',ratName]).(sessName).LFP.srate = srate;
+data.(['rat',ratName]).(sessName).LFP.info = 'Row = shank, column = electrode';
+save('probeLFP','data');
 
 
