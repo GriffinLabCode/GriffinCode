@@ -544,31 +544,21 @@ for triali = 1:numTrials
     end
 
     next = 0;
-    while next == 0   
-        % track choice entry
-        if readDigitalPin(a,irArduino.Delay)==0 
-            disp('DelayEntry')
-            % neuralynx timestamp command
-            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEntry" 102 2');  
-            writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])
-            %tEntry = [];
-            %tEntry = tic;
-            next = 1;
-
-        end
-    end
-
-    % break out of the session if youre out of time
-    if triali == numTrials || toc(sStart)/60 > session_length
-        break % break out of for loop
-    end             
-    
-    next = 0;
     while next == 0
         if readDigitalPin(a,irArduino.Delay)==0
+            
+            disp('DelayEntry')
+            
+            % neuralynx timestamp command
+            [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "DelayEntry" 102 2');  
+            %writeline(s,[doorFuns.tLeftClose doorFuns.tRightClose])            
+            
             % prep the maze
             writeline(s,maze_prep)
+            %dStart = [];
+            %dStart = tic;
                 
+            %fStart = []; fStart = tic;
             % prep the maze for the next trial
             if condID == 0
                 if trajectory{triali+1} == 'L'
@@ -641,9 +631,9 @@ for triali = 1:numTrials
         %disp(['Normal delay of ',num2str(delayLenTrial(triali))])
         pause(delayLenTrial(triali));
 
-    elseif contains(indicatorOUT{triali},'high')
+    elseif contains(indicatorOUT{triali},'high')  
         dStart = [];
-        dStart = tic;        
+        dStart = tic;
         pause(3.5);
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
@@ -760,6 +750,7 @@ for triali = 1:numTrials
             %yokH = [yokH NaN];
         
     elseif contains(indicatorOUT{triali},'low')
+        % dstart was put up top to account for manual lags
         dStart = [];
         dStart = tic;
         pause(3.5);        
@@ -948,6 +939,11 @@ task_name = input(prompt,'s');
 
 prompt   = 'Enter notes for the session ';
 info     = input(prompt,'s');
+
+userTrialIn = str2num(input('Enter number of trials you ran ','s'));
+if userTrialIn ~= numel(accuracy_text)
+    error('You have entered the wrong number of trials - you probably didnt record them on your sheet correctly')
+end
 
 prompt = 'Did the EIB come off the rats head during any delay trials? ';
 eibOFF  = input(prompt,'s');

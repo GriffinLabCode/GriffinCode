@@ -89,7 +89,7 @@ noisePercent = 1; % 5 percent
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 10; % minutes
 
 % pellet count and machine timeout
 pellet_count = 1;
@@ -170,6 +170,7 @@ ledArduino.wood  = 'D11';
 ledArduino.mesh  = 'D5';
 ON = 1; OFF = 0;
 
+bmi = 0;
 %writeline(s,doorFuns.closeAll);
 %{
 for i = 1:10000000
@@ -193,32 +194,20 @@ end
 
 %% trial set up - make sure that there are no more than 3 of each trial type
 disp('Generating trial distribution')
-left  = repmat('L',[numTrials/2 1]);
-right = repmat('R',[numTrials/2 1]);
-both  = [left; right];
-both_shuffled = both;
-for i = 1:1000
-    % notice how it rewrites the both_shuffled variable
-    both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
-end
-trajectory = cellstr(both_shuffled);
-
-disp('Ensuring that there are no more than 3 of each trial type')
-next = 0;
-while next == 0
-    for i = 1:length(trajectory)-3
-        if trajectory{i}==trajectory{i+1} && trajectory{i}==trajectory{i+2} && trajectory{i}==trajectory{i+3} && trajectory{i}==trajectory{i+3}
-            % try a new shuffle
-            both_shuffled = randsample(trajectory,numTrials,false);
-            trajectory = cellstr(both_shuffled);           
-            break
-        end
-        if i == length(trajectory)-3
-            next = 1;
-        end
+outr = randsample([1,2],1);
+both = [];
+for i = 1:round(1000/6)
+    left  = repmat('L',[6 1]);
+    right = repmat('R',[6 1]);
+    if outr == 1
+        both{i}  = [left; right];
+    else
+        both{i} = [right;left];
     end
 end
-   
+both = vertcat(both{:});
+trajectory = cellstr(both);
+
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
 
@@ -530,18 +519,6 @@ for triali = 1:numTrials
         end
     end
 
-    next = 0;
-    while next == 0   
-        % track choice entry
-        if readDigitalPin(a,irArduino.Delay)==0 
-
-            %tEntry = [];
-            %tEntry = tic;
-            next = 1;
-
-        end
-    end
-
     disp(['Time left on task = ',num2str(round(session_length-toc(sStart)/60)),'min'])
     if toc(sStart)/60 > session_length
         break % break out of for loop
@@ -609,11 +586,6 @@ for triali = 1:numTrials
             next = 1;
         end
     end  
-
-    disp(['Time left on task = ',num2str(round(session_length-toc(sStart)/60)),'min'])
-    if toc(sStart)/60 > session_length
-        break % break out of for loop
-    end 
     
     % begin delay pause and real-time coherence detection
     delayLength = delayLenTrial(triali);
@@ -621,81 +593,84 @@ for triali = 1:numTrials
     % neuralynx timestamp command
     [succeeded, cheetahReply] = NlxSendCommand('-PostEvent "CohDetectStart" 102 2');  
     
-    dStart = [];
-    dStart = tic;
-    for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
-        disp('Getting coherence');
-        if i == 1
-            clearStream(LFP1name,LFP2name);
-            pause(windowDuration)
-            [succeeded, dataArray, timeStampArray, ~, ~, ...
-            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+    if bmi == 1
+        dStart = [];
+        dStart = tic;
+        for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
+            disp('Getting coherence');
+            if i == 1
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-            % 2) store the data
-            % now add and remove data to move the window
-            dataWin    = dataArray;
-        end
-
-        try
-            % 3) pull in 0.25 seconds of data
-            % pull in data at shorter resolution   
-            pause(pauseTime)
-            [succeeded, dataArray, timeStampArray, ~, ~, ...
-            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-            % 4) apply it to the initial array, remove what was there
-            dataWin(:,1:length(dataArray))=[]; % remove 560 samples
-            dataWin = [dataWin dataArray]; % add data
-
-            % detrend by removing third degree polynomial
-            data_det=[];
-            data_det(1,:) = detrend(dataWin(1,:),3);
-            data_det(2,:) = detrend(dataWin(2,:),3);
-
-            % determine if data is noisy
-            zArtifact = [];
-            zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
-            zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
-
-            idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
-            percSat = (length(idxNoise)/length(zArtifact))*100;
-            if percSat > noisePercent
-                detected{triali}(i)=1;
-                disp('Artifact Detected - coherence not calculated')     
-            else
-                detected{triali}(i)=0;
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;
             end
 
-            % calculate coherence
-            [coh{triali}{i},f] = mscohere(data_det(1,:),data_det(2,:),[],[],fpass,srate);
-           % cohAvg = nanmean(coh);
+            try
+                % 3) pull in 0.25 seconds of data
+                % pull in data at shorter resolution   
+                pause(pauseTime)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-            % store data
-            dataZStored{triali}{i} = zArtifact;
-            dataStored{triali}{i}  = dataWin;
+                % 4) apply it to the initial array, remove what was there
+                dataWin(:,1:length(dataArray))=[]; % remove 560 samples
+                dataWin = [dataWin dataArray]; % add data
 
-            % store coherence data
-            %cohAvg_data = [cohAvg_data cohAvg];
+                % detrend by removing third degree polynomial
+                data_det=[];
+                data_det(1,:) = detrend(dataWin(1,:),3);
+                data_det(2,:) = detrend(dataWin(2,:),3);
 
-            % calculate the amount of data actually pulled in
-            %actualDataDuration(i) = length(dataWin)/srate;
+                % determine if data is noisy
+                zArtifact = [];
+                zArtifact(1,:) = ((data_det(1,:)-baselineMean(1))./baselineSTD(1));
+                zArtifact(2,:) = ((data_det(2,:)-baselineMean(2))./baselineSTD(2));
 
-            if toc(dStart) > delayLength
-                break
+                idxNoise = find(zArtifact(1,:) > noiseThreshold | zArtifact(1,:) < -1*noiseThreshold | zArtifact(2,:) > noiseThreshold | zArtifact(2,:) < -1*noiseThreshold );
+                percSat = (length(idxNoise)/length(zArtifact))*100;
+                if percSat > noisePercent
+                    detected{triali}(i)=1;
+                    disp('Artifact Detected - coherence not calculated')     
+                else
+                    detected{triali}(i)=0;
+                end
+
+                % calculate coherence
+                [coh{triali}{i},f] = mscohere(data_det(1,:),data_det(2,:),[],[],fpass,srate);
+               % cohAvg = nanmean(coh);
+
+                % store data
+                dataZStored{triali}{i} = zArtifact;
+                dataStored{triali}{i}  = dataWin;
+
+                % store coherence data
+                %cohAvg_data = [cohAvg_data cohAvg];
+
+                % calculate the amount of data actually pulled in
+                %actualDataDuration(i) = length(dataWin)/srate;
+
+                if toc(dStart) > delayLength
+                    break
+                end
+            catch
+                disp('Caught potential failure')
+                clearStream(LFP1name,LFP2name);
+                pause(windowDuration)
+                [succeeded, dataArray, timeStampArray, ~, ~, ...
+                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                % 2) store the data
+                % now add and remove data to move the window
+                dataWin    = dataArray;            
             end
-        catch
-            disp('Caught potential failure')
-            clearStream(LFP1name,LFP2name);
-            pause(windowDuration)
-            [succeeded, dataArray, timeStampArray, ~, ~, ...
-            numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
-
-            % 2) store the data
-            % now add and remove data to move the window
-            dataWin    = dataArray;            
-        end
-    end    
-       
+        end    
+    else
+        pause(delayLength)
+    end
 end 
 [succeeded, reply] = NlxSendCommand('-StopRecording');
 
