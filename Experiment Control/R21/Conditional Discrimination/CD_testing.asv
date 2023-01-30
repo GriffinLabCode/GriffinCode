@@ -204,8 +204,8 @@ while next == 0
 end
 
 %% trial set up - make sure that there are no more than 3 of each trial type
-metTraj = 0; metSeq = 0;
-while metTraj == 0 || metSeq == 0
+next2 = 0;
+while next2 == 0
     disp('Generating trial distribution')
     left  = repmat('L',[numTrials/2 1]);
     right = repmat('R',[numTrials/2 1]);
@@ -217,7 +217,7 @@ while metTraj == 0 || metSeq == 0
     end
     trajectory = cellstr(both_shuffled);
 
-    disp('Ensuring that there are no more than 3 of each trial type and that alternation does not work more than 60% of the time')
+    disp('Ensuring that there are no more than 3 of each trial type and that alternation does not work more than 50% of the time')
     boolTraj = double(contains(trajectory,'R')); % 1 = R
     % find right handed difference (if 1 
     alt = abs(diff(boolTraj));
@@ -248,14 +248,12 @@ while metTraj == 0 || metSeq == 0
                 alt = abs(diff(boolTraj));
                 alt = cellstr(num2str(alt));
                 alt(find(contains(alt,'0')))={'sameSide'};
-                alt(find(contains(alt,'1')))={'alternation'};    
-                % set to 0 because you shuffled
-                metTraj = 0;
+                alt(find(contains(alt,'1')))={'alternation'};                  
                 break
             end         
             if loopi == length(looper)
-                disp('Criterion met for alternation not working > or < 60% of the time')
-                next1 = 1; metSeq = 1;
+                disp('Criterion met for alternation not working > 50% of the time')
+                next1 = 1;
             end
         end
     end
@@ -267,18 +265,64 @@ while metTraj == 0 || metSeq == 0
             if trajectory{i}==trajectory{i+1} && trajectory{i}==trajectory{i+2} && trajectory{i}==trajectory{i+3} && trajectory{i}==trajectory{i+3}
                 % try a new shuffle
                 both_shuffled = randsample(trajectory,numTrials,false);
-                trajectory = cellstr(both_shuffled);
-                % set to 0 bc you shuffled
-                metSeq = 0;
+                trajectory = cellstr(both_shuffled);           
                 break
             end
             if i == length(trajectory)-3
-                next = 1; metTraj = 1; 
+                next = 1; next2 = 1;
             end
         end
     end
 end
+        % get blocks of trajectories
+        trajectories = trajectory(looper(loopi):looper(loopi)+9);
+        % search for more than 3 in a row
+        next3 = 0;
+        while next3 == 0
+            for ii = 1:length(trajectories)-3
+                if trajectories{ii}==trajectories{ii+1} && trajectories{ii}==trajectories{ii+2} && trajectories{ii}==trajectories{ii+3}
+                    disp('More than 3 lefts/rights in a row, reshuffling...')
+                    both_shuffled = randsample(trajectory,10,false);
+                    trajectories = cellstr(both_shuffled);
+                    met = 0;
+                    break
+                else
+                    met = 1;
+                end
+                if ii == length(trajectories)-3 && met == 1
+                    next3 = 1;
+                end
+            end
+        end
+
+        temp = []; numAlt = []; propWorkAlt = [];
+        temp   = alt(looper(loopi):looper(loopi)+8);
+        numAlt = numel(find(contains(temp,'alternation')));
+        propWorkAlt = numAlt/10;
+        if propWorkAlt > 0.6 || propWorkAlt < 0.6
+            % try again
+            disp('Alternating works too often, reshuffling...')
+            % shuffle within block
+            both_shuffled = randsample(trajectory,10,false);
+            trajectory(looper(loopi):looper(loopi)+9) = cellstr(both_shuffled); 
+            % get alt index
+            boolTraj = double(contains(trajectory,'R')); % 1 = R
+            % find right handed difference (if 1 
+            alt = abs(diff(boolTraj));
+            alt = cellstr(num2str(alt));
+            alt(find(contains(alt,'0')))={'sameSide'};
+            alt(find(contains(alt,'1')))={'alternation'};                  
+            break
+        end         
+        if loopi == length(looper)
+            disp('Criterion met for alternation not working > 50% of the time')
+            next = 1;
+        end         
+    end
+end
+
     
+   
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
 

@@ -1,10 +1,6 @@
 %% Step 4
 
 %% 
-% sometimes if the session is not exceeding the time limit of 30 minutes,
-% then the code will continue performing trials, but not save the data.
-% Cheetah w%%
-rng('shuffle');
 % clear/clc
 clear; clc
 
@@ -13,6 +9,12 @@ codeDir = getCurrentPath();
 addpath(codeDir)
 
 %% confirm this is the correct code
+prompt = ['CHANGE FONT SIZE TO 36? Home>Preferences>Fonts (y/n) '];
+fontOut = input(prompt,'s');
+if contains(fontOut,[{'n'} {'N'}])
+    error('Please change font size to 36 so you can see the instructions for CD task Home>Preferences>Fonts')
+end
+
 prompt = ['What is your rats name? '];
 targetRat = input(prompt,'s');
 
@@ -203,6 +205,82 @@ for i = 1:1000
 end
 trajectory = cellstr(both_shuffled);
 
+metTraj = 0; metSeq = 0;
+while metTraj == 0 || metSeq == 0
+    disp('Generating trial distribution')
+    left  = repmat('L',[numTrials/2 1]);
+    right = repmat('R',[numTrials/2 1]);
+    both  = [left; right];
+    both_shuffled = both;
+    for i = 1:1000
+        % notice how it rewrites the both_shuffled variable
+        both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
+    end
+    trajectory = cellstr(both_shuffled);
+
+    disp('Ensuring that there are no more than 3 of each trial type and that alternation does not work more than 60% of the time')
+    boolTraj = double(contains(trajectory,'R')); % 1 = R
+    % find right handed difference (if 1 
+    alt = abs(diff(boolTraj));
+    alt = cellstr(num2str(alt));
+    alt(find(contains(alt,'0')))={'sameSide'};
+    alt(find(contains(alt,'1')))={'alternation'}; 
+    
+    % make sure alternation does not work more than 50% of the time and
+    % that rats dont do more than 3 trials in a row of alternation
+    % do this in blocks of 10 trials
+    next1 = 0;
+    while next1 == 0 
+        looper = 1:5:numTrials;
+        for loopi = 1:length(looper)
+            temp = []; numAlt = []; propWorkAlt = [];
+            temp   = alt(looper(loopi):looper(loopi)+3);
+            numAlt = numel(find(contains(temp,'alternation')));
+            propWorkAlt = numAlt/5;
+            if propWorkAlt > 0.6 || propWorkAlt < 0.6
+                % try again
+                disp('Alternating works too often, reshuffling...')
+                % shuffle within block
+                both_shuffled = randsample(trajectory,5,false);
+                trajectory(looper(loopi):looper(loopi)+4) = cellstr(both_shuffled); 
+                % get alt index
+                boolTraj = double(contains(trajectory,'R')); % 1 = R
+                % find right handed difference (if 1 
+                alt = abs(diff(boolTraj));
+                alt = cellstr(num2str(alt));
+                alt(find(contains(alt,'0')))={'sameSide'};
+                alt(find(contains(alt,'1')))={'alternation'};    
+                % set to 0 because you shuffled
+                metTraj = 0;
+                break
+            end         
+            if loopi == length(looper)
+                disp('Criterion met for alternation not working > or < 60% of the time')
+                next1 = 1; metSeq = 1;
+            end
+        end
+    end
+    
+    disp('Ensuring that there are no more than 3 of each trial type')
+    next = 0;
+    while next == 0
+        for i = 1:length(trajectory)-3
+            if trajectory{i}==trajectory{i+1} && trajectory{i}==trajectory{i+2} && trajectory{i}==trajectory{i+3} && trajectory{i}==trajectory{i+3}
+                % try a new shuffle
+                both_shuffled = randsample(trajectory,numTrials,false);
+                trajectory = cellstr(both_shuffled);
+                % set to 0 bc you shuffled
+                metSeq = 0;
+                break
+            end
+            if i == length(trajectory)-3
+                next = 1; metTraj = 1; 
+            end
+        end
+    end
+end
+  
+%{
 disp('Ensuring that there are no more than 3 of each trial type')
 next = 0;
 while next == 0
@@ -218,7 +296,8 @@ while next == 0
         end
     end
 end
-   
+%}
+
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
 
@@ -321,19 +400,23 @@ session_time  = session_start-session_start; % quick definitio of this so it sta
 % tell the experimenter which trial is start
 if condID == 0
     if trajectory{1} == 'L'
-        writeDigitalPin(a,ledArduino.left,ON);
-        writeDigitalPin(a,ledArduino.wood,ON);
+        disp('LEFT WOOD')
+        %writeDigitalPin(a,ledArduino.left,ON);
+        %writeDigitalPin(a,ledArduino.wood,ON);
     elseif trajectory{1} == 'R'
-        writeDigitalPin(a,ledArduino.right,ON);
-        writeDigitalPin(a,ledArduino.mesh,ON);
+        disp('RIGHT MESH')
+        %writeDigitalPin(a,ledArduino.right,ON);
+        %writeDigitalPin(a,ledArduino.mesh,ON);
     end
 elseif condID == 1
     if trajectory{1} == 'L'
-        writeDigitalPin(a,ledArduino.left,ON);
-        writeDigitalPin(a,ledArduino.mesh,ON);
+        disp('LEFT MESH')
+        %writeDigitalPin(a,ledArduino.left,ON);
+        %writeDigitalPin(a,ledArduino.mesh,ON);
     elseif trajectory{1} == 'R'
-        writeDigitalPin(a,ledArduino.right,ON);
-        writeDigitalPin(a,ledArduino.wood,ON);
+        disp('RIGHT WOOD')
+        %writeDigitalPin(a,ledArduino.right,ON);
+        %writeDigitalPin(a,ledArduino.wood,ON);
     end
 end
 
@@ -355,10 +438,10 @@ while next == 0
     end
 end
 % turn everything off
-writeDigitalPin(a,ledArduino.left,OFF);
-writeDigitalPin(a,ledArduino.mesh,OFF);
-writeDigitalPin(a,ledArduino.right,OFF);
-writeDigitalPin(a,ledArduino.wood,OFF);
+%writeDigitalPin(a,ledArduino.left,OFF);
+%writeDigitalPin(a,ledArduino.mesh,OFF);
+%writeDigitalPin(a,ledArduino.right,OFF);
+%writeDigitalPin(a,ledArduino.wood,OFF);
 
 % open central stem door to start session
 writeline(s,doorFuns.centralOpen);
@@ -373,7 +456,8 @@ for triali = 1:numTrials
     % minutes of the session
     if toc(sStart)/60 > session_length
         %writeline(s,doorFuns.closeAll)
-        %sessEnd = 1;            
+        %sessEnd = 1;  
+        writeline(s,maze_prep);
         break % break out of for loop
     else        
         % set central door timeout value
@@ -487,7 +571,7 @@ for triali = 1:numTrials
                     accuracy(triali)=1;
                     disp('Error')
                 end                 
-            end                    
+            end                                   
 
             pause(5)
             writeline(s,[doorFuns.gzRightOpen doorFuns.gzLeftOpen doorFuns.tRightClose doorFuns.tLeftOpen doorFuns.centralClose]);
@@ -558,24 +642,29 @@ for triali = 1:numTrials
             % prep the maze
             writeline(s,maze_prep)
                 
+            %fStart = []; fStart = tic;
             % prep the maze for the next trial
             if condID == 0
                 if trajectory{triali+1} == 'L'
-                    writeDigitalPin(a,ledArduino.left,ON);
-                    writeDigitalPin(a,ledArduino.wood,ON);
+                    disp('LEFT WOOD')
+                    %writeDigitalPin(a,ledArduino.left,ON);
+                    %writeDigitalPin(a,ledArduino.wood,ON);
                 elseif trajectory{triali+1} == 'R'
-                    writeDigitalPin(a,ledArduino.right,ON);
-                    writeDigitalPin(a,ledArduino.mesh,ON);
+                    disp('RIGHT MESH')
+                    %writeDigitalPin(a,ledArduino.right,ON);
+                    %writeDigitalPin(a,ledArduino.mesh,ON);
                 elseif trajectory{triali+1} == 'E'
                     break
                 end
             elseif condID == 1
                 if trajectory{triali+1} == 'L'
-                    writeDigitalPin(a,ledArduino.left,ON);
-                    writeDigitalPin(a,ledArduino.mesh,ON);
+                    disp('LEFT MESH')
+                    %writeDigitalPin(a,ledArduino.left,ON);
+                    %writeDigitalPin(a,ledArduino.mesh,ON);
                 elseif trajectory{triali+1} == 'R'
-                    writeDigitalPin(a,ledArduino.right,ON);
-                    writeDigitalPin(a,ledArduino.wood,ON);
+                    disp('RIGHT WOOD')
+                    %writeDigitalPin(a,ledArduino.right,ON);
+                    %writeDigitalPin(a,ledArduino.wood,ON);
                 elseif trajectory{triali+1} == 'E'
                     break
                 end
@@ -601,10 +690,10 @@ for triali = 1:numTrials
             end
 
             % turn everything off
-            writeDigitalPin(a,ledArduino.left,OFF);
-            writeDigitalPin(a,ledArduino.mesh,OFF);
-            writeDigitalPin(a,ledArduino.right,OFF);
-            writeDigitalPin(a,ledArduino.wood,OFF);  
+            %writeDigitalPin(a,ledArduino.left,OFF);
+            %writeDigitalPin(a,ledArduino.mesh,OFF);
+            %writeDigitalPin(a,ledArduino.right,OFF);
+            %writeDigitalPin(a,ledArduino.wood,OFF);   
             
             next = 1;
         end

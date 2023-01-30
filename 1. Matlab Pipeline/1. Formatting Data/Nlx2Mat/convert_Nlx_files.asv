@@ -12,13 +12,11 @@ cd(datafolder)
 
 % define which CSCs to convert. Maybe you only want to convert CSCs 1 and
 % 3. If you want CSCs 1:16: numCSC = 1:16;
-%{
-% for probe 21-45
 numCSC = [1:64]; % ** If your CSC are numbered, do this and comment below
 remCSC = [1,2,3,7,9,10,17,18,19,20,22,23,25,26,28,33,38,41,42,49,53,57,64];
 idxRem = dsearchn(numCSC',remCSC');
 numCSC(idxRem)=[];
-%}
+
 
 %strCSC = [{'PFC_11'} {'PFC_10'} {'HPC_43'} {'HPC_41'} {'HPC_33'} {'HPC_31'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_red'} {'PFC_black'} {'HPC_red'} {'HPC_green'} {'HPC_blue'} {'HPC_black'}]; % if your csc are strings, do this and comment above
@@ -26,7 +24,7 @@ numCSC(idxRem)=[];
 
 %strCSC = [{'PFC_black'} {'HPC_red'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_red'} {'HPC_blue'} {'HPC_red'}]; % if your csc are strings, do this and comment above
-strCSC = [{'HPC_b'} {'PFC_post'}];
+%strCSC = [{'HPC_b'} {'PFC_post'}];
 %numCSC = [3,10,14]; % ** If your CSC are numbered, do this and comment below
 %strCSC = [{'PFC_11'} {'PFC_10'} {'HPC_43'} {'HPC_41'} {'HPC_33'} {'HPC_31'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_red'} {'PFC_blue'} {'HPC_red'} {'HPC_clear'} {'HPC_blue'} {'HPC_black'} {'REF'}]; % if your csc are strings, do this and comment above
