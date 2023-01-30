@@ -204,6 +204,18 @@ while next == 0
 end
 
 %% trial set up - make sure that there are no more than 3 of each trial type
+tic;
+disp('Generating trial distribution')
+left  = repmat('L',[numTrials/2 1]);
+right = repmat('R',[numTrials/2 1]);
+both  = [left; right];
+both_shuffled = both;
+for i = 1:1000
+    % notice how it rewrites the both_shuffled variable
+    both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
+end
+trajectory = cellstr(both_shuffled);
+
 metTraj = 0; metSeq = 0;
 while metTraj == 0 || metSeq == 0
     disp('Generating trial distribution')
@@ -230,18 +242,18 @@ while metTraj == 0 || metSeq == 0
     % do this in blocks of 10 trials
     next1 = 0;
     while next1 == 0 
-        looper = 1:5:numTrials;
+        looper = 1:10:numTrials;
         for loopi = 1:length(looper)
             temp = []; numAlt = []; propWorkAlt = [];
             temp   = alt(looper(loopi):looper(loopi)+3);
             numAlt = numel(find(contains(temp,'alternation')));
-            propWorkAlt = numAlt/5;
-            if propWorkAlt > 0.6 || propWorkAlt < 0.6
+            propWorkAlt = numAlt/10;
+            if propWorkAlt > 0.6
                 % try again
                 disp('Alternating works too often, reshuffling...')
                 % shuffle within block
-                both_shuffled = randsample(trajectory,5,false);
-                trajectory(looper(loopi):looper(loopi)+4) = cellstr(both_shuffled); 
+                both_shuffled = randsample(trajectory,10,false);
+                trajectory(looper(loopi):looper(loopi)+9) = cellstr(both_shuffled); 
                 % get alt index
                 boolTraj = double(contains(trajectory,'R')); % 1 = R
                 % find right handed difference (if 1 
@@ -278,6 +290,7 @@ while metTraj == 0 || metSeq == 0
         end
     end
 end
+toc;
     
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
