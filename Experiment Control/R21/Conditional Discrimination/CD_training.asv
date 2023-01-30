@@ -194,7 +194,6 @@ while next == 0
 end
 
 %% trial set up - make sure that there are no more than 3 of each trial type
-tic;
 disp('Generating trial distribution')
 left  = repmat('L',[numTrials/2 1]);
 right = repmat('R',[numTrials/2 1]);
@@ -238,7 +237,7 @@ while metTraj == 0 || metSeq == 0
             temp   = alt(looper(loopi):looper(loopi)+3);
             numAlt = numel(find(contains(temp,'alternation')));
             propWorkAlt = numAlt/10;
-            if propWorkAlt > 0.6
+            if propWorkAlt > 0.6 || propWorkAlt < 0.6
                 % try again
                 disp('Alternating works too often, reshuffling...')
                 % shuffle within block
@@ -280,7 +279,7 @@ while metTraj == 0 || metSeq == 0
         end
     end
 end
-toc;
+  
 %{
 disp('Ensuring that there are no more than 3 of each trial type')
 next = 0;
