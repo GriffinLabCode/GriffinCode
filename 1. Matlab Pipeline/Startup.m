@@ -99,6 +99,16 @@ for nn = 3:size(folder_names,1)
             
             disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])        
             
+            % add the helper functions
+            funFolder_in_chronux = '\spectral_analysis\pointtimes';
+            
+            % addpath to the continuous folder - this is where the lfp
+            % analyses are
+            addpath([add_inside_dir,funFolder_in_chronux])
+            
+            disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])        
+            
+            
         else
             
             % addpath to outside folder

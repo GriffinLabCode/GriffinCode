@@ -9,11 +9,11 @@ function [] = lfpRaster(lfp,lfpIdx,unitIdx)
     disp('Please note that this code only supports two signals right now');
 
     figure('color','w')
-    unitLooper = unitIdx:size(lfp(unitIdx:end,:),1);
-    unitCount = length(unitLooper);
+    unitLooper = unitIdx;
+    unitCount  = length(unitLooper);
     % pfc
     subplot(unitCount+2,1,1)
-        plot(lfp(lfpIdx(1),:),'k'); box off; axis off; axis tight;
+        plot(lfp(lfpIdx(1),:),'k'); box off; axis tight; %axis off; 
         xlim([1 length(lfp)])        
     % hpc
     subplot(unitCount+2,1,2);
@@ -22,7 +22,6 @@ function [] = lfpRaster(lfp,lfpIdx,unitIdx)
     % colors for unit plotting
     disp('Color code supported by...')
     colors = distinguishable_colors(size(lfp(5:end,:),1));
-    colorID = 1;        
     for si = 1:length(unitLooper)
         subplot(unitCount+2,1,si+2)
         for i = 1:length(lfp(unitLooper(si),:))

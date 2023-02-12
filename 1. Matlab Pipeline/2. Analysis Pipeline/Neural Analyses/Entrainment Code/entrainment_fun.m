@@ -138,8 +138,8 @@ elseif shuffle == 1
             % Create sub-sampled MRL value from bootstrapped spike-phase distribution
             permnum = 1000;
             for i = 1:permnum  
-                random_spikes = randsample(spkPhaseRad,spkCount);
-                mrl_sub{shuffi}(i)    = circ_r(random_spikes);      
+                random_spikes      = randsample(spkPhaseRad,spkCount);
+                mrl_sub{shuffi}(i) = circ_r(random_spikes);      
             end
 
             % Calculate MRL, Rayleigh's z-statistic, and p-value based on null
