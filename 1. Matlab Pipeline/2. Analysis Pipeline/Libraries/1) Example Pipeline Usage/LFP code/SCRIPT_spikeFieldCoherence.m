@@ -19,6 +19,41 @@ load('spikefieldData')
 frequencies = logspace(0,2); % 10^0 to 10^2: 1:100
 nCycle = 6; % constants
 
+% chronux
+params = getCustomParams;
+params.Fs = srate;
+params.pad = 2;
+params.fpass = [0:20];
+params.tapers = [3 5];
+[C,phi,S12,S1,S2,f]=coherencycpb(lfp',spikeTimes',params);
+figure; plot(f,C); xlim([0 20])
+
+% sfc defined as the cpsd/s1*s2 via welches method
+% notice how this gives you the same answer as chronux's method, except we
+% have more control over frequency precision (frequency variable) - this is
+% a lot faster as well
+freq = [1:.5:20];
+[sfc,freq] = getSpikeFieldCoherence(lfp,spikeTimes,freq,[],srate);
+figure; plot(freq,sfc);
+
+% sfc defined by phase (practically mrl)
+nCycles = 6;
+[sfcP,freqP] = getSpikeFieldCoherence(lfp,spikeTimes,freq,nCycles,srate,'phase');
+
+figure('color','w');
+subplot 211; hold on;
+    plot(freq,smoothdata(sfc,'gaussian',10),'k');
+    plot(freq,sfc,'b')
+    title('FFT based SFC')
+    legend('Smoothed','raw')
+subplot 212; 
+    plot(freqP,sfcP);
+    title('Phase based sfc')
+    xlabel('Frequency')
+    ylabel('Spike Field Coherence')
+    box off
+
+%% here are some approaches broken down a bit
 %tic;
 lfp1 = lfp;
 % unlike our data, these data are organized as a boolean variable where 1 =
@@ -40,7 +75,7 @@ figure('color','w')
 plot(frequencies,sfc);
 
 % built into a function
-[sfc,freq] = getSpikeFieldCoherence(lfp,sidx,[],12,srate);
+[sfc,freq] = getSpikeFieldCoherence(lfp,sidx,[],12,srate,'phase');
 figure('color','w')
 plot(freq,sfc);
 
@@ -103,10 +138,10 @@ figure('color','w')
     end    
 
 %% compare to entrainment
-lowpass = 4; highpass = 12;
+lowpass = 6; highpass = 9;
 
 % filter the signal with 3rd degree butterworth
-jonesWilson = 1;
+jonesWilson = 0;
 if jonesWilson == 1
     disp('You are now going to exclude phase estimations on non-theta states')
 else
@@ -145,6 +180,17 @@ sidx(isnan(spkPhase))=[];
 spkPhase(isnan(spkPhase))=[];
 spkRadian(isnan(spkRadian))=[];
 
+figure('color','w')
+subplot 211;
+    plot(lfp(srate*10:srate*12),'b');
+    xlim([0 srate])
+    box off
+subplot 212;
+    plot(spikeTimes(srate*10:srate*12),'k')
+    xlim([0 srate])
+    box off;
+
+%% typical analysis
 % bootstrapped mrl
 rng('default'); % for replication
 permnum = 1000; % number of permutations
@@ -159,7 +205,7 @@ end
 % entrainment statistics
 bsMrl     = mean(mrl_sub);
 mrl       = circ_r(spkRadian); 
-[p, z]    = circ_rtest(spkRadian);
+[p, z]    = circ_rtest(spkRadian(randomData));
 [n, xout] = hist(spkPhase,[0:30:360]); 
 
 figure('color','w')
@@ -171,7 +217,122 @@ subplot(122)
     xlabel ('Phase')
     ylabel ('Spike Count')  
     
-%% combine entrainment filtering with spike field coherence
+%% entrainment is impacted by spike counts
+
+% Rayleighs test is sensitive to sample size
+rng('default')
+ptemp = []; ztemp = []; p = []; z = [];
+looper = 20:10:1000; % go up to 1000 spikes
+for i = 1:length(looper)
+    % sample data at sample size (i) 1000 times (bootstrapped distribution)
+    for n = 1:1000
+        % randomly sample spike phases with increasing amounts of data
+        randomData = randsample(spkRadian,looper(i));
+        [ptemp(n), ztemp(n)]     = circ_rtest(randomData);
+    end
+    p(i) = mean(ptemp);
+    z(i) = mean(ztemp);
+    pstd(i) = std(ptemp);
+    zstd(i) = std(ztemp);
+    disp(['Finished with ',num2str(looper(i)),' spikes'])
+end
+    
+% MRL
+rng('default')
+mrltemp = []; mrl = [];
+looper = 20:10:1000; % go up to 1000 spikes
+for i = 1:length(looper)
+    % sample data at sample size (i) 1000 times (bootstrapped distribution)
+    for n = 1:1000
+        % randomly sample spike phases with increasing amounts of data
+        mrltemp(n) = circ_r(randsample(spkRadian,looper(i)));
+    end
+    mrl(i)    = mean(mrltemp);
+    mrlStd(i) = std(mrltemp);
+    disp(['Finished with ',num2str(looper(i)),' spikes'])
+end
+
+figure('color','w')
+    subplot 311;
+        shadedErrorBar(looper,p,pstd,'k',0);
+        box off
+        ylabel('Mean Rayleighs p-value (n=1000 iterations)')
+        %xlabel('HPC place cell spike count')
+        %title('Rayleighs test of non-uniformity vs spike counts')
+    subplot 312;
+        shadedErrorBar(looper,z,zstd,'k',0);
+        box off
+        ylabel('Rayleighs Z (n=1000 iterations)')
+        %xlabel('HPC place cell spike count')
+    subplot 313;
+        shadedErrorBar(looper,mrl,mrlStd,'k',0);
+        box off
+        ylabel('MRL (n=1000 iterations)')
+        xlabel('HPC place cell spike count')
+        
+figure('color','w')
+    subplot 311;
+        plot(looper,p,'k');
+        box off
+        ylabel('Mean Rayleighs p-value (n=1000 iterations)')
+        %xlabel('HPC place cell spike count')
+        %title('Rayleighs test of non-uniformity vs spike counts')
+    subplot 312;
+        plot(looper,z,'k');
+        box off
+        ylabel('Rayleighs Z (n=1000 iterations)')
+        %xlabel('HPC place cell spike count')
+    subplot 313;
+        plot(looper,mrl,'k');
+        box off
+        ylabel('MRL (n=1000 iterations)')
+        xlabel('HPC place cell spike count')
+        
+figure('color','w');
+subplot 311
+    plot(looper,zstd,'k')
+    ylabel('z standard deviation')
+    xlabel('HPC place cell spike counts')
+subplot 312;
+    plot(looper,pstd,'k')
+    ylabel('p standard deviation')
+    xlabel('HPC place cell spike counts')
+subplot 313;
+    plot(looper,mrlStd,'k')
+    ylabel('MRL standard deviation')
+    xlabel('HPC place cell spike counts')
+        
+% compare a bootstrapped distribution of MRL estimates to randomly sampled
+% LFP phase values
+rng('default'); % for replication
+permnum = 1000; % number of permutations
+phaseRadRand = phaseRad(~isnan(phaseRad)); % get phase distribution without nan
+mrl_sub = []; mrl_rand = [];
+for i = 1:permnum 
+    % get mrl from true data and simply from the LFP phase
+    mrl_sub(i)  = circ_r(randsample(spkRadian,50));  
+    mrl_rand(i) = circ_r(randsample(phaseRadRand,50));
+end
+
+% plot distributions
+figure('color','w'); 
+subplot 211; hold on;
+    histogram(mrl_sub,'FaceColor','b')
+    histogram(mrl_rand,'FaceColor','r')
+    ylimits = ylim; xlimits = xlim;
+    line([mean(mrl_sub) mean(mrl_sub)],[ylimits(1) ylimits(2)],'color','k','LineWidth',2);
+    [h,p,ci,z] = ztest(mean(mrl_sub),mean(mrl_rand),std(mrl_rand));
+    [h,p] = kstest2(mrl_sub,mrl_rand);
+    legend('True spikes','Random Phases')
+    ylabel('Interation (n=1000)')
+    
+    % plot cumulative distribution
+subplot 212;
+    data   = []; data{1}   = mrl_sub; data{2} = mrl_rand;
+    colors = []; colors{1} = 'b';   colors{2} = 'r';
+    cumulativeDensity(data,colors,'Bootstrapped MRL','HPC',[],[],'n')
+    
+%% combine entrainment filtering with phase based spike field coherence
 
 % number of cycles for morlet wavelet (closer to 12 = better frequency
 % resolution and worse temporal resolution - standard is 5-12 - Cohen)
@@ -179,15 +340,14 @@ nCycles = 6;
 
 % calculate phase-based sfc on filtered spike times from entrainment
 % analysis above
-[sfc,freq] = getSpikeFieldCoherence(lfp,sidx,[],nCycles,srate);
+[sfc,freq] = getSpikeFieldCoherence(lfp,sidx,[],nCycles,srate,'phase');
 
 % use original, but randomly sample equal number of spikes
 sidx_rs = randsample(sidx_og,length(sidx));
-[sfc_rs,freq] = getSpikeFieldCoherence(lfp,sidx_rs,[],nCycles,srate);
+[sfc_rs,freq] = getSpikeFieldCoherence(lfp,sidx_rs,[],nCycles,srate,'phase');
 
 figure('color','w'); hold on;
     plot(freq,sfc,'k','LineWidth',2);
     plot(freq,sfc_rs,'b','LineWidth',2);
     legend('Filtered spikes','Raw spikes')
     
-

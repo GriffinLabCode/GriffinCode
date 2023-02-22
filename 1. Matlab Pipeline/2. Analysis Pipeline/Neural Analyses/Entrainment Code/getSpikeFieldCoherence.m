@@ -64,7 +64,7 @@ if contains(indVar,'phase')
 else
     % spike field coherence
     disp('Computing spike field coherence')
-    
+
     % coherence is the CPSD/S1.*S2
     [pxy] = cpsd(lfp,spikeTimes,[],[],freq,srate);
     [pxx] = pwelch(lfp,[],[],freq,srate);
