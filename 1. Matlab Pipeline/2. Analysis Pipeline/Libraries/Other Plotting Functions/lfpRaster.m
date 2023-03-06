@@ -5,18 +5,20 @@
 % lfpIdx: index of which rows are your lfp data
 % unitIdx: index of which rows are your unit data
 
-function [] = lfpRaster(lfp,lfpIdx,unitIdx)
+function [] = lfpRaster(lfp,lfpIdx,unitIdx,srate)
     disp('Please note that this code only supports two signals right now');
 
     figure('color','w')
     unitLooper = unitIdx;
     unitCount  = length(unitLooper);
     % pfc
-    subplot(unitCount+2,1,1)
+    subplot(unitCount+2,1,1); hold on;
+        plot(skaggs_filter_var(double(lfp(lfpIdx(1),:)),6,9,srate),'k','LineWidth',2)
         plot(lfp(lfpIdx(1),:),'k'); box off; axis tight; %axis off; 
         xlim([1 length(lfp)])        
     % hpc
-    subplot(unitCount+2,1,2);
+    subplot(unitCount+2,1,2); hold on;
+        plot(skaggs_filter_var(double(lfp(lfpIdx(2),:)),6,9,srate),'b','LineWidth',2)    
         plot(lfp(lfpIdx(2),:),'b'); box off; axis tight; axis off;
         xlim([1 length(lfp)])
     % colors for unit plotting

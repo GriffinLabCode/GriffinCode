@@ -52,14 +52,18 @@ function [Phase, InstCycleFrequency, PerCycleFreq, signal_filtered] = phase_freq
 
     %}
 
-    if jonesWilson == 1
-        disp('Filtering peaks/troughs if theyre outside of 1std from the mean filtered signal amplitude...')
+    if exist('jonesWilson')
+        if isempty(jonesWilson)
+            jonesWilson = 1;
+            disp('Automatically setting std threshold to 1std')
+        end
+        disp(['Filtering peaks/troughs if theyre outside ',num2str(jonesWilson), 'std from the mean filtered signal amplitude...'])
         % jones wilson - only peaks/troughs > 1std from the mean will be included
         signalZ = zscore(signal_filtered);
 
         % discover any peaks < 1std, remove
-        peakRem = find(signalZ(peaks) < 1); % +1std
-        trouRem = find(signalZ(troughs) > -1); % -1std
+        peakRem = find(signalZ(peaks) < jonesWilson); % +1std
+        trouRem = find(signalZ(troughs) > -jonesWilson); % -1std
         peaks(peakRem)=NaN;
         troughs(trouRem)=NaN;
     end
