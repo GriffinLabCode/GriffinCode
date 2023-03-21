@@ -40,6 +40,4 @@ function CleinPlot(data,colors,plotFig)
     X = linspace(centers(1)-w/2,centers(end)+w/2,1000);
     Y = fnval(DF,X);
     area(X,Y,'FaceColor',colors);
-    set(gca,'ylim',[0 350])
-    set(gca,'xlim',[0.05 0.6])
 end
