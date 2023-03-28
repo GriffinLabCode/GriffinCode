@@ -8,13 +8,17 @@
 %           you have two datasets you want to plot next to each other, then
 %           xLabels = [{'data1'},{'data2'}]
 % yLabels: String containing y axis label (ie whats your measurement?)
-%
+% jitter: 'y' or 'n'. Jitter data points as dots
+% jitterc: color as cell array input c = [{'r'} {'b'}] etc...
+% barcolor: color as cell array for bar graph faces (same as jitterc)
+% genFig: 'y' or 'n'. If set to 'y', the code will generate figure. If 'n'
+%               you specify the figure. 'n' is good for subplotting
 % -- OUTPUTS -- %
 % b: box plot figure
 %
 % written by John Stout and Allison George
 
-function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
+function [b,jitterc] = multiBarPlot(data,xLabels,yLabel,jitter,jitterc,barcolor,genFig)
 
     % check that data is a cell array, if not, convert it. This happens if
     % you input a vector or matrix
@@ -41,10 +45,23 @@ function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
     end
 
     % make figure
-    figure('color','w'); hold on;     
+    if exist('genFig')==0
+        genFig='y';
+    end
+    if contains(genFig,'y')
+        figure('color','w'); 
+    end
+    hold on;
     for i = 1:length(data)
         %bar(i,nanmean(data{i}),'FaceColor',[0 0.5 1]);
-        bar(i,nanmean(data{i}),'FaceColor',[.5 .5 .5],'LineWidth',1);
+        if exist('barcolor')==0
+            barcolor = [.5 .5 .5];
+        end
+        if iscell(barcolor) == 1
+            bar(i,nanmean(data{i}),'FaceColor',barcolor{i},'LineWidth',1);
+        else
+            bar(i,nanmean(data{i}),'FaceColor',barcolor,'LineWidth',1);
+        end
         disp(data{i})
         errorbar(i,nanmean(data{i}),stderr(data{i},1),'Color','k','LineWidth',1);
         if exist('jitter')
@@ -58,13 +75,13 @@ function [b,c] = multiBarPlot(data,xLabels,yLabel,jitter,c)
                 % rewritten, so colors match between plots
                 if exist('c')==0 
                     numIn = size(data{i});
-                    c = rand(3,numIn(1))';
-                elseif size(c,1)~=size(data{i},1)
+                    jitterc = rand(3,numIn(1))';
+                elseif size(jitterc,1)~=size(data{i},1)
                     numIn = size(data{i});
-                    c = rand(3,numIn(1))';                     
+                    jitterc = rand(3,numIn(1))';                     
                 end                    
                 x_axes               = ones(size(data{i})).*(i+((rand(size(data{i}))-0.5)/10));               
-                scat                 = scatter(x_axes,data{i},[],c,'filled'); % multiply by i to follow the bar graph x axes
+                scat                 = scatter(x_axes,data{i},[],jitterc,'filled'); % multiply by i to follow the bar graph x axes
                 
                % scat.MarkerEdgeColor = 'k';
                % scat.MarkerFaceColor = [.5 .5 0];  
