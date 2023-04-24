@@ -11,13 +11,18 @@
 % orient: orientation of boxplot. Empty if vertical, 'horizontal' if
 %           horizontal. 'vertcal' will also make it vertical
 % outliers: 'y' if you want to display outliers. anything else if otherwise
-%
+% new_fig: optional. provides a way to create subplots. new_fig = 'y'
+%           generates a new figure in this script. If you do not define, it
+%           automatically generates a new figure in the script. If you set
+%           new_fig = 'n', then you create the figure outside of this
+%           script. For example:
+%                   figure; subplot 211; multiBoxPlot(data,x,y,'vertical','n','n')                    
 % -- OUTPUTS -- %
 % b: box plot figure
 %
 % written by John Stout
 
-function [b] = multiBoxPlot(data,xLabels,yLabel,orient,outliers)
+function [b] = multiBoxPlot(data,xLabels,yLabel,orient,outliers,new_fig)
     % check that data is a cell array, if not, convert it. This happens if
     % you input a vector or matrix
     if iscell(data) == 0
@@ -43,7 +48,13 @@ function [b] = multiBoxPlot(data,xLabels,yLabel,orient,outliers)
     end
 
     % make figure
-    figure('color','w')
+    if exist('new_fig')==0
+        new_fig = 'y';
+    end
+    if contains(new_fig,'n')
+    else
+        figure('color','w')
+    end        
     x = []; y = [];
     for i = 1:length(data)
         xTemp = [];

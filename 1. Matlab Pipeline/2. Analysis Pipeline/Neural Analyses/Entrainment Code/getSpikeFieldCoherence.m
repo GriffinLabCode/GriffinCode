@@ -23,38 +23,57 @@
 % This code was adopted from MxC: MATLAB for brain and cognitive
 % scientists by John Stout and confirmed for accuracy with their data.
 
-function [sfc,freq] = getSpikeFieldCoherence(lfp,spikeLFPidx,freq,nCycle,srate)
-% convert data to single
-lfp = single(lfp);
-
-if exist('freq')==0 
-    disp('Did not detect frequency input, default to log space')
-    freq = logspace(0,2); % 10^0 to 10^2: 1:100
-elseif isempty(freq)==1
-    disp('Did not detect frequency input, default to log space')
-    freq = logspace(0,2); % 10^0 to 10^2: 1:100
+function [sfc,freq,phi] = getSpikeFieldCoherence(lfp,spikeTimes,freq,nCycle,srate,indVar)
+if exist('indVar')==0
+    indVar = 'n';
 end
+if contains(indVar,'phase')
+    disp('Computing phase based spike field coherence as described by Cohen 2019')
+    % convert data to single
+    lfp = single(lfp);
+    spikeLFPidx = find(spikeTimes);
 
-if exist('nCycle')==0 
-    disp('Did not detect # cycles input, default to 6')
-    nCycle = 6; 
-elseif isempty(nCycle)==1
-    disp('Did not detect # cycles input, default to 6')
-    nCycle = 6;
-end
+    if exist('freq')==0 
+        disp('Did not detect frequency input, default to log space')
+        freq = logspace(0,2); % 10^0 to 10^2: 1:100
+    elseif isempty(freq)==1
+        disp('Did not detect frequency input, default to log space')
+        freq = logspace(0,2); % 10^0 to 10^2: 1:100
+    end
 
-for wavei = 1:length(freq)
-    % get the analytic signal for morlet wavelet convolution
-    as = getMorletWaveletConv(lfp,freq(wavei),nCycle,srate);
-    % get the phase angle of each spike
-    angles = angle(as(spikeLFPidx)); 
-    % spike field coherence is the length of the averaged vector
-    sfc(wavei) = abs(mean(exp(1i*angles)));
+    if exist('nCycle')==0 
+        disp('Did not detect # cycles input, default to 6')
+        nCycle = 6; 
+    elseif isempty(nCycle)==1
+        disp('Did not detect # cycles input, default to 6')
+        nCycle = 6;
+    end
+
+    for wavei = 1:length(freq)
+        % get the analytic signal for morlet wavelet convolution
+        as = getMorletWaveletConv(lfp,freq(wavei),nCycle,srate);
+        % get the phase angle of each spike
+        angles = angle(as(spikeLFPidx)); 
+        % spike field coherence is the length of the averaged vector
+        sfc(wavei) = abs(mean(exp(1i*angles)));
+    end
+    %{
+    figure('color','w')
+    plot(freq,sfc);
+    %}
+else
+    % spike field coherence
+    disp('Computing spike field coherence')
+
+    % coherence is the CPSD/S1.*S2
+    [pxy] = cpsd(lfp,spikeTimes,[],[],freq,srate);
+    [pxx] = pwelch(lfp,[],[],freq,srate);
+    [pyy,freq] = pwelch(spikeTimes,[],[],freq,srate);
+    %sfc = ((abs(pxy)).^2)./(pxx.*pyy); % same result
+    cyx=pxy./sqrt(pxx.*pyy);
+    sfc=abs(cyx);
+    phi=angle(cyx);
 end
-%{
-figure('color','w')
-plot(freq,sfc);
-%}
 
 
 

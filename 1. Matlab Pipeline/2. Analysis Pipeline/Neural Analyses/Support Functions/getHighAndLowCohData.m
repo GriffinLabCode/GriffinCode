@@ -21,10 +21,13 @@
 % dataex: cell array containing remaining signal data
 % C: Avg theta coherence over time
 % t: time variable (plot(t,C) or stem(t,C))
+% dataRef: restructured data containing all original data points placed
+%           into an array. This would be useful for going back to the
+%           original variable
 %
 % written by John Stout
     
-function [datahigh,datalow,dataex,C,t] = getHighAndLowCohData(data,cohInd,signalInd,cohThresholds,srate,plotfig,deltaThresh)
+function [datahigh,datalow,dataex,C,t,dataAll] = getHighAndLowCohData(data,cohInd,signalInd,cohThresholds,srate,plotfig,deltaThresh)
 disp('If you notice signal artifacts in your data, consider ztransforming and removing high coh epochs if extreme voltages are observed or if delta coh > theta coh')
 
 if exist('deltaThresh')==0
@@ -52,11 +55,13 @@ nw=length(winstart);
 
 disp(['LFP channels defined in "signalInd" will be detrended'])
 C = []; datahigh = cell([1 nw]); datalow = cell([1 nw]); dataex = cell([1 nw]);
+dataAll = cell([1 nw]); 
 for n=1:nw
     
     % get data
-    indx    = winstart(n):winstart(n)+Nwin-1;
-    datawin = data(indx,:);
+    indx       = winstart(n):winstart(n)+Nwin-1;
+    datawin    = data(indx,:);
+    datawin_og = data(indx,:); % non detrended signal
     
     % detrend signals indicated
     datawin(:,signalInd) = detrend(datawin(:,signalInd),3);
@@ -68,6 +73,7 @@ for n=1:nw
     % identify whether c belongs to high, low, or na
     if contains(deltaThresh,'y')
         cdelta = mean(mscohere(datawin(:,cohInd(1)),datawin(:,cohInd(2)),[],[],[1:.5:4],srate));
+        dataAll{n} = datawin_og';
         if ctheta > cohThresholds(1) && ctheta > cdelta % this should be high
             datahigh{n} = datawin';
         elseif ctheta < cohThresholds(2) && ctheta > cdelta
@@ -76,6 +82,7 @@ for n=1:nw
             dataex{n} = datawin';
         end        
     else
+        dataAll{n} = datawin_og';
         if ctheta > cohThresholds(1) % this should be high
             datahigh{n} = datawin';
         elseif ctheta < cohThresholds(2)

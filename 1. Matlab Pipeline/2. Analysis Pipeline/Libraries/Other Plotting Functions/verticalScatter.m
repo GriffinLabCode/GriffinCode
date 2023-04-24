@@ -36,7 +36,7 @@ function [b] = verticalScatter(data,scat_color,xLabels,yLabel,centTend,saveName)
     for i = 1:length(data)
         %b = bar(i,mean(data{i}),'FaceColor',[0 0.5 1]);
         %errorbar(i,mean(data{i}),stderr(data{i},1),'Color','k');
-        x_axes               = ones(size(data{i})).*(i+((rand(size(data{i}))-0.5)/10));               
+        x_axes               = ones(size(data{i})).*(i+((rand(size(data{i}))-0.5)/4));               
         scat                 = scatter(x_axes,data{i}); % multiply by i to follow the bar graph x axes 
         scat.MarkerEdgeColor = 'k';
         scat.MarkerFaceColor = scat_color{i}; 
