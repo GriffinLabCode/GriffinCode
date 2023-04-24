@@ -101,7 +101,7 @@ noisePercent = 1; % 5 percent
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 30; % minutes
+session_length = 20; % minutes
 
 % pellet count and machine timeout
 pellet_count = 1;
@@ -113,8 +113,11 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 %% experiment design prep.
 
 % define number of trials
-numTrials = 100; %24;
+numTrials = 9*10; %24;
 %umTrials = 24;
+
+% what percent of trials are rewarded via alternation?
+percentAlt = .6;
 
 %% randomize delay durations
 maxDelay = 20;
@@ -126,7 +129,7 @@ delayLenTrial = [];
 next = 0;
 while next == 0
 
-    if numel(delayLenTrial) >= 100
+    if numel(delayLenTrial) >= numTrials
         next = 1;
     else
         shortDuration  = randsample(minDelay:maxDelay/2,5,'true');
@@ -187,6 +190,21 @@ ON = 1; OFF = 0;
 for i = 1:10000000
     readDigitalPin(a,irArduino.Delay)
 end
+for i = 1:10000000
+    readDigitalPin(a,irArduino.rGoalArm)
+end
+for i = 1:10000000
+    readDigitalPin(a,irArduino.lGoalArm)
+end
+for i = 1:10000000
+    readDigitalPin(a,irArduino.lGoalZone)
+end
+for i = 1:10000000
+    readDigitalPin(a,irArduino.rGoalZone)
+end
+for i = 1:10000000
+    readDigitalPin(a,irArduino.choicePoint)
+end
 %}
 
 %% clean the stored data just in case IR beams were broken
@@ -204,8 +222,84 @@ while next == 0
 end
 
 %% trial set up - make sure that there are no more than 3 of each trial type
-next2 = 0;
-while next2 == 0
+tic;
+disp('Generating trial distribution')
+left  = repmat('L',[numTrials/2 1]);
+right = repmat('R',[numTrials/2 1]);
+both  = [left; right];
+both_shuffled = both;
+for i = 1:1000
+    % notice how it rewrites the both_shuffled variable
+    both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
+end
+trajectory = cellstr(both_shuffled);
+
+% split trajectory into blocks of 9 trials (3 one side, 3 another side)
+looper = 1:6:numTrials;
+trajectory_cell = [];
+for loopi = 1:length(looper)
+    % split data into blocks of 9 trials and solve the problem
+    trajectory_cell{loopi} = trajectory(looper(loopi):looper(loopi)+8);
+end
+
+% solve the problem
+next = 0;
+while next == 0
+    % work in blocks of 9 trials to solve the Fellows issue. This code is
+    % more robust as it will always generate a random distribution of
+    % trials
+    for loopi = 1:length(trajectory_cell)
+        % while loop variables to check for bias and alternation criterion
+        met_alt = 0; met_bias = 0;
+        while met_alt == 0 || met_bias == 0
+            % mix up trajectory_cell sequence
+            trajectory_cell{loopi} = randsample(trajectory_cell{loopi},length(trajectory_cell{loopi}),false);
+
+            % prepare these variables
+            boolTraj = []; alt = [];
+
+            % assign alt variable for string designation of alternation or pers
+            boolTraj = abs(diff(double(contains(trajectory_cell{loopi},'R')))); % 1 = R
+
+            % alternation
+            groupAltPercent = mean(boolTraj);
+            if groupAltPercent <= percentAlt
+                met_alt = 1;
+                disp(['Alternation criterion of ',num2str(percentAlt),' met']);
+            else
+                met_alt = 0;
+            end
+
+            % bias 
+            for i = 1:length(trajectory_cell{loopi})-3
+                if trajectory_cell{loopi}{i}==trajectory_cell{loopi}{i+1} && trajectory_cell{loopi}{i}==trajectory_cell{loopi}{i+2} && trajectory_cell{loopi}{i}==trajectory_cell{loopi}{i+3} && trajectory_cell{loopi}{i}==trajectory_cell{loopi}{i+3}
+                    met_bias = 0;
+                    break
+                else
+                    met_bias = 1;
+                end
+            end        
+        end
+
+    end
+    
+    % now check that things work on the large scale trial distribution
+    trajectory = vertcat(trajectory_cell{:});
+    boolTraj   = abs(diff(double(contains(trajectory,'R')))); % 1 = R
+    
+    % alternation
+    groupAltPercent = mean(boolTraj);
+    if groupAltPercent <= percentAlt
+        met_alt = 1;
+        disp(['Alternation criterion of ',num2str(percentAlt),' met']);
+    else
+        met_alt = 0;
+    end    
+end
+
+
+metTraj = 0; metSeq = 0;
+while metTraj == 0 || metSeq == 0
     disp('Generating trial distribution')
     left  = repmat('L',[numTrials/2 1]);
     right = repmat('R',[numTrials/2 1]);
@@ -217,7 +311,7 @@ while next2 == 0
     end
     trajectory = cellstr(both_shuffled);
 
-    disp('Ensuring that there are no more than 3 of each trial type and that alternation does not work more than 50% of the time')
+    disp('Ensuring that there are no more than 3 of each trial type and that alternation does not work more than 60% of the time')
     boolTraj = double(contains(trajectory,'R')); % 1 = R
     % find right handed difference (if 1 
     alt = abs(diff(boolTraj));
@@ -230,30 +324,32 @@ while next2 == 0
     % do this in blocks of 10 trials
     next1 = 0;
     while next1 == 0 
-        looper = 1:5:numTrials;
+        looper = 1:10:numTrials;
         for loopi = 1:length(looper)
             temp = []; numAlt = []; propWorkAlt = [];
             temp   = alt(looper(loopi):looper(loopi)+3);
             numAlt = numel(find(contains(temp,'alternation')));
-            propWorkAlt = numAlt/5;
-            if propWorkAlt > 0.6 || propWorkAlt < 0.6
+            propWorkAlt = numAlt/10;
+            if propWorkAlt > percentAlt
                 % try again
                 disp('Alternating works too often, reshuffling...')
                 % shuffle within block
-                both_shuffled = randsample(trajectory,5,false);
-                trajectory(looper(loopi):looper(loopi)+4) = cellstr(both_shuffled); 
+                both_shuffled = randsample(trajectory,10,false);
+                trajectory(looper(loopi):looper(loopi)+9) = cellstr(both_shuffled); 
                 % get alt index
                 boolTraj = double(contains(trajectory,'R')); % 1 = R
                 % find right handed difference (if 1 
                 alt = abs(diff(boolTraj));
                 alt = cellstr(num2str(alt));
                 alt(find(contains(alt,'0')))={'sameSide'};
-                alt(find(contains(alt,'1')))={'alternation'};                  
+                alt(find(contains(alt,'1')))={'alternation'};    
+                % set to 0 because you shuffled
+                metTraj = 0;
                 break
             end         
             if loopi == length(looper)
-                disp('Criterion met for alternation not working > 50% of the time')
-                next1 = 1;
+                disp('Criterion met for alternation not working > or < 60% of the time')
+                next1 = 1; metSeq = 1;
             end
         end
     end
@@ -265,64 +361,20 @@ while next2 == 0
             if trajectory{i}==trajectory{i+1} && trajectory{i}==trajectory{i+2} && trajectory{i}==trajectory{i+3} && trajectory{i}==trajectory{i+3}
                 % try a new shuffle
                 both_shuffled = randsample(trajectory,numTrials,false);
-                trajectory = cellstr(both_shuffled);           
+                trajectory = cellstr(both_shuffled);
+                % set to 0 bc you shuffled
+                metSeq = 0;
                 break
             end
             if i == length(trajectory)-3
-                next = 1; next2 = 1;
+                next = 1; metTraj = 1; 
             end
         end
     end
-end
-        % get blocks of trajectories
-        trajectories = trajectory(looper(loopi):looper(loopi)+9);
-        % search for more than 3 in a row
-        next3 = 0;
-        while next3 == 0
-            for ii = 1:length(trajectories)-3
-                if trajectories{ii}==trajectories{ii+1} && trajectories{ii}==trajectories{ii+2} && trajectories{ii}==trajectories{ii+3}
-                    disp('More than 3 lefts/rights in a row, reshuffling...')
-                    both_shuffled = randsample(trajectory,10,false);
-                    trajectories = cellstr(both_shuffled);
-                    met = 0;
-                    break
-                else
-                    met = 1;
-                end
-                if ii == length(trajectories)-3 && met == 1
-                    next3 = 1;
-                end
-            end
-        end
-
-        temp = []; numAlt = []; propWorkAlt = [];
-        temp   = alt(looper(loopi):looper(loopi)+8);
-        numAlt = numel(find(contains(temp,'alternation')));
-        propWorkAlt = numAlt/10;
-        if propWorkAlt > 0.6 || propWorkAlt < 0.6
-            % try again
-            disp('Alternating works too often, reshuffling...')
-            % shuffle within block
-            both_shuffled = randsample(trajectory,10,false);
-            trajectory(looper(loopi):looper(loopi)+9) = cellstr(both_shuffled); 
-            % get alt index
-            boolTraj = double(contains(trajectory,'R')); % 1 = R
-            % find right handed difference (if 1 
-            alt = abs(diff(boolTraj));
-            alt = cellstr(num2str(alt));
-            alt(find(contains(alt,'0')))={'sameSide'};
-            alt(find(contains(alt,'1')))={'alternation'};                  
-            break
-        end         
-        if loopi == length(looper)
-            disp('Criterion met for alternation not working > 50% of the time')
-            next = 1;
-        end         
-    end
-end
-
     
-   
+end
+toc;
+    
 % add 1 to trajectory - the rat won't run on this trial
 trajectory{end+1} = 'E';
 
@@ -1022,6 +1074,9 @@ sound(y, 2*Fs);
 %writeline(s,[doorFuns.closeAll])
 
 %% save data
+% if you need to quit, hit cntrl+C then highlight this section, right
+% click, evaluate
+
 % save data
 c = clock;
 c_save = strcat(num2str(c(2)),'_',num2str(c(3)),'_',num2str(c(1)),'_','EndTime',num2str(c(4)),num2str(c(5)));
@@ -1037,9 +1092,13 @@ info     = input(prompt,'s');
 
 userTrialIn = str2num(input('Enter number of trials you ran ','s'));
 if userTrialIn ~= numel(accuracy_text)
-    error('You have entered the wrong number of trials - you probably didnt record them on your sheet correctly')
+    save_var = strcat(rat_name,'_',task_name,'_TrialSheetNotAligned_',c_save);
+    place2store = ['X:\01.Experiments\R21\',targetRat];
+    cd(place2store);
+    save(save_var);
+    error('You have entered the wrong number of trials - you probably didnt record them on your sheet correctly')    
 end
-
+%{
 prompt = 'Did the EIB come off the rats head during any delay trials? ';
 eibOFF  = input(prompt,'s');
 if contains(eibOFF,[{'y'} {'Y'}])
@@ -1050,9 +1109,11 @@ end
 
 prompt = 'Did the EIB come off at any OTHER point during the session? ';
 eibOFF_session = input(prompt,'s');
+%}
 
 %% VISUALIZE
 clear plot
+%{
 if contains(eibOFF,[{'y'} {'Y'}])
     figure('color','w');    
     for i = 1:length(dataStored)
@@ -1078,19 +1139,19 @@ if contains(eibOFF,[{'y'} {'Y'}])
     coh(logical(trial2rem))=[];
 
 end
-
-save_var = strcat(rat_name,'_',task_name,'_',eibSave,'_',c_save);
+%}
+save_var = strcat(rat_name,'_',task_name,'_',c_save);
 place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
 save(save_var);
 
 % what trials to exclude
 clear prompt
-prompt   = 'Enter trajectories to exclude ';
+prompt   = 'Enter trials to exclude from behavior sheet ';
 remTraj  = str2num(input(prompt,'s'));
 
 disp('Saving excluded trajectories')
-save('removeTrajectories','remTraj','save_var');
+%save('removeTrajectories','remTraj','save_var');
 
 disp('Remember! There are N trajectories, but N-1 delays. Therefore, remove trial #1 when lining up BMI data');
 
@@ -1198,7 +1259,7 @@ for i = 1:length(idxLow)
     ylabel('PFC')
     axis tight;
 end
-idxLowRem2 = str2num(input('Which trials to remove? ','s'));
+idxLowRem2 = str2num(input('Which indices to remove from figures? ','s'));
 idxRem2 = []; idxRem2 = horzcat(idxHighRem2,idxLowRem2);
 dataFormatted2(idxRem2,:) = [];
 
@@ -1344,19 +1405,14 @@ for i = 1:size(altTrajLow,1)
     end    
 end
 %}
-wallInfo = input('Did you have stem walls in this session? ','s');
-if contains(wallInfo,[{'Y'} {'y'}])
-    wallInfo = 'Walls';
-else
-    wallInfo = 'noWalls';
-end
+
 place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
-save_var = strcat(rat_name,'_',task_name,'_',wallinfo,'_',eibSave,'_',c_save,'_CLEANED');
+save_var = strcat(rat_name,'_',task_name,'_',c_save,'_CLEANED');
 save(save_var);
 
 place2store = ['X:\01.Experiments\R21\',targetRat];
 cd(place2store);
-save_var = strcat(rat_name,'_',task_name,'_',wallinfo,eibSave,'_',c_save,'_filtered');
+save_var = strcat(rat_name,'_',task_name,'_',c_save,'_filtered');
 save(save_var,'dataFormatted2','acc_high','acc_low','acc_yHigh','acc_yLow','acc_Norm','acc_high_text','acc_low_text','acc_yHigh_text','acc_yLow_text','acc_Norm_text');
 disp(['Performed at ',num2str(percentAccurate),'%'])

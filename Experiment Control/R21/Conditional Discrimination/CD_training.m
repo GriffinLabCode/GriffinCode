@@ -888,3 +888,15 @@ disp('Saving excluded trajectories')
 save('removeTrajectories','remTraj');
 
 disp('Remember! There are N trajectories, but N-1 delays. Therefore, remove trial #1 when lining up BMI data');
+
+
+meanAccMove = movmean(accuracy,round(length(accuracy)/2));
+
+figure('color','w');
+    plot(1:length(accuracy),meanAccMove,'k','LineWidth',2)
+    ylabel('Moving mean')
+    xlabel('Trial number')
+    axis tight;
+    title(['Total Performance = ',num2str(percentAccurate),'%'])
+
+

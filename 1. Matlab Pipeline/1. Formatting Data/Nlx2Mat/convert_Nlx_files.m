@@ -21,12 +21,12 @@ numCSC(idxRem)=[];
 %}
 
 %strCSC = [{'PFC_11'} {'PFC_10'} {'HPC_43'} {'HPC_41'} {'HPC_33'} {'HPC_31'}]; % if your csc are strings, do this and comment above
-%strCSC = [{'PFC_red'} {'PFC_black'} {'HPC_red'} {'HPC_green'} {'HPC_blue'} {'HPC_black'}]; % if your csc are strings, do this and comment above
+strCSC = [{'PFC_red'} {'PFC_black'} {'HPC_red'} {'HPC_green'} {'HPC_pink'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_red'} {'HPC_blue'}]; % if your csc are strings, do this and comment above
 
 %strCSC = [{'PFC_black'} {'HPC_red'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_red'} {'HPC_blue'} {'HPC_red'}]; % if your csc are strings, do this and comment above
-strCSC = [{'HPC_b'} {'PFC_post'}];
+%strCSC = [{'HPC_b'} {'PFC_post'}];
 %numCSC = [3,10,14]; % ** If your CSC are numbered, do this and comment below
 %strCSC = [{'PFC_11'} {'PFC_10'} {'HPC_43'} {'HPC_41'} {'HPC_33'} {'HPC_31'}]; % if your csc are strings, do this and comment above
 %strCSC = [{'PFC_red'} {'PFC_blue'} {'HPC_red'} {'HPC_clear'} {'HPC_blue'} {'HPC_black'} {'REF'}]; % if your csc are strings, do this and comment above

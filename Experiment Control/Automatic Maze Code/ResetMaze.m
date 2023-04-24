@@ -1,4 +1,5 @@
 %% SCRIPT
+clear
 
 % check port
 if exist("s") == 0
