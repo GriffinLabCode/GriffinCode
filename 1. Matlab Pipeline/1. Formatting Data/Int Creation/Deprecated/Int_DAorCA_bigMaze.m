@@ -40,6 +40,9 @@ starttrials = Int_ind(1,1);
 endtrials   = Int_ind(end);
 Int         = Int(1:endtrials,:);
 
+% remove repeats
+
+
 % Populate column 4 of the Int variable 
 % 0 = Correct, 1 = Incorrect
 numtrials = size(Int,1);

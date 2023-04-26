@@ -52,7 +52,7 @@ inside_E = 0; has_been_to_E = 0;
 was_inside_A=0; was_inside_B=0; was_inside_D=0; 
 
 for i=1:n
-    
+
     %Where was the rat?
     was_inside_A=inside_A;
     was_inside_B=inside_B;
@@ -152,15 +152,14 @@ for i=1:n
     if (inside_D ==1) && (was_inside_D==0) && (has_been_to_A == 1)
         %Entering the Base from the Right Reward Zone
         E2(num_Int,2) = pos_t(1,i);
-        has_been_to_A = 0;
-    end
-    
-    if (inside_D ==1) && (was_inside_D==0) && (has_been_to_B == 1)
+        has_been_to_A = 0;    
+    elseif (inside_D ==1) && (was_inside_D==0) && (has_been_to_B == 1)
         %Entering the Base from the Left Reward Zone
         E2(num_Int,2) = pos_t(1,i);
         has_been_to_B = 0;
-    end
     
+    end
+
 end
 
 if ~isempty(Int)

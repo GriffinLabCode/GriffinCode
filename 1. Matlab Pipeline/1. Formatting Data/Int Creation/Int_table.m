@@ -56,6 +56,8 @@
 %% user parameters -- CHANGE ME --
 % MAKE SURE THAT YOUR CURRENT FOLDER IS THE DATAFOLDER YOU WANT TO WORK
 % WITH
+disp('If you have poor tracking data, you will have poor estimations of things. ')
+disp('Please look through the results of this')
 clear;
 datafolder   = pwd;
 missing_data = 'exclude';
@@ -135,19 +137,30 @@ for i = 2:numSamples-1
     % now in the startbox. note that the isempty line is placed to track
     % the first sample as he couldn't have been in the ret arm and then in
     % sb
-    if in_sb(i) == 0 && in_sb(i-1) == 1 && (in_stem(i) == 1 || on_stem(i) == 1) && contains(whereWasRat,'sb')
-        % this is the entry timestamp
-        stem_entry = [stem_entry t(i)];
-        % re-assign startbox as he now was in stem
-        whereWasRat = 'stem';
-        %pause;
+    if in_sb(i) == 0 && in_stem(i) == 1 && contains(whereWasRat,'sb')
+        % look into the future. The next in_... should be cp
+        for k = i:numSamples-1
+            % the rat should not be in the startbox, and if so, then this
+            % is not the stem entry
+            if in_sb(k) > in_cp(k)
+                %pause;
+                break
+            elseif in_cp(k) > in_sb(k)
+                % this is the entry timestamp
+                stem_entry = [stem_entry t(i)];
+                % re-assign startbox as he now was in stem
+                whereWasRat = 'stem';
+               
+                % you want to break out to avoid this loop
+                break
+            end
+        end
     end
 
-    % if he is not on the stem, but he was previously on the stem, and he
-    % is now in the choice point or on the edge of the choice point
-    % boundary, and he used to be in the stem, then he's in the choice
-    % point
-    if in_stem(i) == 0 && in_stem(i-1) == 1 && (in_cp(i) == 1 || on_cp(i) == 1) && contains(whereWasRat,'stem')
+    % if they aren't on stem, but they're in choice and were previously in
+    % stem
+    if in_stem(i) == 0 && in_cp(i) == 1 && contains(whereWasRat,'stem')  
+        
         % this is the entry timestamp
         cp_entry = [cp_entry t(i)];
         % re-assign startbox as he now was in stem
@@ -158,7 +171,7 @@ for i = 2:numSamples-1
     % fields, is not in the startbox, but his last position was in the
     % choice point
     if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
-            in_sb(i) == 0 && (in_cp(i-1) == 1 || on_cp(i-1) == 1) && contains(whereWasRat,'cp')
+            in_sb(i) == 0 && contains(whereWasRat,'cp')
         % store timestamp
         goalArm_entry = [goalArm_entry t(i)];
         % tracker
@@ -167,12 +180,12 @@ for i = 2:numSamples-1
 
     % if the rat is in the left reward field or on it, but didn't used to
     % be in the field nor on it, but his next coordinate is in it
-    if (in_lr(i) == 1 || on_lr(i) == 1) && (in_lr(i-1) == 0 && on_lr(i-1) == 0) && (in_lr(i+1) == 1 || on_lr(i+1) == 1) && contains(whereWasRat,'goalArm')
+    if in_lr(i) == 1 && contains(whereWasRat,'goalArm')
         goalZone_entry = [goalZone_entry t(i)];
         trajectory = [trajectory;'L'];
         % tracker
         whereWasRat = 'goalZone';
-    elseif (in_rr(i) == 1 || on_rr(i) == 1) && (in_rr(i-1) == 0 && on_rr(i-1) == 0) && (in_rr(i+1) == 1 || on_rr(i+1) == 1) && contains(whereWasRat,'goalArm')
+    elseif in_rr(i) == 1 && contains(whereWasRat,'goalArm')
         goalZone_entry = [goalZone_entry t(i)];
         trajectory = [trajectory;'R'];
         % tracker
@@ -185,16 +198,14 @@ for i = 2:numSamples-1
     % location previously covered, then hes in the return arms
     %idxWayOut = 
     if in_stem(i) == 0 && in_cp(i) == 0 && in_lr(i) == 0 && in_rr(i) == 0 && ...
-            in_sb(i) == 0 && ((in_lr(i-1) == 1 || on_lr(i-1) == 1) || (in_rr(i-1) == 1 || on_rr(i-1) == 1)) ...
-            && in_stem(i+1) == 0 && in_cp(i+1) == 0 && in_lr(i+1) == 0 && in_rr(i+1) == 0 ...
-            && in_sb(i+1) == 0 && contains(whereWasRat,'goalZone')
+            in_sb(i) == 0 && contains(whereWasRat,'goalZone')
         retArm_entry = [retArm_entry t(i)];
         % tracker
         whereWasRat = 'retArm';
     end      
 
     % if the rat is not in the stem
-    if (in_sb(i) == 1 || on_sb(i) == 1) && in_sb(i-1) == 0 && in_sb(i+1) == 1 && contains(whereWasRat,'retArm')
+    if in_sb(i) == 1 && contains(whereWasRat,'retArm')
         startBox_entry = [startBox_entry t(i)];
         % tracker
         whereWasRat = 'sb';
@@ -299,7 +310,7 @@ question = 'Would you like to confirm your int file is correct? [Y/N] ';
 answer   = input(question,'s');
 
 if contains(answer,'Y') | contains(answer,'y')
-    [remData] = checkInt(Int_old,x,y,t,taskType);
+    [remData] = checkInt(Int_old,x,y,t);
     
     % remove data selected by user
     Int_old(remData,:)=[];

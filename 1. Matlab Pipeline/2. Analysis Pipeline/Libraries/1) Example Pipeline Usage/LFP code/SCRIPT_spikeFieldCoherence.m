@@ -137,25 +137,12 @@ figure('color','w')
         text(xlimits(2)-40*100,ylimits(2)-0.005,['R = ',num2str(r(2))])
     end    
 
-%% compare to entrainment
-lowpass = 6; highpass = 9;
+%% comparing hilbert entrainment to phase interpolation
+lowpass  = 6; highpass = 9;
+hpcFilt  = skaggs_filter_var(double(lfp)',lowpass,highpass,srate);
+[phase,phaseRad] = hilbertPhase(hpcFilt);
 
-% filter the signal with 3rd degree butterworth
-jonesWilson = 0;
-if jonesWilson == 1
-    disp('You are now going to exclude phase estimations on non-theta states')
-else
-end
-
-hpcFilt = skaggs_filter_var(double(lfp)',lowpass,highpass,srate);
-[phase, InstFreq, cycleFreq] = phase_freq_detect(hpcFilt, lowpass, highpass, srate, 1);            
-phaseRad = phase*(pi/180); 
-
-% get the signals phase
-%phaseRad = angle(hilbert(hpcFilt));
-%phase    = rad2deg(phaseRad).*2;
 nonThetaState = 86511:86511+10000;
-
 figure('color','w'); 
     subplot 211; hold on;
         plot(lfp(1:srate*6),'b'); 
@@ -176,20 +163,44 @@ figure('color','w');
 sidx = find(spikeTimes);
 spkPhase   = phase(sidx);
 spkRadian  = phaseRad(sidx);
-sidx(isnan(spkPhase))=[];
+[p, z]     = circ_rtest(spkRadian);
+mrlHilbert = circ_r(spkRadian)
+
+% plots
+[n, xout] = hist(spkPhase,[0:30:360]); 
+figure('color','w')
+subplot(221)
+    circ_plot(spkRadian,'hist',[],18,false,true,'lineWidth',4,'color','r')
+    title('hilbert')
+subplot(222)
+    bar(xout,n)
+    xlim ([0 360])
+    xlabel ('Phase')
+    ylabel ('Spike Count') 
+    title('hilbert')
+
+% phase interp
+[phase, InstFreq, cycleFreq] = phase_freq_detect(hpcFilt, lowpass, highpass, srate, 0);            
+phaseRad = phase*(pi/180); 
+sidx       = find(spikeTimes);
+spkPhase   = phase(sidx);
+spkRadian  = phaseRad(sidx);
 spkPhase(isnan(spkPhase))=[];
 spkRadian(isnan(spkRadian))=[];
+[p, z]     = circ_rtest(spkRadian);
+mrlInterp = circ_r(spkRadian)
 
-figure('color','w')
-subplot 211;
-    plot(lfp(srate*10:srate*12),'b');
-    xlim([0 srate])
-    box off
-subplot 212;
-    plot(spikeTimes(srate*10:srate*12),'k')
-    xlim([0 srate])
-    box off;
-
+[n, xout] = hist(spkPhase,[0:30:360]); 
+subplot(223)
+    circ_plot(spkRadian,'hist',[],18,false,true,'lineWidth',4,'color','r')
+    title('phase interp')
+subplot(224)
+    bar(xout,n)
+    xlim ([0 360])
+    xlabel ('Phase')
+    ylabel ('Spike Count') 
+    title('phase interp')
+    
 %% typical analysis
 % bootstrapped mrl
 rng('default'); % for replication

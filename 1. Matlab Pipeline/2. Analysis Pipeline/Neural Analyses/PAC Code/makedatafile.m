@@ -55,7 +55,7 @@ data.Xg = skaggs_filter_var(signal_data.amplitude_EEG,signal_data.amplitude_band
 % Extract phase using either the Hilbert transform or phase extrapolation
 if signal_data.phase_extraction == 0
     data.Xt_hil = hilbert(data.Xt);
-    data.Xt_phase = angle(data.Xt_hil)*(180/pi)+180;
+    data.Xt_phase = hilbertPhase(data.Xt); %angle(data.Xt_hil); %*(180/pi)+180;
 elseif signal_data.phase_extraction == 1
     Phase = phase_freq_detect(data.Xt,data.T,signal_data.phase_bandpass(:,1),signal_data.phase_bandpass(:,2),signal_data.srate);
     data.Xt_phase = Phase';

@@ -30,8 +30,16 @@ function [sem] = stderr(mat,fun_arg)
             % sem
             sem(i,:) = (nanstd(mat(i,:)))./(sqrt(numObs)); % if mat is a vector                  
         end
+    elseif fun_arg == 3
+        for rowi = 1:size(mat,1)
+            for coli = 1:size(mat,2)
+                temp = reshape(mat(rowi,coli,:),[1 size(mat,3)]);
+                numObs = length(temp)-sum(isnan(temp));
+                sem(rowi,coli) = nanstd(temp)./(sqrt(numObs));
+            end
+        end
     end
-    
+                
     if isempty(fun_arg) || exist('fun_arg')==0
         error('Add fun_arg, an argument telling stderr which direction to perform its computation along your matrix')
     end
