@@ -113,7 +113,7 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 %% experiment design prep.
 
 % define number of trials
-numTrials = 9*12; %24;
+numTrials = 9*10; %24;
 %umTrials = 24;
 
 % what percent of trials are rewarded via alternation?
@@ -226,19 +226,25 @@ tic;
 disp('Generating trial distribution')
 left  = repmat('L',[numTrials/2 1]);
 right = repmat('R',[numTrials/2 1]);
-trajectory_og = cellstr(interleave_vars(left,right)');
+both  = [left; right];
+both_shuffled = both;
+for i = 1:1000
+    % notice how it rewrites the both_shuffled variable
+    both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
+end
+trajectory = cellstr(both_shuffled);
 
 % split trajectory into blocks of 9 trials (3 one side, 3 another side)
-looper = 1:18:numTrials;
+looper = 1:9:numTrials;
 trajectory_cell = [];
 for loopi = 1:length(looper)
     % split data into blocks of 9 trials and solve the problem
-    trajectory_cell{loopi} = trajectory_og(looper(loopi):looper(loopi)+17);
+    trajectory_cell{loopi} = trajectory(looper(loopi):looper(loopi)+8);
 end
 
 % solve the problem
 next_alt = 0; next_bias = 0;
-while next_alt == 0 || next_bias == 0
+while next == 0 || next_bias == 0
     % work in blocks of 9 trials to solve the Fellows issue. This code is
     % more robust as it will always generate a random distribution of
     % trials
@@ -246,14 +252,7 @@ while next_alt == 0 || next_bias == 0
         % while loop variables to check for bias and alternation criterion
         met_alt = 0; met_bias = 0;
         while met_alt == 0 || met_bias == 0
-                        
-            % mix up trajectory_cell sequence - importantly, this always
-            % has the same number of lefts and rights because
-            % trajectory_cell is defined by trajectory_og, where 18 trials
-            % are split into 9 left and 9 right. The randsample procedure
-            % here, while overwriting previous random samples, does not
-            % sample with replacement. In other words, it's always sampling
-            % from the same distribution
+            % mix up trajectory_cell sequence
             trajectory_cell{loopi} = randsample(trajectory_cell{loopi},length(trajectory_cell{loopi}),false);
 
             % prepare these variables
@@ -307,10 +306,6 @@ while next_alt == 0 || next_bias == 0
         end
     end 
 end
-
-% trim for delay generation symmetry
-trajectory = trajectory(1:100);
-
 % find right handed difference (if 1 
 alt = boolTraj;
 alt = cellstr(num2str(alt));
