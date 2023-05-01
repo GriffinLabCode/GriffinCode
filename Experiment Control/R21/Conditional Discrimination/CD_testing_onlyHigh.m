@@ -113,7 +113,7 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 %% experiment design prep.
 
 % define number of trials
-numTrials = 9*10; %24;
+numTrials = 9*12; %24;
 %umTrials = 24;
 
 % what percent of trials are rewarded via alternation?
@@ -226,25 +226,19 @@ tic;
 disp('Generating trial distribution')
 left  = repmat('L',[numTrials/2 1]);
 right = repmat('R',[numTrials/2 1]);
-both  = [left; right];
-both_shuffled = both;
-for i = 1:1000
-    % notice how it rewrites the both_shuffled variable
-    both_shuffled = both_shuffled(randperm(numel(both_shuffled)));
-end
-trajectory = cellstr(both_shuffled);
+trajectory_og = cellstr(interleave_vars(left,right)');
 
 % split trajectory into blocks of 9 trials (3 one side, 3 another side)
-looper = 1:9:numTrials;
+looper = 1:18:numTrials;
 trajectory_cell = [];
 for loopi = 1:length(looper)
     % split data into blocks of 9 trials and solve the problem
-    trajectory_cell{loopi} = trajectory(looper(loopi):looper(loopi)+8);
+    trajectory_cell{loopi} = trajectory_og(looper(loopi):looper(loopi)+17);
 end
 
 % solve the problem
 next_alt = 0; next_bias = 0;
-while next == 0 || next_bias == 0
+while next_alt == 0 || next_bias == 0
     % work in blocks of 9 trials to solve the Fellows issue. This code is
     % more robust as it will always generate a random distribution of
     % trials
@@ -252,7 +246,14 @@ while next == 0 || next_bias == 0
         % while loop variables to check for bias and alternation criterion
         met_alt = 0; met_bias = 0;
         while met_alt == 0 || met_bias == 0
-            % mix up trajectory_cell sequence
+                        
+            % mix up trajectory_cell sequence - importantly, this always
+            % has the same number of lefts and rights because
+            % trajectory_cell is defined by trajectory_og, where 18 trials
+            % are split into 9 left and 9 right. The randsample procedure
+            % here, while overwriting previous random samples, does not
+            % sample with replacement. In other words, it's always sampling
+            % from the same distribution
             trajectory_cell{loopi} = randsample(trajectory_cell{loopi},length(trajectory_cell{loopi}),false);
 
             % prepare these variables
@@ -306,6 +307,10 @@ while next == 0 || next_bias == 0
         end
     end 
 end
+
+% trim for delay generation symmetry
+trajectory = trajectory(1:100);
+
 % find right handed difference (if 1 
 alt = boolTraj;
 alt = cellstr(num2str(alt));
@@ -345,31 +350,33 @@ end
 indicatorOUT = [];
 for i = 1:10:100
     delays2pull = delayLenTrial(i:i+9);
-    numExp = length(delays2pull)*.20;
-    numCon = length(delays2pull)*.20;
+    numExp = length(delays2pull)*.30;
+    numCon = length(delays2pull)*.30;
     totalN = numExp+numCon;
     
     % randomly select which delay will be high and low
     %N1=1; N2=10;   % range desired
     %p=randperm(N1:N2);
-        
-    % high and low must happen before yoked
+           
+    % first is always high, second low, third, con h, 4 con L
     next = 0;
     while next == 0
+        indicator = cellstr(repmat('Norm',[10 1]));
         idx = randperm(10,totalN);
-        if idx(1) < idx(3) && idx(1) < idx(4) && idx(2) < idx(3) && idx(2) < idx(4)
+        for j = 1:6
+            if j < 4
+                indicator{idx(j)}='high';
+            else
+                indicator{idx(j)}='contH';
+            end
+        end
+        idxH = find(contains(indicator,'high'));
+        idxC = find(contains(indicator,'contH'));
+        indMet = find([idxC-idxH]<0);
+        if isempty(indMet)
             next = 1;
         end
     end
-    
-    % first is always high, second low, third, con h, 4 con L
-    indicator = cellstr(repmat('Norm',[10 1]));
-    
-    % now replace
-    indicator{idx(1)} = 'high';
-    indicator{idx(2)} = 'low';
-    indicator{idx(3)} = 'contH';
-    indicator{idx(4)} = 'contL';
     
     % store indicator variable
     indicatorOUT = [indicatorOUT;indicator];
