@@ -44,17 +44,45 @@ figure('color','w');
 subplot 211; hold on;
     plot(freq,smoothdata(sfc,'gaussian',10),'k');
     plot(freq,sfc,'b')
-    title('FFT based SFC')
+    title('Welchs SFC')
     legend('Smoothed','raw')
 subplot 212; 
     plot(freqP,sfcP);
-    title('Phase based sfc')
+    title('Cohen sfc')
     xlabel('Frequency')
     ylabel('Spike Field Coherence')
     box off
+    
+% welch's method was fine on the hpc unit, but when I do the same on a PFC
+% unit and HPC lfp, the results are remarkably different
+clear;
+load('spikefieldData_pfcUnitHpcLFP')
 
+freq = [1:.5:20];
+[sfc,freq] = getSpikeFieldCoherence(lfp,spikeTimes,freq,[],srate);
+figure; plot(freq,sfc);
+
+% sfc defined by phase (practically mrl)
+nCycles = 6;
+[sfcP,freqP] = getSpikeFieldCoherence(lfp,spikeTimes,freq,nCycles,srate,'phase');
+
+figure('color','w');
+subplot 211; hold on;
+    plot(freq,smoothdata(sfc,'gaussian',10),'k');
+    plot(freq,sfc,'b')
+    title('Welchs SFC')
+    legend('Smoothed','raw')
+subplot 212; 
+    plot(freqP,sfcP);
+    title('Cohen sfc')
+    xlabel('Frequency')
+    ylabel('Spike Field Coherence')
+    box off
+    
 %% here are some approaches broken down a bit
 %tic;
+clear;
+load('spikefieldData')
 lfp1 = lfp;
 % unlike our data, these data are organized as a boolean variable where 1 =
 % spike, 0 = no spike. We need to use dsearchn to identify sidx as a

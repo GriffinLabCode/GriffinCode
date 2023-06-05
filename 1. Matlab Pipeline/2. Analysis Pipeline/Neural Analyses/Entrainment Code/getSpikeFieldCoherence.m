@@ -8,8 +8,8 @@
 %
 % -- INPUTS -- %
 % lfp: vector of LFP used for spike indexing
-% spikeLFPidx: an index, pointing to LFP values (lfp variable) that
-%               correspond to spike timestamps. Run getSpkLFPidx
+% spikeTimes: boolean vector of spike times that is of the same size and
+%               shape as your LFP vector
 % freq: range of frequencies
 % nCycle: number of cycles for morlet wavelet convolution. Should be
 %           between 4 and 12. Higher values = greater frequency precision
@@ -20,8 +20,26 @@
 % sfc: spike field coherence across the range of frequencies provided
 % freq: frequencies output
 %
+% WALKTHROUGH GUIDE***
+% Please see "SCRIPT_spikeFieldCoherence" found here:
+% \Libraries\1) Example Pipeline Usage\LFP code
+%
 % This code was adopted from MxC: MATLAB for brain and cognitive
 % scientists by John Stout and confirmed for accuracy with their data.
+%
+% try this for welches method - smooth the output for a similar result to
+% Mike Cohens method:
+%
+% freq = [1:.5:20];
+% [sfc,freq] = getSpikeFieldCoherence(lfp,spikeTimes,freq,[],srate);
+% figure; plot(freq,sfc);
+%
+% or this for mike cohen method:
+%
+% nCycles = 6;
+% [sfcP,freqP] = getSpikeFieldCoherence(lfp,spikeTimes,freq,nCycles,srate,'phase');
+%
+% Written by John Stout (Mike Cohen method was adapted but from Cohen, 2014)
 
 function [sfc,freq,phi] = getSpikeFieldCoherence(lfp,spikeTimes,freq,nCycle,srate,indVar)
 if exist('indVar')==0
