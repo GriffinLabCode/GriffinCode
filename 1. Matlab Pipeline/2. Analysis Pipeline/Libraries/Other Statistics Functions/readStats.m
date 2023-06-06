@@ -38,7 +38,7 @@ function [] = readStats(data1,data2,parametric,stat_test,data_title,numCorrectio
             disp('Running paired ttest')
             [h,p,ci,stat]=ttest(data1,data2);
         end
-        if p<0.05
+        if p<0.05 && numCorrections > 1
             p=p*numCorrections;
             data_title = horzcat(data_title,' Bonf Corrected');
         else
@@ -50,13 +50,13 @@ function [] = readStats(data1,data2,parametric,stat_test,data_title,numCorrectio
         if contains(stat_test,'ranksum')
             disp('Running ranksum test')
             [p,h,z]=ranksum(data1,data2); 
-            z = z.ranksum;
+            z = z.zval;
         elseif contains(stat_test,'signrank')
             disp('Running signrank test for paired data')
             [p,h,z]=signrank(data1,data2);  
-            z = z.signedrank;
+            z = z.zval;
         end
-        if p<0.05
+        if p<0.05 && numCorrections > 1
             p=p*numCorrections;
             data_title = horzcat(data_title,' Bonf Corrected');
         else

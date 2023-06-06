@@ -56,13 +56,19 @@
 %% user parameters -- CHANGE ME --
 % MAKE SURE THAT YOUR CURRENT FOLDER IS THE DATAFOLDER YOU WANT TO WORK
 % WITH
+disp('If you have poor tracking data, you will have poor estimations of things. ')
+disp('Please look through the results of this')
 clear;
 datafolder   = pwd;
-missing_data = 'exclude';
+missing_data = 'ignore';
 vt_name      = 'VT1.mat';
 taskType     = 'DA';
 load('Int_information')
 
+disp(['Int parameters ']); disp(' ')
+disp(['missing_data: ',missing_data])
+disp(['task type: ',taskType])
+    
 %% pull in video tracking data
 % meat
 [x,y,t] = getVTdata(datafolder,missing_data,vt_name);
@@ -141,23 +147,24 @@ for i = 2:numSamples-1
             % the rat should not be in the startbox, and if so, then this
             % is not the stem entry
             if in_sb(k) > in_cp(k)
+                %pause;
                 break
-            else
+            elseif in_cp(k) > in_sb(k)
                 % this is the entry timestamp
                 stem_entry = [stem_entry t(i)];
                 % re-assign startbox as he now was in stem
                 whereWasRat = 'stem';
+               
                 % you want to break out to avoid this loop
                 break
             end
         end
     end
 
-    % if he is not on the stem, but he was previously on the stem, and he
-    % is now in the choice point or on the edge of the choice point
-    % boundary, and he used to be in the stem, then he's in the choice
-    % point
-    if in_stem(i) == 0 && in_cp(i) == 1 && contains(whereWasRat,'stem')
+    % if they aren't on stem, but they're in choice and were previously in
+    % stem
+    if in_stem(i) == 0 && in_cp(i) == 1 && contains(whereWasRat,'stem')  
+        
         % this is the entry timestamp
         cp_entry = [cp_entry t(i)];
         % re-assign startbox as he now was in stem
@@ -307,10 +314,7 @@ question = 'Would you like to confirm your int file is correct? [Y/N] ';
 answer   = input(question,'s');
 
 if contains(answer,'Y') | contains(answer,'y')
-    [remData] = checkInt(Int_old,x,y,t);
-    
-    % remove data selected by user
-    Int_old(remData,:)=[];
+    remData = checkInt(Int_old,x,y,t);
 
     numtrials = size(Int_old,1);
     for i = 1:numtrials-1
@@ -329,9 +333,15 @@ if contains(answer,'Y') | contains(answer,'y')
     X = [C{end},' behavioral accuracy = ',num2str(percentCorrect),'%'];
     disp(X);
 
+    % remove data selected by user
+    if isempty(remData)==0
+        Int_old(remData,:)=NaN([1 size(Int_old,2)]);
+    end
+    
 else
     disp('IT IS RECOMMENDED that you check your int file as missing data will be stored as a non-existing trial');
 end
+Int = Int_old; clearvars -except Int datafolder
 
 % save data
 question = 'Are you satisfied with the Int file and ready to save? [Y/N] ';
@@ -345,5 +355,5 @@ if contains(answer,'Y') | contains(answer,'y')
     IntFileName = input(question,'s');
     
     % save
-    save(IntFileName,'Int_old','Int_new');
+    save(IntFileName,'Int');
 end
