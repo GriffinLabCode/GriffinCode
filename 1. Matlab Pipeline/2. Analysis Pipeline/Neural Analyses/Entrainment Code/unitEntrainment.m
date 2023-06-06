@@ -8,7 +8,14 @@
 % highpass: high pass filter
 % srate: sampling rate
 %
-% -- OUTPUTS
+% -- OUTPUTS -- %
+% spkPhase: spike-phase values
+% spkRadian: spike-radian values
+% rayleighsP: p-statistic for raleighs test of non-uniformity
+% rayleighsZ: z-stat for rayleighs test of non uniformity
+% bsMrl: boostrapped mrl value
+% n: binned phase counts
+% xout: binned phase values
 
 function [spkPhase,spkRadian,rayleighsP,rayleighsZ,bsMrl,n,xout] = unitEntrainment(spikeIdx,lfp,lowpass,highpass,srate)
 
