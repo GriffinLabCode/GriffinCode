@@ -335,8 +335,23 @@ trackingError = zeros([size(Int_old,1) 1]);
 trackingError(remData)=1;
 
 % create the table
-Int = Int_old; Int(:,end+1)=trackingError;
-IntTable = table(trajNumber,stemEntry,cpEntry,gaEntry,gzEntry,retEntry,sbEntry,trajectory,accuracy,trajBinary,accBinary,trackingError);
+Int = Int_old;
+trackingError = logical(trackingError);
+
+% find anomalies (non existing data)
+anomaly = zeros([size(Int,1), 1]);
+for i = 1:size(Int,1)
+    nanData = [];
+    nanData = find(Int(i,[1:2 5:8])==0);
+    if isempty(nanData)==0
+        anomaly(i)=1;
+    end
+end
+failedTimeStamp = [];
+failedTimeStamp = logical(anomaly);
+
+% generate table
+IntTable = table(trajNumber,stemEntry,cpEntry,gaEntry,gzEntry,retEntry,sbEntry,trajectory,accuracy,trajBinary,accBinary,trackingError,failedTimeStamp);
 
 % save data
 question = 'Are you satisfied with the Int file and ready to save? [Y/N] ';
@@ -349,9 +364,9 @@ if contains(answer,'Y') | contains(answer,'y')
     question    = 'Please enter an Int file name: ';
     IntFileName = input(question,'s');
     
-    question = 'Please enter information regarding your trial exclusions');
+    question = 'Please enter information regarding your trial exclusions: ';
     info = input(question,'s');
     
     % save
-    save(IntFileName,'Int','IntTable');
+    save(IntFileName,'Int','IntTable','info');
 end
