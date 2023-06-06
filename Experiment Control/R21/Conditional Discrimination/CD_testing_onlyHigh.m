@@ -52,8 +52,8 @@ load('CDinfo')
 threshold.coh_duration = 0.5;
 [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);   
 % do this twice to ensure reliable streaming
-pause(5);
-[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
+%pause(5);
+%[srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,threshold.coh_duration);    
 
 if srate > 2035 || srate < 2000
     error('Sampling rate is not correct')
@@ -101,7 +101,7 @@ noisePercent = 1; % 5 percent
 %% prep 2 - define parameters for the session
 
 % how long should the session be?
-session_length = 20; % minutes
+session_length = 15; % minutes
 
 % pellet count and machine timeout
 pellet_count = 1;
@@ -117,7 +117,7 @@ numTrials = 9*12; %24;
 %umTrials = 24;
 
 % what percent of trials are rewarded via alternation?
-percentAlt = .6;
+percentAlt = .45;
 
 %% randomize delay durations
 maxDelay = 20;
@@ -527,7 +527,7 @@ for triali = 1:numTrials
             % send to netcom 
             if triali > 1
                 if trajectory_taken{triali} == 'L' && trajectory_taken{triali} == trajectory{triali}
-                    disp('Correct')
+                    disp(['Trial #',num2str(triali),' = CORRECT'])
                     accuracy_text{triali} = 'correct';
                     accuracy(triali) = 0;
                     % only reward on an alternation
@@ -535,19 +535,19 @@ for triali = 1:numTrials
                 else
                     accuracy_text{triali} = 'incorrect';
                     accuracy(triali) = 1;                    
-                    disp('Error')
+                    disp(['Trial #',num2str(triali),' = ERROR'])
                 end
             elseif triali == 1
                 if trajectory_taken{triali} == 'L' && trajectory_taken{triali} == trajectory{triali}
-                    disp('Correct')
+                    disp(['Trial #',num2str(triali),' = CORRECT'])
                     accuracy_text{triali} = 'correct';
                     accuracy(triali) = 0;
                     % only reward on an alternation
-                    writeline(s,rewFuns.right)                   
+                    %disp(['Trial #',num2str(triali),' = ERROR'])
                 else
                     accuracy_text{triali} = 'incorrect';
                     accuracy(triali) = 1;                    
-                    disp('Error')
+                    disp(['Trial #',num2str(triali),' = ERROR'])
                 end                
             end
             pause(5)
@@ -570,7 +570,7 @@ for triali = 1:numTrials
             % send to netcom 
             if triali > 1
                 if trajectory_taken{triali} == 'R' && trajectory_taken{triali} == trajectory{triali}
-                    disp('Correct')
+                    disp(['Trial #',num2str(triali),' = CORRECT'])
                     accuracy_text{triali} = 'correct';
                     accuracy(triali) = 0;
                     % only reward on an alternation
@@ -578,11 +578,11 @@ for triali = 1:numTrials
                 else
                     accuracy_text{triali} = 'incorrect';
                     accuracy(triali)=1;
-                    disp('Error')
+                    disp(['Trial #',num2str(triali),' = ERROR'])
                 end
             elseif triali == 1
                 if trajectory_taken{triali} == 'R' && trajectory_taken{triali} == trajectory{triali}
-                    disp('Correct')
+                    disp(['Trial #',num2str(triali),' = CORRECT'])
                     accuracy_text{triali} = 'correct';
                     accuracy(triali) = 0;
                     % only reward on an alternation
@@ -590,7 +590,7 @@ for triali = 1:numTrials
                 else
                     accuracy_text{triali} = 'incorrect';
                     accuracy(triali)=1;
-                    disp('Error')
+                    disp(['Trial #',num2str(triali),' = ERROR'])
                 end                 
             end                    
 
@@ -730,14 +730,27 @@ for triali = 1:numTrials
         for i = 1:1000000000 % nearly infinite loop. This is needed for the first loop
 
             if i == 1
-                clearStream(LFP1name,LFP2name);
-                pause(windowDuration)
-                [succeeded, dataArray, timeStampArray, ~, ~, ...
-                numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+                try
+                    clearStream(LFP1name,LFP2name);
+                    pause(windowDuration)
+                    [succeeded, dataArray, timeStampArray, ~, ~, ...
+                    numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
 
-                % 2) store the data
-                % now add and remove data to move the window
-                dataWin    = dataArray;
+                    % 2) store the data
+                    % now add and remove data to move the window
+                    dataWin    = dataArray;
+                catch
+                    % sometimes above fails, unlikely to fail twice in a
+                    % row
+                    clearStream(LFP1name,LFP2name);
+                    pause(windowDuration)
+                    [succeeded, dataArray, timeStampArray, ~, ~, ...
+                    numValidSamplesArray, numRecordsReturned, numRecordsDropped , funDur.getData ] = NlxGetNewCSCData_2signals(LFP1name, LFP2name);  
+
+                    % 2) store the data
+                    % now add and remove data to move the window
+                    dataWin    = dataArray;
+                end
             end
 
             try
@@ -1013,6 +1026,15 @@ endTime = toc(sStart)/60;
 %% compute accuracy array and create some figures
 percentAccurate = ((numel(find(accuracy==0)))/(numel(accuracy)))*100;
 
+traj_bool = trajectory_taken;
+traj_bool(contains(traj_bool,'R'))={'1'};
+traj_bool(contains(traj_bool,'L'))={'0'};
+traj_bool = str2num(cell2mat(traj_bool'));
+traj_change = abs(diff(traj_bool));  
+
+% alternation rate: number of alternations/number of trials
+alternIdx = mean(traj_change)*100;
+
 %% ending noise - a fitting song to end the session
 load handel.mat;
 sound(y, 2*Fs);
@@ -1043,6 +1065,7 @@ if userTrialIn ~= numel(accuracy_text)
     save(save_var);
     error('You have entered the wrong number of trials - you probably didnt record them on your sheet correctly')    
 end
+
 %{
 prompt = 'Did the EIB come off the rats head during any delay trials? ';
 eibOFF  = input(prompt,'s');

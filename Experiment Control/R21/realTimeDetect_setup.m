@@ -13,14 +13,16 @@
 function [srate,timing] = realTimeDetect_setup(LFP1name,LFP2name,amountOfData)
 
 % downloaded location of github code - automate for github
-github_download_directory = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21';
-addpath(github_download_directory);
-
-% connect to netcom - automate this for github
-%pathName   = 'C:\Users\jstout\Documents\GitHub\NeuroCode\MATLAB Code\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files';
-rootDir = getCurrentPath;
-pathName = horzcat(rootDir,'\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files');
+load('main_directory')
+temp1 = []; temp1 = strsplit(main_directory,'\');
+temp1(end)=[];
+main_directory = join(temp1,'\');
+pathName = horzcat(main_directory,'\Experiment Control\R21\NetComDevelopmentPackage_v3.1.0\MATLAB_M-files');
+pathName = horzcat(pathName{:});
+addpath(pathName);
 serverName = '192.168.3.100';
+
+for i = 1:3
 connect2netcom(pathName,serverName)
 
 % open a stream to interface with Nlx objects - this is required
