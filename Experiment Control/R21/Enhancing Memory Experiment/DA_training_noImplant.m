@@ -61,11 +61,15 @@ amountOfTime = (70/60); %session_length; % 0.84 is 50/60secs, to account for ini
 % define number of trials
 <<<<<<< Updated upstream:Experiment Control/R21/Enhancing Memory Experiment/DA_training_noImplant.m
 <<<<<<< Updated upstream:Experiment Control/R21/Enhancing Memory Experiment/DA_training_noImplant.m
+<<<<<<< Updated upstream:Experiment Control/R21/Enhancing Memory Experiment/DA_training_noImplant.m
 <<<<<<< Updated upstream
 numTrials  = 24;
 =======
 numTrials  = 25;
 >>>>>>> Stashed changes
+=======
+numTrials  = 25;
+>>>>>>> Stashed changes:Experiment Control/R21/Experimental Code/DA_training_noImplant.m
 =======
 numTrials  = 25;
 >>>>>>> Stashed changes:Experiment Control/R21/Experimental Code/DA_training_noImplant.m
