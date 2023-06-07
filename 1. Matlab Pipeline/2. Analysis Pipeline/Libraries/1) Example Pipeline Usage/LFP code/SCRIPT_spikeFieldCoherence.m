@@ -40,19 +40,34 @@ figure; plot(freq,sfc);
 nCycles = 6;
 [sfcP,freqP] = getSpikeFieldCoherence(lfp,spikeTimes,freq,nCycles,srate,'phase');
 
+% sfc defined by spike-triggered average (only do a subsample of spikes
+% here)
+disp('Ito method might take a while...')
+lfp = lfp(1:250000);
+spikeTimes = spikeTimes(1:250000);
+[sfcS,freqS] = getSpikeFieldCoherence(lfp,spikeTimes,[],[],srate,'sta');
+
 figure('color','w');
-subplot 211; hold on;
+subplot 311; hold on;
     plot(freq,smoothdata(sfc,'gaussian',10),'k');
     plot(freq,sfc,'b')
     title('Welchs SFC')
     legend('Smoothed','raw')
-subplot 212; 
+subplot 312; 
     plot(freqP,sfcP);
     title('Cohen sfc')
     xlabel('Frequency')
     ylabel('Spike Field Coherence')
     box off
-    
+subplot 313;
+    plot(freqS,sfcS);
+    title('SFC via STA/STP - Ito et al., 2019')
+    xlabel('Frequency')
+    ylabel('Spike field coherence (%)')
+    box off
+    xlim([0 20])
+disp('The cohen method provides the best "bang for your buck" when considering performance');
+
 % welch's method was fine on the hpc unit, but when I do the same on a PFC
 % unit and HPC lfp, the results are remarkably different
 clear;
@@ -66,18 +81,30 @@ figure; plot(freq,sfc);
 nCycles = 6;
 [sfcP,freqP] = getSpikeFieldCoherence(lfp,spikeTimes,freq,nCycles,srate,'phase');
 
+% sfc defined by spike-triggered average (only do a subsample of spikes
+% here)
+disp('Ito method might take a while...')
+[sfcS,freqS] = getSpikeFieldCoherence(lfp,spikeTimes,[],[],srate,'sta');
+
 figure('color','w');
-subplot 211; hold on;
+subplot 311; hold on;
     plot(freq,smoothdata(sfc,'gaussian',10),'k');
     plot(freq,sfc,'b')
     title('Welchs SFC')
     legend('Smoothed','raw')
-subplot 212; 
+subplot 312; 
     plot(freqP,sfcP);
     title('Cohen sfc')
     xlabel('Frequency')
     ylabel('Spike Field Coherence')
     box off
+subplot 313;
+    plot(freqS,sfcS);
+    title('SFC via STA/STP - Ito et al., 2019')
+    xlabel('Frequency')
+    ylabel('Spike field coherence (%)')
+    box off
+    xlim([0 20])
     
 %% here are some approaches broken down a bit
 %tic;

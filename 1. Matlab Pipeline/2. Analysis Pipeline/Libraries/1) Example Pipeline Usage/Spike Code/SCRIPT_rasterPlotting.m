@@ -3,7 +3,7 @@
 % example run through of getting spike data
 clear; clc;
 datafolder   = 'X:\01.Experiments\RERh Inactivation Recording\Eric2\Muscimol\Muscimol';
-int_name     = 'Int_VTE_JS.mat'; % define your int file name
+int_name     = 'Int_2022_corrected.mat'; % define your int file name
 vt_name      = 'VT1.mat'; % define your video tracking data name
 missing_data = 'interp'; % define how you want to handle missing VT data
 vt_srate     = 30; % 30 samples/sec is the video tracking sampling rate
@@ -17,7 +17,7 @@ tt_name      = 'TT'; % what are the first two letters of your TTs?
 Int = getIntFile(datafolder,int_name);
 
 % you can get spike data like this
-[spikeData,clusterID] = getSpikeData(datafolder,tt_name);
+[spikeData,clusterID] = getSpikeData(datafolder,tt_name,'Events');
 
 % however, here, we're going to be generating raster plots
 IntLoc     = 1; % define a location defined by timestamps on your int file. For example, Choice point entry

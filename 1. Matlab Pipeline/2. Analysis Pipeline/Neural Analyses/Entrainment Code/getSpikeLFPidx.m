@@ -16,23 +16,27 @@
 % spikeTimes: spike timestamps that you want to get LFP values for
 %
 % -- OUTPUTS -- %
+% spikeLFPbool: boolean spike-train of the same size and shape as your lfp
 % spikeLFPidx: an index of spike-LFP values. Use this to get LFP values
 % spikeLFPval: LFP per each spike
 %
 % written by John Stout
 
-function [spikeLFPidx,spikeLFPval] = getSpikeLFPidx(lfpTimes,spikeTimes)
+function [spikeLFPbool,spikeLFPidx,spikeLFPval] = getSpikeLFPidx(lfpTimes,spikeTimes)
 
 % do some reorienting
-lfpTimes = change_row_to_column(lfpTimes);
-spikeTimes = change_row_to_column(spikeTimes)';
+lfpTimes   = change_row_to_column(lfpTimes);
+spikeTimes = change_row_to_column(spikeTimes);
 
 % get index of LFP
 spikeLFPidx = [];
 spikeLFPidx = dsearchn(lfpTimes,spikeTimes);
 
 % Get lfp
-spikeLFPval = lfpTimes(spikeTimes);
+spikeLFPval = lfpTimes(spikeLFPidx);
 
+% boolean spike train of the same size and shape as LFP
+spikeLFPbool = zeros(size(lfpTimes));
+spikeLFPbool(spikeLFPidx)=1;
 
 
