@@ -318,7 +318,7 @@ delayTime = NaN([size(Int_old,1) 1]);
 delayTime(2:end) = delayTemp;
 
 %% CHECK YOUR DATA!!!
-[remStem2Choice, remReturn, remDelay] = checkInt(Int_old,x,y,t);
+[remStem2Choice, remReturn, remSB] = checkInt(Int_old,x,y,t);
 
 numtrials = size(Int_old,1);
 for i = 1:numtrials-1
@@ -343,13 +343,13 @@ trackingErrorStem(remStem2Choice)=1;
 trackingErrorReturn = zeros([size(Int_old,1) 1]);
 trackingErrorReturn(remReturn)=1;
 trackingErrorSB = zeros([size(Int_old,1) 1]);
-trackingErrorSB(remDelay+1)=1;
+trackingErrorSB(find)+1)=1;
 
 % create the table
 Int = Int_old;
 trackingErrorStem = logical(trackingErrorStem);
 trackingErrorReturn = logical(trackingErrorReturn);
-trackingErrorSBentry = logical(trackingErrorSB);
+trackingErrorSB = logical(trackingErrorSB);
 
 % find anomalies (non existing data)
 anomaly = zeros([size(Int,1), 1]);
@@ -364,7 +364,7 @@ failedTimeStamp = [];
 failedTimeStamp = logical(anomaly);
 
 % generate table
-IntTable = table(trajNumber,stemEntry,cpEntry,gaEntry,gzEntry,retEntry,sbEntry,trajectory,accuracy,trajBinary,accBinary,delayTime,trackingErrorStem,trackingErrorReturn,trackingErrorSBentry,failedTimeStamp);
+IntTable = table(trajNumber,stemEntry,cpEntry,gaEntry,gzEntry,retEntry,sbEntry,trajectory,accuracy,trajBinary,accBinary,delayTime,trackingError,failedTimeStamp);
 
 % save data
 question = 'Are you satisfied with the Int file and ready to save? [Y/N] ';
@@ -377,6 +377,9 @@ if contains(answer,'Y') | contains(answer,'y')
     question    = 'Please enter an Int file name: ';
     IntFileName = input(question,'s');
     
+    question = 'Please enter information regarding your trial exclusions: ';
+    info = input(question,'s');
+    
     % save
-    save(IntFileName,'Int','IntTable');
+    save(IntFileName,'Int','IntTable','info');
 end
