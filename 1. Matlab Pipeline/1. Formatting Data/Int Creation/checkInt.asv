@@ -38,22 +38,22 @@ for i = 1:numTrials
                 x_trial = pos_x(pos_t >= Int(i,6) & pos_t <= Int(i,8));
                 y_trial = pos_y(pos_t >= Int(i,6) & pos_t <= Int(i,8));
                 plot(x_trial,y_trial,'Color',[0, 0, 0, 0.5],'LineWidth',1);
-                missingRet = numel(find(x_trial==0)); 
+                missingRet = find(x_trial==0);
                 numRet = numel(x_trial);
                 rateRet = missingRet/numRet;
             else
             end
         end
+        missingData = find(x_trial==0);
         title(['Trial #',num2str(i)])
-        text(min(pos_x)+20,min(pos_y)+150,['stemLost=',num2str(round(rateStem,2))],'Color','r');
-        text(min(pos_x)+20,min(pos_y)+50,['retLost=',num2str(round(rateRet,2))],'Color','b');
+        text(min(x)+50,min(y)+50,'stemLost=',num2str(stemRate),' retLost=','num2s)
         axis off
  
 end 
 set(gcf, 'Position', get(0, 'Screensize'));
-remStem2Choice = str2num(input('Enter trials with >10% tracking error in stem/choice or failed choice entry/exit estimation: ','s'));
-remReturn = str2num(input('Enter trials with >10% tracking error in return: ','s'));
-remDelay = str2num(input('Enter trials with failed startbox entry or stem entry data points: ','s'));
+remStem2Choice = str2num(input('Enter trials with major tracking errors from stem to choice: ','s'));
+remReturn = str2num(input('Enter trials with major tracking errors on return: ','s'));
+remDelay = str2num(input('Enter trials with poor or failed startbox or stem entry points: ','s'));
 
 %remData = logical(remData);
 
