@@ -51,9 +51,9 @@ for i = 1:numTrials
  
 end 
 set(gcf, 'Position', get(0, 'Screensize'));
-remStem2Choice = str2num(input('Enter trials with >10% tracking error in stem/choice or failed choice entry/exit estimation: ','s'));
+remStem2Choice = str2num(input('Enter trials with >10% tracking error in stem/choice, failed stem entry or choice exit: ','s'));
 remReturn = str2num(input('Enter trials with >10% tracking error in return: ','s'));
-remDelay = str2num(input('Enter trials with failed startbox entry or stem entry data points: ','s'));
+remDelay = str2num(input('Enter trials with failed startbox entry: ','s'));
 
 %remData = logical(remData);
 
