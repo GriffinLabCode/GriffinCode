@@ -342,6 +342,14 @@ trackingErrorStem = zeros([size(Int_old,1) 1]);
 trackingErrorStem(remStem2Choice)=1;
 trackingErrorReturn = zeros([size(Int_old,1) 1]);
 trackingErrorReturn(remReturn)=1;
+
+% if you try to remove the last trial (i.e. the tracker failed to capture
+% the rat entering the startbox on trial 37/37), then you will create a
+% false index to remove. There was only 37 trials, it doesn't matter if you
+% tag the last trial to remove a delay that doesn't exist
+if ~isempty(find(remDelay == size(Int_old,1)))
+    remDelay(find(remDelay == size(Int_old,1)))=[]; % remove
+end
 trackingErrorSB = zeros([size(Int_old,1) 1]);
 trackingErrorSB(remDelay+1)=1;
 
