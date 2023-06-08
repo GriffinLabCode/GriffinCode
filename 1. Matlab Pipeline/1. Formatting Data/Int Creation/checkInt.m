@@ -19,8 +19,15 @@ numTrials = size(Int,1);
 
 figure('color','w'); hold on;    
 p1 = []; p2 = [];
+if numTrials < 40
+    rowVal = 5;
+    colVal = 8;
+else
+    rowVal = ceil(numTrials/10);
+    colVal = 10;
+end
 for i = 1:numTrials
-        subplot(5,8,i); hold on;
+        subplot(rowVal,colVal,i); hold on;
         plot(pos_x,pos_y,'Color',[.8 .8 .8]); 
         for ii = 1:size(Int,2)
             Int_x = pos_x(pos_t == Int(i,ii));
