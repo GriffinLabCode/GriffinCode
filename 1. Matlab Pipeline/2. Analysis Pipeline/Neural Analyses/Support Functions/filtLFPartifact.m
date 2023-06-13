@@ -2,8 +2,16 @@
 % this function zscore transforms your lfp signal and plots the data out
 % for the user to select a z-score criterion to detect artifacts. It then
 % removes 1 theta cycle worth of data surrounding the event.
+%
+% -- OUTPUTS -- %
+% lfpNaN: lfp with artifacts removed (nans)
+% lfp: original lfp variable
+% zlfp: zscored lfp variable
+% stdThresh: user defined threshold
+% lfpHigh: threshold in LFP values for positive valued artifact
+% lfpLow: threshold in lfp values for negative valued artifact
 
-function [lfpNaN,lfp] = filtLFPartifact(lfp,srate)
+function [lfpNaN,lfp,zlfp,stdThresh,lfpHigh,lfpLow] = filtLFPartifact(lfp,srate)
 
 % zscore transform signal
 lfp_og = lfp;
@@ -47,6 +55,11 @@ while next == 0
         % identify nans, which are the removed signal clips
         lfpNaN = find(isnan(lfp));
     if contains(userHappy,[{'y'} {'Y'}])
+        % find lfp values corresponding to the threshold
+        idxHigh = dsearchn(zlfp',stdThresh);
+        idxLow  = dsearchn(zlfp',-stdThresh);
+        lfpHigh = lfp(idxHigh(1)); % threshold for artifact detection
+        lfpLow  = lfp(idxLow(1));        
         next = 1;
     elseif contains(userHappy,'stop')
         break

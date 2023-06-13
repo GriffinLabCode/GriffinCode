@@ -8,11 +8,16 @@
 % pos_t: timestamps from video camera
 %
 % -- OUTPUTS -- %
-% remData: according to the user, remove these trials
+% remStem2Choice: remove trials with tracking errors on stem and if failed
+%                   stem entry/choice exit found
+% remReturn: remove trials with tracking error on return
+% remDelay: remove trials with failed startbox entrance
+% remDoubleTrial: remove trials if there are multiple overlapping trials
+%                   being characterized as a single trial
 %
 % written by John Stout
 
-function [remStem2Choice, remReturn, remDelay] = checkInt(Int,pos_x,pos_y,pos_t)
+function [remStem2Choice, remReturn, remDelay, remDoubleTrial] = checkInt(Int,pos_x,pos_y,pos_t)
 
 % number of trials
 numTrials = size(Int,1);
@@ -61,6 +66,7 @@ set(gcf, 'Position', get(0, 'Screensize'));
 remStem2Choice = str2num(input('Enter trials with >10% tracking error in stem/choice, failed stem entry or choice exit: ','s'));
 remReturn = str2num(input('Enter trials with >10% tracking error in return: ','s'));
 remDelay = str2num(input('Enter trials with failed startbox entry: ','s'));
+remDoubleTrial = str2num(input('Enter "double trials" - trials that have two trajectories overlapping: ','s'));
 
 %remData = logical(remData);
 
