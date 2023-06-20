@@ -73,7 +73,7 @@ for rati = 1:length(rats)
         % filter spikes for task
         for clusti = 1:length(clusterID)
             spkTimes{clusti} = spkTimes{clusti}(spkTimes{clusti}>Int(1,1)...
-                & spkTimes{clusti}<Int(1,end));
+                & spkTimes{clusti}<Int(end,end)); %this was an error on 6/20. Fixed
         end        
         
         % remove neurons spiking < 50 times
