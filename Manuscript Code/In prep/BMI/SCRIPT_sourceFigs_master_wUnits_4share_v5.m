@@ -2208,7 +2208,7 @@ readStats(data2plot(:,1),0,parametric,stat_test,'GP PF2HC',numCorrections);
 readStats(data2plot(:,2),0,parametric,stat_test,'GP HC2PF',numCorrections);
 readStats(data2plot(:,1),data2plot(:,2),parametric,stat_test,'PF2HC v HC2PF',numCorrections);
 
-%% entrainment
+%% spike phase analysis
 loadSourceData = 1; % set this value to 0 if you want to rerun analyses that generated datahigh and datalow for entrainment
 if loadSourceData == 0
     % this entrainment analysis uses LFP data and spiking data acquired across
@@ -2747,7 +2747,7 @@ datalow(idxRem)=[];
 %}
 
 % entrainment
-rerunSFC = 1;
+rerunSFC = 0;
 if rerunSFC == 1
     srate = 2000;
     lowpass = 4; highpass = 12; % JW2005; Hallock 2016;
@@ -2814,7 +2814,7 @@ if rerunSFC == 1
         frHigh{i} = frTempHigh;
         frLow{i}  = frTempLow;
 
-        % entrainment
+        % entrainment and SFC
         for uniti = 1:size(spikeTimeHighData,1)
 
             % get spikes
@@ -2826,14 +2826,6 @@ if rerunSFC == 1
             spkIdxLow  = find(spksLow);
 
             % -- calculate entrainment -- %
-
-            % pfc high
-            %{
-            [spkPhase_pfcH{i}{uniti},spkRadian_pfcH{i}{uniti},...
-                rayleighsP_pfcH{i}{uniti},rayleighsZ_pfcH{i}{uniti},...
-                bsMrl_pfcH{i}{uniti},n_pfcH{i}{uniti},xout_pfcH{i}{uniti}] = ...
-                unitEntrainment(spkIdxHigh,lfpHighPFC,lowpass,highpass,srate,'hilbert',filterThetaDelta); 
-            %}
             
             % vmt high
             [spkPhase_vmtH{i}{uniti},spkRadian_vmtH{i}{uniti},...
@@ -2846,14 +2838,6 @@ if rerunSFC == 1
                 rayleighsP_hpcH{i}{uniti},rayleighsZ_hpcH{i}{uniti},...
                 bsMrl_hpcH{i}{uniti},n_hpcH{i}{uniti},xout_hpcH{i}{uniti}] = ...
                 unitEntrainment(spkIdxHigh,lfpHighHPC,lowpass,highpass,srate,phaseMethod,filterThetaDelta);              
-
-            % pfc low
-            %{
-            [spkPhase_pfcL{i}{uniti},spkRadian_pfcL{i}{uniti},...
-                rayleighsP_pfcL{i}{uniti},rayleighsZ_pfcL{i}{uniti},...
-                bsMrl_pfcL{i}{uniti},n_pfcL{i}{uniti},xout_pfcL{i}{uniti}] = ...
-                unitEntrainment(spkIdxLow,lfpLowPFC,lowpass,highpass,srate,'hilbert',filterThetaDelta);              
-            %}
             
             % vmt low
             [spkPhase_vmtL{i}{uniti},spkRadian_vmtL{i}{uniti},...
@@ -2866,7 +2850,7 @@ if rerunSFC == 1
                 rayleighsP_hpcL{i}{uniti},rayleighsZ_hpcL{i}{uniti},...
                 bsMrl_hpcL{i}{uniti},n_hpcL{i}{uniti},xout_hpcL{i}{uniti}] = ...
                 unitEntrainment(spkIdxLow,lfpLowHPC,lowpass,highpass,srate,phaseMethod,filterThetaDelta);           
-
+                        
         end
         disp(['Completed with session ',num2str(i)])
     end
@@ -2882,126 +2866,7 @@ else
     load('data_ent_06212023');
 end
 
-% remove empty arrays
-rayleighsP_hpcH = emptyCellErase(rayleighsP_hpcH);
-rayleighsP_hpcL = emptyCellErase(rayleighsP_hpcL);
-rayleighsP_vmtH = emptyCellErase(rayleighsP_vmtH);
-rayleighsP_vmtL = emptyCellErase(rayleighsP_vmtL);
-
-% do this twice (cell inside a cell)
-for i = 1:2
-    rayleighsP_hpcH = horzcat(rayleighsP_hpcH{:});
-    rayleighsP_hpcL = horzcat(rayleighsP_hpcL{:});
-    rayleighsP_vmtH = horzcat(rayleighsP_vmtH{:});
-    rayleighsP_vmtL = horzcat(rayleighsP_vmtL{:});
-end
-
-% convert to double
-rayleighsP_hpcH = double(rayleighsP_hpcH);
-rayleighsP_hpcL = double(rayleighsP_hpcL);
-rayleighsP_vmtH = double(rayleighsP_vmtH);
-rayleighsP_vmtL = double(rayleighsP_vmtL);
-
-% percent mod
-perc_hpcH = (numel(find(rayleighsP_hpcH<0.05))/numel(rayleighsP_hpcH))*100;
-perc_vmtH = (numel(find(rayleighsP_vmtH<0.05))/numel(rayleighsP_vmtH))*100;
-perc_hpcL = (numel(find(rayleighsP_hpcL<0.05))/numel(rayleighsP_hpcL))*100;
-perc_vmtL = (numel(find(rayleighsP_vmtL<0.05))/numel(rayleighsP_vmtL))*100;
-totalHPC  = (numel(find(rayleighsP_hpcH<0.05 | rayleighsP_hpcL<0.05))/numel(rayleighsP_hpcH))*100;
-
-figure('color','w');
-multiBarPlot(horzcat(perc_vmtH,perc_vmtL,perc_hpcH,perc_hpcL),[{'VMT high'} {'VMT low'} {'HPC high'} {'HPC low'}],'% mod.');
-
-% rayleighs z and bootstrapped mrl
-bsMrl_hpcH = emptyCellErase(bsMrl_hpcH);
-bsMrl_hpcL = emptyCellErase(bsMrl_hpcL);
-bsMrl_vmtH = emptyCellErase(bsMrl_vmtH);
-bsMrl_vmtL = emptyCellErase(bsMrl_vmtL);
-
-% do this twice (cell inside a cell)
-for i = 1:2
-    bsMrl_hpcH = horzcat(bsMrl_hpcH{:});
-    bsMrl_hpcL = horzcat(bsMrl_hpcL{:});
-    bsMrl_vmtH = horzcat(bsMrl_vmtH{:});
-    bsMrl_vmtL = horzcat(bsMrl_vmtL{:});
-end
-diffZ_hpc = (bsMrl_hpcH-bsMrl_hpcL)./(bsMrl_hpcH+bsMrl_hpcL);
-diffZ_vmt = (bsMrl_vmtH-bsMrl_vmtL)./(bsMrl_vmtH+bsMrl_vmtL);
-data2plot = []; data2plot{1} = diffZ_hpc; data2plot{2} = diffZ_vmt;
-figure('color','w');
-multiBarPlot(data2plot,[{'HPC'} {'VMT'}],'Bootstrapped MRL');
-
-% remove empty arrays
-rayleighsZ_hpcH = emptyCellErase(rayleighsZ_hpcH);
-rayleighsZ_hpcL = emptyCellErase(rayleighsZ_hpcL);
-rayleighsZ_vmtH = emptyCellErase(rayleighsZ_vmtH);
-rayleighsZ_vmtL = emptyCellErase(rayleighsZ_vmtL);
-
-% do this twice (cell inside a cell)
-for i = 1:2
-    rayleighsZ_hpcH = horzcat(rayleighsZ_hpcH{:});
-    rayleighsZ_hpcL = horzcat(rayleighsZ_hpcL{:});
-    rayleighsZ_vmtH = horzcat(rayleighsZ_vmtH{:});
-    rayleighsZ_vmtL = horzcat(rayleighsZ_vmtL{:});
-end
-
-% plot examples
-spkRadian_hpcH = emptyCellErase(spkRadian_hpcH);
-spkRadian_hpcL = emptyCellErase(spkRadian_hpcL);
-spkRadian_vmtH = emptyCellErase(spkRadian_vmtH);
-spkRadian_vmtL = emptyCellErase(spkRadian_vmtL);
-
-spkRadian_hpcH = horzcat(spkRadian_hpcH{:});
-spkRadian_hpcL = horzcat(spkRadian_hpcL{:});
-spkRadian_vmtH = horzcat(spkRadian_vmtH{:});
-spkRadian_vmtL = horzcat(spkRadian_vmtL{:});
-
-uniti = 22;    
-figure('color','w');
-subplot 221;
-    circ_plot(spkRadian_hpcH{uniti},'hist',[],18,false,true,'lineWidth',4,'color','b');
-    title('High')
-subplot 222;
-    circ_plot(spkRadian_hpcL{uniti},'hist',[],18,false,true,'lineWidth',4,'color','r');
-    title('Low')
-disp(['High Raleighs Z = ',num2str(rayleighsZ_hpcH(uniti)),' p = ',num2str(rayleighsP_hpcH(uniti))]);
-disp(['High Raleighs Z = ',num2str(rayleighsZ_hpcL(uniti)),' p = ',num2str(rayleighsP_hpcL(uniti))]);
-
-% phase histogram information
-xout_hpcH = emptyCellErase(xout_hpcH);
-xout_hpcL = emptyCellErase(xout_hpcL);
-xout_vmtH = emptyCellErase(xout_vmtH);
-xout_vmtL = emptyCellErase(xout_vmtL);
-xout_hpcH = horzcat(xout_hpcH{:});
-xout_hpcL = horzcat(xout_hpcL{:});
-xout_vmtH = horzcat(xout_vmtH{:});
-xout_vmtL = horzcat(xout_vmtL{:});
-
-n_hpcH = emptyCellErase(n_hpcH);
-n_hpcL = emptyCellErase(n_hpcL);
-n_vmtH = emptyCellErase(n_vmtH);
-n_vmtL = emptyCellErase(n_vmtL);
-n_hpcH = horzcat(n_hpcH{:});
-n_hpcL = horzcat(n_hpcL{:});
-n_vmtH = horzcat(n_vmtH{:});
-n_vmtL = horzcat(n_vmtL{:});
-
-subplot(223)
-    bar(xout_hpcH{uniti},n_hpcH{uniti},'FaceColor','b')
-    xlim ([0 360])
-    xlabel ('Phase')
-    ylabel ('Spike Count') 
-    title('hilbert')
-subplot(224)
-    bar(xout_hpcL{uniti},n_hpcL{uniti},'FaceColor','r')
-    xlim ([0 360])
-    xlabel ('Phase')
-    ylabel ('Spike Count') 
-    title('hilbert')
-   
-%% SFC
-clearvars -except datahigh datalow
-
+% SFC
 if rerunSFC == 1
     freq = [1:.5:20]; srate = 2000; nCycles = 6;
     for i = 1:length(datahigh)
@@ -3075,45 +2940,216 @@ else
     % reliable
     load('data_sfc_21_Jun_2023');
 end
-% reformat
-sfcHighPFC = sfcHighPFC(:);
-sfcHighVMT = sfcHighVMT(:);
-sfcHighHPC = sfcHighHPC(:);
-sfcLowPFC  = sfcLowPFC(:);
-sfcLowVMT  = sfcLowVMT(:);
-sfcLowHPC  = sfcLowHPC(:);
+
+%% reformatting and plotting spike-phase results
+
+% rayleighs p
+rayleighsP_hpcH = emptyCellErase(rayleighsP_hpcH);
+rayleighsP_hpcL = emptyCellErase(rayleighsP_hpcL);
+rayleighsP_vmtH = emptyCellErase(rayleighsP_vmtH);
+rayleighsP_vmtL = emptyCellErase(rayleighsP_vmtL);
+
+% bootstrapped mrl
+bsMrl_hpcH = emptyCellErase(bsMrl_hpcH);
+bsMrl_hpcL = emptyCellErase(bsMrl_hpcL);
+bsMrl_vmtH = emptyCellErase(bsMrl_vmtH);
+bsMrl_vmtL = emptyCellErase(bsMrl_vmtL);
+
+% Z
+rayleighsZ_hpcH = emptyCellErase(rayleighsZ_hpcH);
+rayleighsZ_hpcL = emptyCellErase(rayleighsZ_hpcL);
+rayleighsZ_vmtH = emptyCellErase(rayleighsZ_vmtH);
+rayleighsZ_vmtL = emptyCellErase(rayleighsZ_vmtL);
+
+% spk radian information
+spkRadian_hpcH = emptyCellErase(spkRadian_hpcH);
+spkRadian_hpcL = emptyCellErase(spkRadian_hpcL);
+spkRadian_vmtH = emptyCellErase(spkRadian_vmtH);
+spkRadian_vmtL = emptyCellErase(spkRadian_vmtL);
+
+% phase histogram info
+xout_hpcH = emptyCellErase(xout_hpcH);
+xout_hpcL = emptyCellErase(xout_hpcL);
+xout_vmtH = emptyCellErase(xout_vmtH);
+xout_vmtL = emptyCellErase(xout_vmtL);
+n_hpcH    = emptyCellErase(n_hpcH);
+n_hpcL    = emptyCellErase(n_hpcL);
+n_vmtH    = emptyCellErase(n_vmtH);
+n_vmtL    = emptyCellErase(n_vmtL);
+
+% same for sfc
+sfcHighHPC = emptyCellErase(sfcHighHPC);
+sfcHighVMT = emptyCellErase(sfcHighVMT);
+sfcLowHPC  = emptyCellErase(sfcLowHPC);
+sfcLowVMT  = emptyCellErase(sfcLowVMT);
 
 % concatenate
-sfcHighPFC = vertcat(sfcHighPFC{:});
 sfcHighVMT = vertcat(sfcHighVMT{:});
 sfcHighHPC = vertcat(sfcHighHPC{:});
-sfcLowPFC  = vertcat(sfcLowPFC{:});
 sfcLowVMT  = vertcat(sfcLowVMT{:});
 sfcLowHPC  = vertcat(sfcLowHPC{:});
 
-% diff scores
-diff_PFC = (sfcHighPFC-sfcLowPFC)./(sfcHighPFC+sfcLowPFC);
+% reformat
+rayleighsP_hpcH = horzcat(rayleighsP_hpcH{:});
+rayleighsP_hpcL = horzcat(rayleighsP_hpcL{:});
+rayleighsP_vmtH = horzcat(rayleighsP_vmtH{:});
+rayleighsP_vmtL = horzcat(rayleighsP_vmtL{:});
+bsMrl_hpcH      = horzcat(bsMrl_hpcH{:});
+bsMrl_hpcL      = horzcat(bsMrl_hpcL{:});
+bsMrl_vmtH      = horzcat(bsMrl_vmtH{:});
+bsMrl_vmtL      = horzcat(bsMrl_vmtL{:});    
+rayleighsZ_hpcH = horzcat(rayleighsZ_hpcH{:});
+rayleighsZ_hpcL = horzcat(rayleighsZ_hpcL{:});
+rayleighsZ_vmtH = horzcat(rayleighsZ_vmtH{:});
+rayleighsZ_vmtL = horzcat(rayleighsZ_vmtL{:});    
+spkRadian_hpcH  = horzcat(spkRadian_hpcH{:});
+spkRadian_hpcL  = horzcat(spkRadian_hpcL{:});
+spkRadian_vmtH  = horzcat(spkRadian_vmtH{:});
+spkRadian_vmtL  = horzcat(spkRadian_vmtL{:});
+xout_hpcH       = horzcat(xout_hpcH{:});
+xout_hpcL       = horzcat(xout_hpcL{:});
+xout_vmtH       = horzcat(xout_vmtH{:});
+xout_vmtL       = horzcat(xout_vmtL{:});
+n_hpcH          = horzcat(n_hpcH{:});
+n_hpcL          = horzcat(n_hpcL{:});
+n_vmtH          = horzcat(n_vmtH{:});
+n_vmtL          = horzcat(n_vmtL{:});
+
+% reformat
+rayleighsP_hpcH = empty2nan(rayleighsP_hpcH);
+rayleighsP_hpcL = empty2nan(rayleighsP_hpcL);
+rayleighsP_vmtH = empty2nan(rayleighsP_vmtH);
+rayleighsP_vmtL = empty2nan(rayleighsP_vmtL);
+bsMrl_hpcH      = empty2nan(bsMrl_hpcH);
+bsMrl_hpcL      = empty2nan(bsMrl_hpcL);
+bsMrl_vmtH      = empty2nan(bsMrl_vmtH);
+bsMrl_vmtL      = empty2nan(bsMrl_vmtL);    
+rayleighsZ_hpcH = empty2nan(rayleighsZ_hpcH);
+rayleighsZ_hpcL = empty2nan(rayleighsZ_hpcL);
+rayleighsZ_vmtH = empty2nan(rayleighsZ_vmtH);
+rayleighsZ_vmtL = empty2nan(rayleighsZ_vmtL);    
+spkRadian_hpcH  = empty2nan(spkRadian_hpcH);
+spkRadian_hpcL  = empty2nan(spkRadian_hpcL);
+spkRadian_vmtH  = empty2nan(spkRadian_vmtH);
+spkRadian_vmtL  = empty2nan(spkRadian_vmtL);
+xout_hpcH       = empty2nan(xout_hpcH);
+xout_hpcL       = empty2nan(xout_hpcL);
+xout_vmtH       = empty2nan(xout_vmtH);
+xout_vmtL       = empty2nan(xout_vmtL);
+n_hpcH          = empty2nan(n_hpcH);
+n_hpcL          = empty2nan(n_hpcL);
+n_vmtH          = empty2nan(n_vmtH);
+n_vmtL          = empty2nan(n_vmtL);
+
+% reformat again
+rayleighsP_hpcH = horzcat(rayleighsP_hpcH{:});
+rayleighsP_hpcL = horzcat(rayleighsP_hpcL{:});
+rayleighsP_vmtH = horzcat(rayleighsP_vmtH{:});
+rayleighsP_vmtL = horzcat(rayleighsP_vmtL{:});
+bsMrl_hpcH      = horzcat(bsMrl_hpcH{:});
+bsMrl_hpcL      = horzcat(bsMrl_hpcL{:});
+bsMrl_vmtH      = horzcat(bsMrl_vmtH{:});
+bsMrl_vmtL      = horzcat(bsMrl_vmtL{:});    
+rayleighsZ_hpcH = horzcat(rayleighsZ_hpcH{:});
+rayleighsZ_hpcL = horzcat(rayleighsZ_hpcL{:});
+rayleighsZ_vmtH = horzcat(rayleighsZ_vmtH{:});
+rayleighsZ_vmtL = horzcat(rayleighsZ_vmtL{:});    
+spkRadian_hpcH  = horzcat(spkRadian_hpcH{:});
+spkRadian_hpcL  = horzcat(spkRadian_hpcL{:});
+spkRadian_vmtH  = horzcat(spkRadian_vmtH{:});
+spkRadian_vmtL  = horzcat(spkRadian_vmtL{:});
+xout_hpcH       = horzcat(xout_hpcH{:});
+xout_hpcL       = horzcat(xout_hpcL{:});
+xout_vmtH       = horzcat(xout_vmtH{:});
+xout_vmtL       = horzcat(xout_vmtL{:});
+n_hpcH          = horzcat(n_hpcH{:});
+n_hpcL          = horzcat(n_hpcL{:});
+n_vmtH          = horzcat(n_vmtH{:});
+n_vmtL          = horzcat(n_vmtL{:});
+
+% percent mod
+rpHPCh = rayleighsP_hpcH(~isnan(rayleighsP_hpcH));
+rpHPCl = rayleighsP_hpcL(~isnan(rayleighsP_hpcL));
+rpVMTh = rayleighsP_vmtH(~isnan(rayleighsP_vmtH));
+rpVMTl = rayleighsP_vmtL(~isnan(rayleighsP_vmtL));
+perc_hpcH = (numel(find(rpHPCh<0.05))/numel(rpHPCh))*100;
+perc_vmtH = (numel(find(rpVMTh<0.05))/numel(rpVMTh))*100;
+perc_hpcL = (numel(find(rpHPCl<0.05))/numel(rpHPCl))*100;
+perc_vmtL = (numel(find(rpVMTl<0.05))/numel(rpVMTl))*100;
+totalHPC  = (numel(find(rpHPCh<0.05 | rpHPCl<0.05))/numel(rpHPCl))*100;
+
+figure('color','w');
+multiBarPlot(horzcat(perc_vmtH,perc_vmtL,perc_hpcH,perc_hpcL),[{'VMT high'} {'VMT low'} {'HPC high'} {'HPC low'}],'% mod.');
+
+diffZ_hpc = (bsMrl_hpcH-bsMrl_hpcL)./(bsMrl_hpcH+bsMrl_hpcL);
+diffZ_vmt = (bsMrl_vmtH-bsMrl_vmtL)./(bsMrl_vmtH+bsMrl_vmtL);
+data2plot = []; data2plot{1} = diffZ_hpc; data2plot{2} = diffZ_vmt;
+figure('color','w');
+multiBarPlot(data2plot,[{'HPC'} {'VMT'}],'Bootstrapped MRL');
+
+uniti = 22;    
+figure('color','w');
+subplot 221;
+    circ_plot(spkRadian_hpcH{uniti},'hist',[],18,false,true,'lineWidth',4,'color','b');
+    title('High')
+subplot 222;
+    circ_plot(spkRadian_hpcL{uniti},'hist',[],18,false,true,'lineWidth',4,'color','r');
+    title('Low')
+disp(['High Raleighs Z = ',num2str(rayleighsZ_hpcH(uniti)),' p = ',num2str(rayleighsP_hpcH(uniti))]);
+disp(['High Raleighs Z = ',num2str(rayleighsZ_hpcL(uniti)),' p = ',num2str(rayleighsP_hpcL(uniti))]);
+
+subplot(223)
+    bar(xout_hpcH{uniti},n_hpcH{uniti},'FaceColor','b')
+    xlim ([0 360])
+    xlabel ('Phase')
+    ylabel ('Spike Count') 
+    box off
+subplot(224)
+    bar(xout_hpcL{uniti},n_hpcL{uniti},'FaceColor','r')
+    xlim ([0 360])
+    xlabel ('Phase')
+    ylabel ('Spike Count') 
+    box off
+
+% -- sfc -- %
 diff_VMT = (sfcHighVMT-sfcLowVMT)./(sfcHighVMT+sfcLowVMT);
 diff_HPC = (sfcHighHPC-sfcLowHPC)./(sfcHighHPC+sfcLowHPC);
 
 figure('color','w'); hold on;
-    shadedErrorBar(freq,mean(diff_PFC,1),stderr(diff_PFC,1),'k',1);
     shadedErrorBar(freq,mean(diff_VMT,1),stderr(diff_VMT,1),'g',0);
-    shadedErrorBar(freq,mean(diff_HPC,1),stderr(diff_HPC,1),'b',1);
+    shadedErrorBar(freq,mean(diff_HPC,1),stderr(diff_HPC,1),'b',0);
     axis tight;
-    
-% plot figures
-figure('color','w')
-subplot 311; hold on;
-    shadedErrorBar(freq,mean(sfcHighPFC,1),stderr(sfcHighPFC,1),'b',1);
-    shadedErrorBar(freq,mean(sfcLowPFC,1),stderr(sfcLowPFC,1),'r',1);
-subplot 312; hold on;
-    shadedErrorBar(freq,mean(sfcHighVMT,1),stderr(sfcHighVMT,1),'b',1);
-    shadedErrorBar(freq,mean(sfcLowVMT,1),stderr(sfcLowVMT,1),'r',1);
-subplot 313; hold on;
-    shadedErrorBar(freq,mean(sfcHighHPC,1),stderr(sfcHighHPC,1),'b',1);
-    shadedErrorBar(freq,mean(sfcLowHPC,1),stderr(sfcLowHPC,1),'r',1);
+    xlabel('Frequency (Hz)')
+    ylabel('Spike field coherence (diff)')
+    ylimits = ylim; xlimits = xlim;
 
+    p = []; statVM = [];
+    for i = 1:size(diff_VMT,2)
+        [h,p(i),ci,stat]=ttest(diff_VMT(:,i));
+        statVM(i,:)=stat.tstat;
+    end 
+    [h, crit_p, adj_ci_cvrg, padj]=fdr_bh(p);
+    pLine = padj;
+    pLine(pLine>0.05)=NaN;
+    pLine(pLine<0.05)=ylimits(2);
+    line(freq,pLine,'color','g','LineWidth',2) 
+    
+    p = []; statHC = [];
+    for i = 1:size(diff_HPC,2)
+        [h,p(i),ci,stat]=ttest(diff_HPC(:,i));
+        statHC(i,:)=stat.tstat;
+    end 
+    [h, crit_p, adj_ci_cvrg, padj]=fdr_bh(p',0.05,'pdep','yes');
+    pLine = padj;
+    pLine(pLine>0.05)=NaN;
+    pLine(pLine<0.05)=ylimits(2);
+    line(freq,pLine,'color','b','LineWidth',2) 
+     
+% a unit that entrainment analysis discovered - unit 22
+figure('color','w'); plot(freq,sfcHighHPC(22,:),'b','LineWidth',2)
+hold on; plot(freq,sfcLowHPC(22,:),'r','LineWidth',2)
+box off
+    
 % fishiris has 3 species of 50 data points on x-axis, and dimensions of the flower on y
 dataK = vertcat(diff_VMT,diff_HPC);
     
@@ -3129,58 +3165,19 @@ k=va.OptimalK;
 c=kmeans(dataK,k);
 
 % separate data
-clustIdxPFC    = c(1:size(diff_PFC),:);
-c(1:size(diff_PFC),:)=[];
 clustIdxVMT    = c(1:size(diff_VMT),:);
 c(1:size(diff_VMT),:)=[];
 clustIdxHPC    = c(1:size(diff_HPC),:);
 c(1:size(diff_HPC),:)=[];
 
 % separate clusters
-diff_PFC_clust{1} = diff_PFC(clustIdxPFC==1,:);
-diff_PFC_clust{2} = diff_PFC(clustIdxPFC==2,:);
 diff_VMT_clust{1} = diff_VMT(clustIdxVMT==1,:);
 diff_VMT_clust{2} = diff_VMT(clustIdxVMT==2,:);
 diff_HPC_clust{1} = diff_HPC(clustIdxHPC==1,:);
 diff_HPC_clust{2} = diff_HPC(clustIdxHPC==2,:);
 
-figure('color','w'); 
-    subplot 311; hold on;
-        shadedErrorBar(freq,mean(diff_PFC_clust{1},1),stderr(diff_PFC_clust{1},1),'k',0);
-        shadedErrorBar(freq,mean(diff_PFC_clust{2},1),stderr(diff_PFC_clust{2},1),'m',0);
-        axis tight;
-        ylim([-0.5 0.5])  
-        ylimits = ylim;
-        
-           % ttest for cluster 1
-            p = []; statPF1 = [];
-            for i = 1:size(diff_PFC_clust{1},2)
-                [h,p(i),ci,stat]=ttest(diff_PFC_clust{1}(:,i));
-                statPF1(i,:)=stat.tstat;
-            end 
-            [h, crit_p, adj_ci_cvrg, padj]=fdr_bh(p);
-            pLine = padj;
-            pLine(pLine>0.05)=NaN;
-            pLine(pLine<0.05)=ylimits(2);
-            line(freq,pLine,'color','k','LineWidth',2) 
-            tableDataPFC_clust1 = []; frequency = freq'; pval = p'; padjust = padj';
-            tableDataPFC_clust1 = table(frequency,statPF1,pval,padjust);
-            
-            % ttest for cluster 2
-            p = []; statPF2 = [];
-            for i = 1:size(diff_PFC_clust{1},2)
-                [h,p(i),ci,stat]=ttest(diff_PFC_clust{2}(:,i));
-                statPF2(i,:)=stat.tstat;
-            end 
-            [h, crit_p, adj_ci_cvrg, padj]=fdr_bh(p);
-            pLine = padj;
-            pLine(pLine>0.05)=NaN;
-            pLine(pLine<0.05)=ylimits(2);
-            line(freq,pLine,'color','m','LineWidth',2) 
-            tableDataPFC_clust2 = []; frequency = freq'; pval = p'; padjust = padj';
-            tableDataPFC_clust2 = table(frequency,statPF2,pval,padjust);
-            
-    subplot 312; hold on;
+figure('color','w');        
+    subplot 211; hold on;
         shadedErrorBar(freq,mean(diff_VMT_clust{1},1),stderr(diff_VMT_clust{1},1),'k',0);
         shadedErrorBar(freq,mean(diff_VMT_clust{2},1),stderr(diff_VMT_clust{2},1),'m',0);
         axis tight;
@@ -3215,7 +3212,7 @@ figure('color','w');
             tableDataVMT_clust2 = []; frequency = freq'; pval = p'; padjust = padj';
             tableDataVMT_clust2 = table(frequency,statVM2,pval,padjust);
         
-    subplot 313; hold on;
+    subplot 212; hold on;
         shadedErrorBar(freq,mean(diff_HPC_clust{1},1),stderr(diff_HPC_clust{1},1),'k',0);
         shadedErrorBar(freq,mean(diff_HPC_clust{2},1),stderr(diff_HPC_clust{2},1),'m',0);
         axis tight;
@@ -3250,6 +3247,45 @@ figure('color','w');
             tableDataHPC_clust2 = []; frequency = freq'; pval = p'; padjust = padj';
             tableDataHPC_clust2 = table(frequency,statHC2,pval,padjust);
 
+% separate mrl data
+diffMrlVMT = (bsMrl_vmtH-bsMrl_vmtL)./(bsMrl_vmtH+bsMrl_vmtL);
+diffMrlHPC = (bsMrl_hpcH-bsMrl_hpcL)./(bsMrl_hpcH+bsMrl_hpcL);
+
+diffMRL_VMT_clust{1} = diffMrlVMT(clustIdxVMT==1);
+diffMRL_VMT_clust{2} = diffMrlVMT(clustIdxVMT==2);
+diffMRL_HPC_clust{1} = diffMrlHPC(clustIdxHPC==1);
+diffMRL_HPC_clust{2} = diffMrlHPC(clustIdxHPC==2);
+
+figure('color','w'); 
+subplot 211; hold on;
+    multiBarPlot(diffMRL_VMT_clust,[{'Clust1'} {'Clust2'}],'BS MRL')
+subplot 212; hold on;
+    multiBarPlot(diffMRL_HPC_clust,[{'Clust1'} {'Clust2'}],'BS MRL')
+
+%% plotting entrainment and spike field coherence
+
+load('data_coh_entrainment');
+
+% plot an example unit with LFP
+sessi    = 12; % has unit 22
+temphigh = horzcat(datahigh{sessi}{:});
+templow  = horzcat(datalow{sessi}{:});
+
+% get unique timestamps
+[~,idx] = unique(temphigh(4,:)); % only keep unique timestamps
+temphigh = temphigh(:,idx); % index out your dataset
+[~,idx] = unique(templow(4,:)); % only keep unique timestamps
+templow = templow(:,idx); % index out your dataset
+
+figure('color','w'); 
+disp('Note that these data are not filtered like described in the paper')
+disp('To see those data, you would have to hack the code above')
+    %plot(C); axis tight;
+    lfpIdx = [1:3]; unitIdx = [5]; srate = 2000;
+    % the coherence analysis above worked through 1.25s windows with 0.25s
+    % overlap, therefore account for missing the last
+    lfpRaster(temphigh(:,181082:181082+2000),lfpIdx,unitIdx,srate)
+    
 %% How is PFC modulated by VMT stim?
 
 % -- 21-45 -- %

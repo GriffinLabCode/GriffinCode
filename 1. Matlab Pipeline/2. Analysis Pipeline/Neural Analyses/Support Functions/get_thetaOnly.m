@@ -31,7 +31,7 @@ delta_env = abs(hilbert_delta);
 % Calculate a theta/delta ratio
 theta_delta = theta_env./delta_env;             
 
-% Find sample periods where the theta/delta ratio >= 4
+% Find sample periods where the theta/delta ratio >= 2
 ratio_ind = find(theta_delta > 2);
 sws_ratio = find(theta_delta < 2);
     
