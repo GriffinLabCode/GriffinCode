@@ -153,5 +153,5 @@ end
 %cd('C:\Users\uggriffin\Documents\BACKUP - Stout 2023 - dissertation\Stout et al 2022 Harnessing neural synchrony\data');
 cd('X:\07. Manuscripts\In preparation\Harnessing neural synchrony');
 disp('Saving spkLFP data...')
-save('data_spkLFP_entrainment','dataSpkLFP');
+save('data_spkLFP_entrainment.mat','dataSpkLFP',"-v7.3");
 
