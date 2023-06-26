@@ -16,8 +16,8 @@ function [myPath] = getCurrentPath()
 getPath = matlab.desktop.editor.getActiveFilename;
 
 % remove function name
-splitPath = split(getPath,'\');
+splitPath = split(getPath,'/');
 splitPath(end)=[];
 
 % join for path
-myPath = cell2mat(join(splitPath,'\'));
+myPath = cell2mat(join(splitPath,'/'));
