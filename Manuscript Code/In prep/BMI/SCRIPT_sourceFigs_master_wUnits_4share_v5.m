@@ -1247,11 +1247,94 @@ else
     lowCohThreshold  = thresholds(:,1);
 end 
 clearvars -except thetaC dataSpkLFP sourceRoot sourceFolder sourceData sourceCode sourceRawCode highCohThreshold lowCohThreshold
+onlyHenry = 1; % cleaner dataset & same task
 
 % present data over delays binned into first 3 bins and last 3 bins of
 % the predictable delay phase
 % remove trials with all zeros
 thetaCog = thetaC;
+if onlyHenry == 1
+    thetaC(4:end,:)=[];
+    highCohThreshold(4:end)=[];
+    lowCohThreshold(4:end)=[];
+end
+
+% binning variable
+delayBins = linspace(0,size(thetaC{1},1),30/5); % 5s bins
+phighMat = []; plowMat = []; phighShuf = []; plowShuf = [];
+for rowi = 1:size(thetaC,1)
+    for coli = 1:size(thetaC,2)
+        if isempty(thetaC{rowi,coli})==0
+            % av over trials
+            remTrials = [];
+            remTrials = find(thetaC{rowi,coli}(1,:)==0);
+            thetaC{rowi,coli}(:,remTrials)=[];            
+            % get phigh and plow over trials
+            tempdata = []; tempdata = thetaC{rowi,coli};
+            phigh = []; plow = [];
+            for bini = 1:length(delayBins)-1
+                for triali = 1:size(tempdata,2)
+                    % get temporary data at trial res
+                    trialdata = [];
+                    trialdata = tempdata(delayBins(bini)+1:delayBins(bini+1),triali);
+                    
+                    % get phigh and plow
+                    phigh{bini}(triali) = (numel(find(trialdata > highCohThreshold(rowi))))/numel(trialdata);
+                    plow{bini}(triali)  = (numel(find(trialdata < lowCohThreshold(rowi))))/numel(trialdata);
+                
+                end
+            end
+            phighMat{rowi}(coli,:) = cellfun(@nanmean,phigh);
+            plowMat{rowi}(coli,:)  = cellfun(@nanmean,plow);
+            
+            % shuffled distribution
+            rng('default');
+            phigh = []; plow = [];
+            for bini = 1:length(delayBins)-1
+                for triali = 1:size(tempdata,2)
+                    % shuffle 1000 times
+                    disp('Shuffling')
+                    for n = 1:1000
+                        tempdata(:,triali) = randsample(tempdata(:,triali),size(tempdata,1));
+                    end                                        
+                    
+                    % get temporary data at trial res
+                    trialdata = [];
+                    trialdata = tempdata(delayBins(bini)+1:delayBins(bini+1),triali);
+                    
+                    % get phigh and plow
+                    phigh{bini}(triali) = (numel(find(trialdata > highCohThreshold(rowi))))/numel(trialdata);
+                    plow{bini}(triali)  = (numel(find(trialdata < lowCohThreshold(rowi))))/numel(trialdata);
+                
+                end
+            end
+            phighShuf{rowi}(coli,:) = cellfun(@nanmean,phigh);
+            plowShuf{rowi}(coli,:)  = cellfun(@nanmean,plow);            
+            
+        end
+    end
+end
+phighMat = vertcat(phighMat{:});
+plowMat  = vertcat(plowMat{:});
+phighShuf = vertcat(phighShuf{:});
+plowShuf  = vertcat(plowShuf{:});
+
+delayX = linspace(0,30,30/5); % 5s bins
+figure('color','w'); hold on;
+shadedErrorBar(delayX(2:end),mean(phighMat,1),stderr(phighMat,1),'b',0)
+%shadedErrorBar(delayX(2:end),mean(phighShuf,1),stderr(phighShuf,1),'r',0)
+plot(delayX(2:end),mean(phighShuf,1),'r','LineWidth',1)
+axis tight
+ylim([0.05 0.18])
+
+p=[];
+for i = 1:size(phighMat,2)
+    [h,p(i),ci{i},stat{i}] = ttest(phighMat(:,i),mean(phighShuf(i),1));
+end
+p = p.*(size(phighMat,2))
+
+
+%{
 for rowi = 1:size(thetaC,1)
     for coli = 1:size(thetaC,2)
         if isempty(thetaC{rowi,coli})==0
@@ -1470,6 +1553,144 @@ outlier = 'n';
 multiBoxPlot(data,xLabels,yLabel,orient,outlier)   
 [h,p]=ttest(data{1},data{2})
 %}
+%}
+
+% run an fft over your signal
+for rowi = 1:size(thetaC,1)
+    for coli = 1:size(thetaC,2)
+        thetaAvg{rowi,coli} = mean(thetaC{rowi,coli},2);
+    end
+end
+thetaAvg = thetaAvg(:);
+thetaAvg = emptyCellErase(thetaAvg);
+thetaAvg = horzcat(thetaAvg{:});
+
+figure('color','w');
+delayX = linspace(0,30,size(thetaAvg,1)); % 5s bins
+shadedErrorBar(delayX,mean(thetaAvg,2),stderr(thetaAvg,2),'k',0);
+box off
+mean(lowCohThreshold)
+
+% plot data as an oscillator
+srate = 115/30;
+exData = thetaC{1}(:);
+figure; 
+subplot 311; 
+plot(exData-mean(exData))
+subplot 312
+plot(exData);
+subplot 313
+smoothEx = smoothdata(exData,'gauss',40);
+plot(smoothEx)
+
+[pxx,f] = periodogram(exData',[],[],srate)
+figure; plot(f,log10(pxx))
+xlim([0 0.04])
+
+% -- autocorrelation -- %
+% at the fifth lag, there is no sharing of data between lags
+figure('color','w'); 
+[acf,confAcf] = autocorr(exData,'NumLags',40)
+[acf_shuff,confShuf] = autocorr(randsample(exData,length(exData)),'NumLags',40);
+
+plot(0:40,acf,'k');
+hold on; plot(0:40,acf_shuff,'r');
+
+delayBins = linspace(0,size(thetaC{1},1),30/5); % 5s bins
+acf = []; acf_shuff = [];
+for rowi = 1:size(thetaC,1)
+    for coli = 1:size(thetaC,2)
+        if isempty(thetaC{rowi,coli})==0
+            % av over trials
+            remTrials = [];
+            remTrials = find(thetaC{rowi,coli}(1,:)==0);
+            thetaC{rowi,coli}(:,remTrials)=[];            
+            % get phigh and plow over trials
+            tempdata = []; tempdata = thetaC{rowi,coli};
+            for triali = 1:size(tempdata,2)
+                % get temporary data at trial res
+                trialdata = [];
+                trialdata = tempdata(:,triali);
+
+                % autocorr
+                [acf{rowi,coli}(triali,:),confAcf] = autocorr(trialdata,'NumLags',50);
+
+            end
+
+            % shuffled distribution
+            rng('default');
+            phigh = []; plow = [];
+            for bini = 1:length(delayBins)-1
+                for triali = 1:size(tempdata,2)
+                    % shuffle 1000 times
+                    disp('Shuffling')
+                    for n = 1:1000
+                        tempdata(:,triali) = randsample(tempdata(:,triali),size(tempdata,1));
+                    end                                        
+                    
+                    % get temporary data at trial res
+                    trialdata = [];
+                    trialdata = tempdata(:,triali);
+                    
+                    % autocorr
+                    [acf_shuff{rowi,coli}(triali,:),confAcf] = autocorr(trialdata,'NumLags',50);
+
+                end
+            end
+        end
+    end
+end
+
+for rowi = 1:size(acf,1)
+    for coli = 1:size(acf,2)
+        acf_avg{rowi,coli} = mean(acf{rowi,coli},1);
+        acf_shuff_avg{rowi,coli} = mean(acf_shuff{rowi,coli},1);
+    end
+end
+acf_avg = acf_avg(:);
+acf_shuff_avg = acf_shuff_avg(:);
+[~,remData] = emptyCellErase(acf_avg);
+acf_avg(remData)=[];
+acf_shuff_avg(remData)=[];
+
+% collapse across sess
+acf_sess = vertcat(acf_avg{:});
+acf_sess_shuff = vertcat(acf_shuff_avg{:});
+
+figure('color','w'); hold on;
+shadedErrorBar(0:50,mean(acf_sess,1),stderr(acf_sess,1),'k',1);
+shadedErrorBar(0:50,mean(acf_sess_shuff,1),stderr(acf_sess_shuff,1),'r',1);
+ylabel('correlation')
+xlabel('lag')
+
+figure('color','w'); hold on;
+shadedErrorBar(0:50,mean(acf_sess,1),stderr(acf_sess,1),'k',1);
+%shadedErrorBar(0:50,mean(acf_sess_shuff,1),stderr(acf_sess_shuff,1),'r',1);
+ylabel('correlation')
+xlabel('lag')
+xlim([0 10])
+
+lag = 5;
+[z,p] = ztest(mean(acf_sess_shuff(:,5)),mean(acf_sess(:,5)),std(acf_sess(:,5)));
+
+for i = 1:10
+    [h,p(i)] = ttest(acf_sess(:,i),mean(acf_sess_shuff(:,i)));
+end
+figure; plot(0:9,p.*5)
+
+figure('color','w'); hold on;
+    shadedErrorBar(0:50,mean(acf_sess,1),stderr(acf_sess,1),'k',1);
+    plot(0:50,mean(acf_sess_shuff,1),'r','LineWidth',1);
+    ylabel('correlation')
+    xlabel('lag')
+    xlim([0 9])
+yyaxis right; 
+    p(1:5)=NaN;
+    plot(0:9,p.*4)
+    xlimits = xlim;
+    ylimits = ylim;
+    line([xlimits(1) xlimits(2)],[0.05 0.05],'Color','r')
+    ylabel('p-value')
 
 %% prep signal data for analysis
 clear datahigh datalow dataex C t
@@ -2749,10 +2970,18 @@ datalow(idxRem)=[];
 % entrainment
 rerunSFC = 0;
 if rerunSFC == 1
+    % I have a powerpoint in the data folder showing the importance of
+    % these parameters. They provide consistent results with interp method,
+    % so long as theta:delta ratio is set. This makes sense bc the interp
+    % method only works with theta phase it can estimate, while hilbert can
+    % estimate anything. 4-12Hz was used to account for the fact that theta
+    % can vary a bit over time and to better capture the shape of the
+    % oscillation. I've noticed that restricting this too much almost
+    % forces the data to 8hz shape when it may not be.
     srate = 2000;
-    lowpass = 4; highpass = 12; % JW2005; Hallock 2016;
+    lowpass = 10; highpass = 30; % JW2005; Hallock 2016; (4-12Hz theta, 15-20Hz beta)
     filterThetaDelta = 'y';     % Hallock2016
-    phaseMethod = 'hilbert';    % JW2005 and Hallock 2016
+    phaseMethod = 'hilbert';    % Buzsaki lab suggests it is more conservative
     
     for i = 1:length(datahigh)
         if isempty(datahigh{i})==1
@@ -2859,11 +3088,13 @@ if rerunSFC == 1
         spkIdxHigh spkIdxLow spkCountH spkCountL spikeTimeHighData spikeTimeLowData ...
         remData idx frTempHigh frTempLow
     disp('Saving results...')
-    save('data_ent_06212023')
+    date = todaysDate();
+    save(['data_ent_',date])   
 else
     % this is the cohen method. I tried Welch's, but the results were not
     % reliable
-    load('data_ent_06212023');
+    load('data_ent_21_Jun_2023'); % load for theta
+    %load('data_ent_22_Jun_2023'); % load for beta
 end
 
 % SFC
@@ -2940,6 +3171,7 @@ else
     % reliable
     load('data_sfc_21_Jun_2023');
 end
+load('data_spkCounts');
 
 %% reformatting and plotting spike-phase results
 
@@ -3053,19 +3285,7 @@ bsMrl_vmtL      = horzcat(bsMrl_vmtL{:});
 rayleighsZ_hpcH = horzcat(rayleighsZ_hpcH{:});
 rayleighsZ_hpcL = horzcat(rayleighsZ_hpcL{:});
 rayleighsZ_vmtH = horzcat(rayleighsZ_vmtH{:});
-rayleighsZ_vmtL = horzcat(rayleighsZ_vmtL{:});    
-spkRadian_hpcH  = horzcat(spkRadian_hpcH{:});
-spkRadian_hpcL  = horzcat(spkRadian_hpcL{:});
-spkRadian_vmtH  = horzcat(spkRadian_vmtH{:});
-spkRadian_vmtL  = horzcat(spkRadian_vmtL{:});
-xout_hpcH       = horzcat(xout_hpcH{:});
-xout_hpcL       = horzcat(xout_hpcL{:});
-xout_vmtH       = horzcat(xout_vmtH{:});
-xout_vmtL       = horzcat(xout_vmtL{:});
-n_hpcH          = horzcat(n_hpcH{:});
-n_hpcL          = horzcat(n_hpcL{:});
-n_vmtH          = horzcat(n_vmtH{:});
-n_vmtL          = horzcat(n_vmtL{:});
+rayleighsZ_vmtL = horzcat(rayleighsZ_vmtL{:}); 
 
 % percent mod
 rpHPCh = rayleighsP_hpcH(~isnan(rayleighsP_hpcH));
@@ -3081,11 +3301,18 @@ totalHPC  = (numel(find(rpHPCh<0.05 | rpHPCl<0.05))/numel(rpHPCl))*100;
 figure('color','w');
 multiBarPlot(horzcat(perc_vmtH,perc_vmtL,perc_hpcH,perc_hpcL),[{'VMT high'} {'VMT low'} {'HPC high'} {'HPC low'}],'% mod.');
 
-diffZ_hpc = (bsMrl_hpcH-bsMrl_hpcL)./(bsMrl_hpcH+bsMrl_hpcL);
-diffZ_vmt = (bsMrl_vmtH-bsMrl_vmtL)./(bsMrl_vmtH+bsMrl_vmtL);
-data2plot = []; data2plot{1} = diffZ_hpc; data2plot{2} = diffZ_vmt;
+% bootstrapped mrl
+diffMRL_hpc = (bsMrl_hpcH-bsMrl_hpcL)./(bsMrl_hpcH+bsMrl_hpcL);
+diffMRL_vmt = (bsMrl_vmtH-bsMrl_vmtL)./(bsMrl_vmtH+bsMrl_vmtL);
+data2plot = []; data2plot{1} = diffMRL_hpc; data2plot{2} = diffMRL_vmt;
 figure('color','w');
 multiBarPlot(data2plot,[{'HPC'} {'VMT'}],'Bootstrapped MRL');
+
+diffZ_hpc = (rayleighsZ_hpcH-rayleighsZ_hpcL)./(rayleighsZ_hpcH+rayleighsZ_hpcL);
+diffZ_vmt = (rayleighsZ_vmtH-rayleighsZ_vmtL)./(rayleighsZ_vmtH+rayleighsZ_vmtL);
+data2plot = []; data2plot{1} = diffZ_hpc; data2plot{2} = diffZ_vmt;
+figure('color','w');
+multiBarPlot(data2plot,[{'HPC'} {'VMT'}],'Rayleighs Z');
 
 uniti = 22;    
 figure('color','w');
@@ -3149,7 +3376,37 @@ figure('color','w'); hold on;
 figure('color','w'); plot(freq,sfcHighHPC(22,:),'b','LineWidth',2)
 hold on; plot(freq,sfcLowHPC(22,:),'r','LineWidth',2)
 box off
-    
+
+% get mod units and examine sfc
+hpcModH = find(rayleighsP_hpcH<0.05);
+hpcModL = find(rayleighsP_hpcL<0.05);
+vmtModH = find(rayleighsP_vmtH<0.05);
+vmtModL = find(rayleighsP_vmtL<0.05);
+
+% get sfc
+diff_HPC_modH = sfcHighHPC(hpcModH,:);
+diff_HPC_modL = sfcLowHPC(hpcModL,:);
+diff_VMT_modH = sfcHighVMT(vmtModH,:);
+diff_VMT_modL = sfcLowVMT(vmtModL,:);
+
+figure('color','w'); hold on;
+    plot(freq,mean(sfcHighHPC,1),'b','LineWidth',2)
+    plot(freq,mean(sfcHighVMT,1),'m','LineWidth',2)
+
+plot(freq,mean(sfcLowHPC(hpcModL,:),1),'r','LineWidth',2)
+
+figure('color','w'); 
+subplot 211; hold on;
+    plot(freq,mean(sfcHighHPC,1),'b','LineWidth',2)
+    plot(freq,mean(sfcHighVMT,1),'m','LineWidth',2)
+subplot 212; hold on;
+    plot(freq,mean(sfcLowHPC,1),'b','LineWidth',2)
+    plot(freq,mean(sfcLowVMT,1),'m','LineWidth',2)
+    for i = 1:size(sfcHighHPC,2)
+        [h,p(i)]=ttest(sfcHighHPC(:,i),sfcHighVMT(:,i));
+    end
+    [h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(p);
+
 % fishiris has 3 species of 50 data points on x-axis, and dimensions of the flower on y
 dataK = vertcat(diff_VMT,diff_HPC);
     
