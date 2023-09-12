@@ -3879,7 +3879,7 @@ p=p.*length(p);
 %% How is PFC-HPC interactions modulated by VMT stim?
 % -- 21-43 and 21-42 -- %
 clear;
-ratID='rat2142';
+ratID='rat2143';
 if contains(ratID,'42')
     load('data_2142_stim8Hz');
 elseif contains(ratID,'43')
@@ -3983,7 +3983,7 @@ for i = 1:size(hpcRon,2)
 end  
 
 % set to 1 if 21-42
-kmeanit = 1;
+kmeanit = 0;
 rng('default');
 if kmeanit == 1
     if contains(ratID,'42')
