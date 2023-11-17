@@ -10,7 +10,7 @@ clear; clc;
 try
     load('main_directory')
 catch   
-    main_directory = 'C:\Users\uggriffin\Documents\GitHub\GriffinCode\1. Matlab Pipeline';
+    main_directory = 'C:/Users/uggriffin/Documents/GitHub/GriffinCode/1. Matlab Pipeline';
 end
 
 % interface with user to redefine main_directory 
@@ -30,8 +30,8 @@ disp('Added path to main directory')
 
 % these will have to change if you change the names of the formatting and
 % analysis pipeline directory names
-analysis_directory = '\2. Analysis Pipeline';
-format_directory   = '\1. Formatting Data';
+analysis_directory = '/2. Analysis Pipeline';
+format_directory   = '/1. Formatting Data';
 
 % concatenate directories
 add_directory = [main_directory,analysis_directory];
@@ -41,7 +41,12 @@ cd(add_directory)
 folder_names = dir;
 
 % adding analysis paths
-for nn = 3:size(folder_names,1)
+if isunix
+    number = 4; % Code to run on Linux or MacOS platform
+elseif ispc
+    number = 3; % Code to run on Windows platform
+end
+for nn = number:size(folder_names,1)
     
     % define a naming variable
     folder_name = folder_names(nn).name;
@@ -50,7 +55,7 @@ for nn = 3:size(folder_names,1)
     
     % temporary variable to house current directory
     cur_dir = [];
-    cur_dir = [add_directory,'\',folder_name];
+    cur_dir = [add_directory,'/',folder_name];
     
     % addpath to outside folder
     addpath(cur_dir)
@@ -64,14 +69,14 @@ for nn = 3:size(folder_names,1)
     cd(cur_dir) % cd to the current folder of interest
     folders_inside_dir = dir; % get the folders within the current folder of interest
     
-    for nnn = 3:size(folders_inside_dir,1) 
+    for nnn = number:size(folders_inside_dir,1) 
         
         % define a naming variable
         folder_name_inside = folders_inside_dir(nnn).name;
 
         % temporary variable to house current directory
         add_inside_dir = [];
-        add_inside_dir = [cur_dir,'\',folder_name_inside];
+        add_inside_dir = [cur_dir,'/',folder_name_inside];
 
         % you can change this if you have specific subfolders you want to
         % add - this is primarily for chronux, but you can make if, elseif,
@@ -82,7 +87,7 @@ for nn = 3:size(folder_names,1)
             cd(add_inside_dir);
             
             % define chronux directory
-            funFolder_in_chronux = '\spectral_analysis\continuous';
+            funFolder_in_chronux = '/spectral_analysis/continuous';
         
             % addpath to the continuous folder - this is where the lfp
             % analyses are
@@ -91,7 +96,7 @@ for nn = 3:size(folder_names,1)
             disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])
         
             % add the helper functions
-            funFolder_in_chronux = '\spectral_analysis\helper';
+            funFolder_in_chronux = '/spectral_analysis/helper';
             
             % addpath to the continuous folder - this is where the lfp
             % analyses are
@@ -100,7 +105,7 @@ for nn = 3:size(folder_names,1)
             disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])        
             
             % add the helper functions
-            funFolder_in_chronux = '\spectral_analysis\pointtimes';
+            funFolder_in_chronux = '/spectral_analysis/pointtimes';
             
             % addpath to the continuous folder - this is where the lfp
             % analyses are
@@ -109,7 +114,7 @@ for nn = 3:size(folder_names,1)
             disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])        
             
             % add the helper functions
-            funFolder_in_chronux = '\spectral_analysis\hybrid';
+            funFolder_in_chronux = '/spectral_analysis/hybrid';
             
             % addpath to the continuous folder - this is where the lfp
             % analyses are
@@ -118,7 +123,7 @@ for nn = 3:size(folder_names,1)
             disp(['Chronux toolbox directory ',funFolder_in_chronux, ' added to path'])        
             
             % add the helper functions
-            funFolder_in_chronux = '\spectral_analysis\pointbinned';
+            funFolder_in_chronux = '/spectral_analysis/pointbinned';
             
             % addpath to the continuous folder - this is where the lfp
             % analyses are
@@ -154,7 +159,7 @@ for nn = 3:size(folder_names,1)
     
     % temporary variable to house current directory
     cur_dir = [];
-    cur_dir = [format_full,'\',folder_name];
+    cur_dir = [format_full,'/',folder_name];
     
     % addpath to outside folder
     addpath(cur_dir)

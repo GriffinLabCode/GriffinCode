@@ -1,0 +1,128 @@
+Introduction
+============
+
+This directory contains a port of the neuralynx file readers (CSC, EV, VT, SE and TT files) and a partial
+port of the file writers (CSC, SE, TT, EV). This Linux/Mac port is based on the original windows/MFC version, 
+developed and provided by Neuralynx Inc by courtesy.
+
+There are two versions: One for 32 Bit and one for 64 Bit. Scripts are provided for Linux and Mac OS X, 
+adaptation to other operating systems (with gcc) should, however, be fairly easily.
+
+This archive also contains compiled binaries for Linux 64 Bit as well as Mac OS X 64 Bit. If these files work
+for you you can use them. However, if they dont (due to different libraries, Matlab versions etc) you need to recompile
+them yourself. In Linux,this only requires standard compilers. Same for Mac OS X (but "Xcode" needs to be installed,by default
+Mac OS X does not install the compiler). Xcode can be downloaded from apple.com for free.
+
+This archive also contains Matlab demo-files on how to use the functions.
+
+
+Compilation
+===========
+This is only necessary if the pre-compiled binaries dont work on your system.
+
+Adjust compile.sh so that it uses your Matlab and compiles for the correct platform.
+Then execute compile.sh , which will create the mex files.
+
+Parameters (both in compile.sh)
+1) Set the variable PLATFORM to one of the following: 32PC, 64PC, 32MAC, 64MAC
+2) the path of matlab  
+These variables need to be adjusted manually before
+
+Note: The version of Matlab installed determines whether you need the 32/64 version and not the operating system. 
+If you're not sure whether your matlab is 32 or 64 bits, type 'computer' on the matlab prompt.
+This will output a string such as GLNX86 (32-bit linux), GLNXA64 (64-bit linux) or MACI64 (64-bit mac).
+
+Testing (for Dec2015 release)
+=============================
+
+The 64-bit linux version was tested on:
+Redhat Linux EL6, g++ 4.4.7 and Matlab 2015b
+and
+Ubuntu Linux 12.04, g++4.6.3 and Matlab 2014b
+
+The 64-bit Mac OS X version was tested on:
+Mac OS X 10.8, g++ 4.2.1 and Matlab 2012b
+
+The pre-compiled binaries provided in the archive are these versions and should work as-is on at least these platforms, but likely many more.
+If not, re-compilation is necessary, which is simple (see below).
+
+Setup and demo files
+====================
+The pre-compiled binaries are in the subdirectory binaries. Re-compilation will also create the files in this directory.
+
+compile.sh generates files such as Nlx2MatCSC_v3.mexglx or Nlx2MatEV_v3.mexglx (mexglx is 32-bit PC, as an example). 
+Put these two files in a directory that is in the matlab search path  (or add the new path to the matlab search path). 
+The functions have the same syntax and functionality as the windows versions. Help is available from within matlab with 'help Nlx2MatCSC_v3', 'help Nlx2MatEV_v3' or similar. 
+
+The file ending will be mexa64 for 64-bit, mexmaci for 32-bit mac and mexmaci64 for 64-bit mac (instead of mexglx as stated above).
+
+The following example matlab files are included:
+
+getRawCSCData.m  : reads raw signal from a CSC file
+getRawCSCTimestamps.m : reads timestamps from a CSC file
+getRawTTLs.m: reads TTLS from an event file
+getRawSE.m: reads from spike files (*.se,*.tt)
+
+putRawCSC.m: writes csc files
+putRawSE.m: writes spike files (*.se, *.tt)
+
+putRawEV.m: writes event files
+
+example of reading an event file:
+events = getRawTTLs('Events.Nev');
+
+reading csc data:
+[timestamps,dataSamples] = getRawCSCData( 'a8.ncs', 198, 200 );
+
+
+!! Note: If the mex function gives errors such as "Corrupt file - incomplete record encountered" it means you compiled
+the wrong version or used the wrong compatibility.h (wrong architecture, as when using the 32bit version for 64). 
+DO NOT ignore this warning - the data returnend is corrupt!
+
+!! The same error will also appear if you overwrite a file without deleting it first.
+
+Acknowledgments and note of caution
+===================================
+
+This is an inofficial port of the original Neuralynx source code to Linux/MacOSX and is not supported in any way by Neuralynx Inc.
+The original source code is owned by and copyright by Neuralynx Inc. 
+
+It is provided for free by the author without any guarantee of correctness. While I tested the functions extensively, I can not
+guarantee in any way that they will not corrupt or modify your data. Please test the functions in the way you're using them appropriately to convince yourself that everything works as it should.
+
+Contact the author (below) for comments/questions regarding this version. While I will do my best to answer queries, I can not
+guarantee you any support or timely responses.
+
+Change log
+==========
+
+First release:
+June 2004, Ueli Rutishauser, California Institute of Technology, Computation and Neural Systems, urut@caltech.edu
+
+Second release:
+October 2008, Updated to 64-Bit and newer g++ compiler (also for 32-bit version). Ueli Rutishauser, Caltech.
+
+third release:
+August 2009, minor update for mac os x 64-bit. Also, modified StdString.h to make it compile with the latest g++ without warnings (this->).
+
+fourth release:
+August 2010, Ueli Rutishauser, Max Planck Institute for Brain Research. urut@brain.mpg.de
+Added the VT (video) file type and optimized the compilation scripts.
+
+5th release:
+April 2011, Ueli Rutishauser, Max Planck Institute for Brain Research. urut@brain.mpg.de
+Added Spike (Single electrodes, tetrodes, stereotrodes) file type and updated compilation scripts/tested platforms.
+
+6th release:
+December 2011, Ueli Rutishauser, Max Planck Institute for Brain Research. urut@brain.mpg.de.
+Added functions to write to Nlx CSC, SE and TT files (new).
+
+7th release:
+December 2015, Ueli Rutishauser, Cedars-Sinai Medical Center / Caltech. urut@caltech.edu
+Added functions to write to EV (new).
+Recompiled with Matlab version 2012b for Mac and 2014b for Linux; Recompiled with more modern libc.
+Only 64-bit binaries are provided starting with this release.
+This release contains modifications to allow reading CSC files >2GBs kindly provided Katia Lehongre (ICM Institute, Paris).
+
+The latest version of this package can be downloaded for free from www.urut.ch.
+
