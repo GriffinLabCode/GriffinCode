@@ -72,16 +72,17 @@ function [b,jitterc] = multiBarPlot(data,xLabels,yLabel,jitter,jitterc,barcolor,
                   0.5 0.5 0.5; 0.8 0 0.3; 0.9 0.7 0.3; 0.9 0.3 0.1; 0 0.1 0.3]
                 %}
                 % define the color variable - once defined, it will not be
-                % rewritten, so colors match between plots
-                if exist('c')==0 
-                    numIn = size(data{i});
-                    jitterc = rand(3,numIn(1))';
-                elseif size(jitterc,1)~=size(data{i},1)
-                    numIn = size(data{i});
-                    jitterc = rand(3,numIn(1))';                     
-                end                    
-                x_axes               = ones(size(data{i})).*(i+((rand(size(data{i}))-0.5)/10));               
-                scat                 = scatter(x_axes,data{i},[],jitterc,'filled'); % multiply by i to follow the bar graph x axes
+                % rewritten, so colors match between plots 
+                numIn = size(data{i});
+                if ~exist('jitterc')
+                    jitterc = rand(3,numIn(1))'; 
+                else
+                    if isempty(jitterc)
+                        jitterc = rand(3,numIn(1))'; 
+                    end
+                end
+                x_axes = ones(size(data{i})).*(i+((rand(size(data{i}))-0.5)/10));               
+                scat   = scatter(x_axes,data{i},[],jitterc,'filled'); % multiply by i to follow the bar graph x axes
                 
                % scat.MarkerEdgeColor = 'k';
                % scat.MarkerFaceColor = [.5 .5 0];  

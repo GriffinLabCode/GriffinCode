@@ -652,7 +652,7 @@ diffHvL = (tempH-tempL)./(tempH+tempL);
     timeTrim = timeTrim'; tstat = tstat'; p = p'; padj = padj';
     tableData = []; tableData = table(timeTrim,tstat,p,padj);
     
-%% Extended Fig 4 stuff
+%% Behavioral analyses
 % note that some of the analyses use different data. This is because
 % procedures varied slightly between approaches. Importantly, even when I
 % include all LFP data, I see a more significant effect (likely due to
@@ -751,7 +751,7 @@ box off
 ylabel('Choice Accuracy')
 xlabel('Delay Duration Bin - check looper variable')
 
-%% More extended figs
+%% extended figs
 disp('Generating rat x coherence plots...')
 load('data_ratNames')
 

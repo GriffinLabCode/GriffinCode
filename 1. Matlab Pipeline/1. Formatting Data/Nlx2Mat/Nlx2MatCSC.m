@@ -1,4 +1,4 @@
-% NLX2MATCSC Imports data from Neuralynx NCS files to Matlab variables.
+s% NLX2MATCSC Imports data from Neuralynx NCS files to Matlab variables.
 %
 %   [Timestamps, ChannelNumbers, SampleFrequencies, NumberOfValidSamples,
 %   Samples, Header] = Nlx2MatCSC( Filename, FieldSelectionFlags,

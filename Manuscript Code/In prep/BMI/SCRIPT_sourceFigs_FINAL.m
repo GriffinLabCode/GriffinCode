@@ -3496,6 +3496,10 @@ subplot 212; hold on;
     end
     [h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(p);
 
+    
+% - an exploratory analysis - can ignore - %
+% Was trying to identify if certain populations could be detected based on
+% their sfc or entrainment patterns
 % fishiris has 3 species of 50 data points on x-axis, and dimensions of the flower on y
 dataK = vertcat(diff_VMT,diff_HPC);
     
