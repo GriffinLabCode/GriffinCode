@@ -1,4 +1,4 @@
-%% Generate Figures for Stout, George, Kim, Hallock, and Griffin paper
+%% Stout et al., 2023 - eLife - Using synchronized brain rhythms to bias memory-guided decisions
 % this code is meant for reproduction purposes and requires all functions
 % in the folder along with this code
 %
@@ -9,6 +9,8 @@
 % You must download the MATLAB pipeline from
 % github.com/JohnStout/GriffinCode and run Startup before some code below
 % works.
+%
+% Please contact john.j.stout.jr@gmail.com if you have any questions
 
 disp('This code was generated for reproduction purposes and for sharing data/results')
 disp('Additional data (raw formats) can be accessed through communication with Amy Griffin')
@@ -29,7 +31,9 @@ if contains(helpAns,'y')
     disp('Have fun!')
 end
 
-%% prep work
+%% CHANGE ME!!!!
+
+% here you must change these to match the destination of your data
 clear; clc;
 sourceRoot = 'C:\Users\uggriffin\Documents\BACKUP - Stout 2023 - dissertation';
 sourceFolder = '\Stout et al 2022 Harnessing neural synchrony';
@@ -652,7 +656,7 @@ diffHvL = (tempH-tempL)./(tempH+tempL);
     timeTrim = timeTrim'; tstat = tstat'; p = p'; padj = padj';
     tableData = []; tableData = table(timeTrim,tstat,p,padj);
     
-%% Behavioral analyses
+%% Extended Fig 4 stuff
 % note that some of the analyses use different data. This is because
 % procedures varied slightly between approaches. Importantly, even when I
 % include all LFP data, I see a more significant effect (likely due to
@@ -751,7 +755,7 @@ box off
 ylabel('Choice Accuracy')
 xlabel('Delay Duration Bin - check looper variable')
 
-%% extended figs
+%% More extended figs
 disp('Generating rat x coherence plots...')
 load('data_ratNames')
 
@@ -3496,6 +3500,10 @@ subplot 212; hold on;
     end
     [h, crit_p, adj_ci_cvrg, adj_p]=fdr_bh(p);
 
+    
+% - an exploratory analysis - can ignore - %
+% Was trying to identify if certain populations could be detected based on
+% their sfc or entrainment patterns
 % fishiris has 3 species of 50 data points on x-axis, and dimensions of the flower on y
 dataK = vertcat(diff_VMT,diff_HPC);
     

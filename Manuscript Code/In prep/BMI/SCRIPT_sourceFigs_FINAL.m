@@ -1,4 +1,4 @@
-%% Generate Figures for Stout, George, Kim, Hallock, and Griffin paper
+%% Stout et al., 2023 - eLife - Using synchronized brain rhythms to bias memory-guided decisions
 % this code is meant for reproduction purposes and requires all functions
 % in the folder along with this code
 %
@@ -9,6 +9,8 @@
 % You must download the MATLAB pipeline from
 % github.com/JohnStout/GriffinCode and run Startup before some code below
 % works.
+%
+% Please contact john.j.stout.jr@gmail.com if you have any questions
 
 disp('This code was generated for reproduction purposes and for sharing data/results')
 disp('Additional data (raw formats) can be accessed through communication with Amy Griffin')
@@ -29,7 +31,9 @@ if contains(helpAns,'y')
     disp('Have fun!')
 end
 
-%% prep work
+%% CHANGE ME!!!!
+
+% here you must change these to match the destination of your data
 clear; clc;
 sourceRoot = 'C:\Users\uggriffin\Documents\BACKUP - Stout 2023 - dissertation';
 sourceFolder = '\Stout et al 2022 Harnessing neural synchrony';
